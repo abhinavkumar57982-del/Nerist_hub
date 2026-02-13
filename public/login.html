@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="description" content="NERIST Campus Hub - Navigation, Marketplace, Lost & Found, Study Resources">
+    <link rel="icon" href="feviconicon.png">
+    <title>NERIST Campus Hub - Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        
+        .auth-container {
+            display: flex;
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .auth-left {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .auth-left h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .auth-left p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        
+        .auth-right {
+            flex: 1;
+            padding: 60px 40px;
+        }
+        
+        .auth-form {
+            max-width: 350px;
+            margin: 0 auto;
+        }
+        
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .auth-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .auth-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .password-container {
+            position: relative;
+        }
+        
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-size: 18px;
+            padding: 5px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 14px;
+        }
+        
+        .success-message {
+            background: #dfd;
+            color: #3a3;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 14px;
+        }
+        
+        .info-message {
+            background: #eef;
+            color: #336;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 14px;
+        }
+        
+        .switch-text {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .switch-text a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .nerist-logo {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .forgot-password {
+            text-align: right;
+            margin-top: 5px;
+        }
+        
+        .forgot-password a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        
+        .back-to-login {
+            text-align: center;
+            margin-top: 15px;
+        }
+        
+        .back-to-login a {
+            color: #667eea;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .validation-message {
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .valid {
+            color: #28a745;
+        }
+        
+        .invalid {
+            color: #dc3545;
+        }
+
+        .hint-text {
+            display: block;
+            color: #666;
+            margin-top: 5px;
+            font-size: 12px;
+        }
+
+        /* ===== MOBILE RESPONSIVE STYLES ===== */
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                display: flex;
+                align-items: flex-start;
+                justify-content: center;
+                min-height: 100vh;
+            }
+
+            .auth-container {
+                flex-direction: column;
+                max-width: 100%;
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+                box-shadow: none;
+            }
+
+            .auth-left {
+                padding: 40px 24px;
+                text-align: center;
+                border-radius: 0 0 30px 30px;
+            }
+
+            .auth-left h1 {
+                font-size: 2rem;
+                margin-bottom: 16px;
+            }
+
+            .auth-left p {
+                font-size: 1rem;
+            }
+
+            .nerist-logo {
+                justify-content: center;
+                font-size: 1.1rem;
+                margin-bottom: 20px;
+            }
+
+            .auth-right {
+                padding: 32px 24px;
+                background: white;
+            }
+
+            .auth-form {
+                max-width: 100%;
+            }
+
+            .auth-tabs {
+                margin-bottom: 24px;
+            }
+
+            .auth-tab {
+                padding: 12px 16px;
+                font-size: 15px;
+                flex: 1;
+                text-align: center;
+            }
+
+            .form-group {
+                margin-bottom: 16px;
+            }
+
+            label {
+                font-size: 13px;
+            }
+
+            input {
+                padding: 14px;
+                font-size: 16px;
+                border-width: 1.5px;
+            }
+
+            .btn {
+                padding: 16px;
+                font-size: 16px;
+                margin-top: 8px;
+            }
+
+            .toggle-password {
+                padding: 8px;
+                font-size: 20px;
+            }
+
+            .forgot-password a {
+                font-size: 13px;
+            }
+
+            .switch-text {
+                font-size: 14px;
+                margin-top: 24px;
+            }
+
+            .validation-message {
+                font-size: 12px;
+            }
+
+            .error-message,
+            .success-message,
+            .info-message {
+                padding: 14px;
+                font-size: 14px;
+                border-radius: 10px;
+            }
+
+            h3 {
+                font-size: 1.3rem;
+                margin-bottom: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-left {
+                padding: 32px 20px;
+            }
+
+            .auth-left h1 {
+                font-size: 1.8rem;
+            }
+
+            .auth-left p {
+                font-size: 0.95rem;
+            }
+
+            .auth-right {
+                padding: 28px 20px;
+            }
+
+            .auth-tab {
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            input {
+                padding: 14px;
+                font-size: 15px;
+            }
+
+            .btn {
+                padding: 15px;
+            }
+        }
+
+        /* Prevent zoom on input focus for iOS */
+        @media screen and (-webkit-min-device-pixel-ratio: 0) { 
+            select,
+            textarea,
+            input {
+                font-size: 16px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-left">
+            <div class="nerist-logo">
+                🎓 NERIST CAMPUS HUB
+            </div>
+            <h1>Welcome Back!</h1>
+            <p>Access your account to post lost items, sell books, find rentals, and connect with fellow NERIST students.</p>
+        </div>
+        
+        <div class="auth-right">
+            <div class="auth-tabs">
+                <div class="auth-tab active" onclick="showForm('login')">Login</div>
+                <div class="auth-tab" onclick="showForm('register')">Register</div>
+            </div>
+            
+            <!-- Login Form -->
+            <div id="login-form" class="auth-form">
+                <div class="error-message" id="login-error"></div>
+                <div class="success-message" id="login-success"></div>
+                
+                <div class="form-group">
+                    <label>Registration Number</label>
+                    <input type="text" id="login-regno" placeholder="Enter your registration number" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="password-container">
+                        <input type="password" id="login-password" placeholder="Enter your password" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword('login-password', this)">
+                            👁️
+                        </button>
+                    </div>
+                    <div class="forgot-password">
+                        <a onclick="showForm('forgot')">Forgot Password?</a>
+                    </div>
+                </div>
+                
+                <button class="btn" onclick="login()">Login</button>
+                
+                <div class="switch-text">
+                    Don't have an account? <a onclick="showForm('register')">Register here</a>
+                </div>
+            </div>
+            
+            <!-- Register Form -->
+            <div id="register-form" class="auth-form" style="display: none;">
+                <div class="error-message" id="register-error"></div>
+                <div class="success-message" id="register-success"></div>
+                <div class="info-message" id="register-info"></div>
+                
+                <div class="form-group">
+                    <label>Registration Number*</label>
+                    <input type="text" id="register-regno" placeholder="e.g., 225/999" required 
+                           oninput="validateRegistrationNumberRealTime()">
+                    <div class="validation-message" id="regno-validation"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Full Name*</label>
+                    <input type="text" id="register-name" placeholder="Enter your full name" required>
+                </div>
+                
+                <!-- SECURITY CODE FIELD -->
+                <div class="form-group">
+                    <label>Security Code*</label>
+                    <input type="text" id="register-security-code" placeholder="Create a security code" required
+                           maxlength="50">
+                    <small class="hint-text">
+                        <i class="fas fa-shield-alt"></i> This code will be required to reset your password
+                    </small>
+                </div>
+                
+                <!-- SECURITY CODE HINT FIELD (Optional) -->
+                <div class="form-group">
+                    <label>Security Code Hint (Optional)</label>
+                    <input type="text" id="register-security-hint" placeholder="e.g., My first pet's name" maxlength="100">
+                    <small class="hint-text">
+                        <i class="fas fa-lightbulb"></i> A reminder to help you remember your security code
+                    </small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Email (Optional)</label>
+                    <input type="email" id="register-email" placeholder="Enter your email">
+                </div>
+                
+                <div class="form-group">
+                    <label>Phone Number (Optional)</label>
+                    <input type="tel" id="register-phone" placeholder="Enter your phone number">
+                </div>
+                
+                <div class="form-group">
+                    <label>Password*</label>
+                    <div class="password-container">
+                        <input type="password" id="register-password" placeholder="Create a password (min. 6 chars)" required
+                               oninput="checkPasswordStrength()">
+                        <button type="button" class="toggle-password" onclick="togglePassword('register-password', this)">
+                            👁️
+                        </button>
+                    </div>
+                    <div class="validation-message" id="password-strength"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Confirm Password*</label>
+                    <div class="password-container">
+                        <input type="password" id="register-confirm-password" placeholder="Confirm your password" required
+                               oninput="checkPasswordMatch()">
+                        <button type="button" class="toggle-password" onclick="togglePassword('register-confirm-password', this)">
+                            👁️
+                        </button>
+                    </div>
+                    <div class="validation-message" id="password-match"></div>
+                </div>
+                
+                <button class="btn" onclick="register()">Register</button>
+                
+                <div class="switch-text">
+                    Already have an account? <a onclick="showForm('login')">Login here</a>
+                </div>
+            </div>
+            
+            <!-- Forgot Password Form - Step 1: Enter Registration Number -->
+            <div id="forgot-form" class="auth-form" style="display: none;">
+                <div class="error-message" id="forgot-error"></div>
+                <div class="success-message" id="forgot-success"></div>
+                
+                <h3 style="margin-bottom: 20px; color: #333; font-size: 1.5rem;">Reset Password</h3>
+                <p style="margin-bottom: 20px; color: #666;">Enter your registration number to begin password reset</p>
+                
+                <div class="form-group">
+                    <label>Registration Number</label>
+                    <input type="text" id="forgot-regno" placeholder="Enter your registration number" required>
+                </div>
+                
+                <button class="btn" onclick="verifyRegistrationForReset()">Continue</button>
+                
+                <div class="back-to-login">
+                    <a onclick="showForm('login')">← Back to Login</a>
+                </div>
+            </div>
+            
+            <!-- Verify Security Code Form - Step 2 -->
+            <div id="verify-security-form" class="auth-form" style="display: none;">
+                <div class="error-message" id="verify-error"></div>
+                <div class="success-message" id="verify-success"></div>
+                <div class="info-message" id="verify-info"></div>
+                
+                <h3 style="margin-bottom: 20px; color: #333; font-size: 1.5rem;">Verify Security Code</h3>
+                
+                <!-- Security Hint Display -->
+                <div id="security-hint-container" style="margin-bottom: 20px; background: #f5f5f5; padding: 12px; border-radius: 8px; border-left: 4px solid #667eea; display: none;">
+                    <i class="fas fa-lightbulb" style="color: #667eea;"></i>
+                    <span id="security-hint-text" style="margin-left: 8px; color: #333; font-size: 14px;"></span>
+                </div>
+                
+                <p style="margin-bottom: 20px; color: #666;">Please enter the security code you set during registration</p>
+                
+                <div class="form-group">
+                    <label>Security Code</label>
+                    <div class="password-container">
+                        <input type="password" id="verify-security-code" placeholder="Enter your security code" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword('verify-security-code', this)">
+                            👁️
+                        </button>
+                    </div>
+                </div>
+                
+                <button class="btn" onclick="verifySecurityCode()">Verify Code</button>
+                
+                <div class="back-to-login">
+                    <a onclick="showForm('forgot')">← Back</a>
+                </div>
+            </div>
+            
+            <!-- Reset Password Form - Step 3 -->
+            <div id="reset-form" class="auth-form" style="display: none;">
+                <div class="error-message" id="reset-error"></div>
+                <div class="success-message" id="reset-success"></div>
+                
+                <h3 style="margin-bottom: 20px; color: #333; font-size: 1.5rem;">Set New Password</h3>
+                
+                <div class="form-group">
+                    <label>New Password</label>
+                    <div class="password-container">
+                        <input type="password" id="reset-password" placeholder="Enter new password (min. 6 chars)" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword('reset-password', this)">
+                            👁️
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <div class="password-container">
+                        <input type="password" id="reset-confirm-password" placeholder="Confirm new password" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword('reset-confirm-password', this)">
+                            👁️
+                        </button>
+                    </div>
+                </div>
+                
+                <button class="btn" onclick="resetPassword()">Reset Password</button>
+                
+                <div class="back-to-login">
+                    <a onclick="showForm('login')">← Back to Login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Global variables
+        let resetToken = '';
+        let pendingResetRegNo = '';
+        let pendingResetHint = '';
+        let regnoValidationTimeout;
+        
+        // ============ UI FUNCTIONS ============
+        
+        function showForm(formType) {
+            document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(form => form.style.display = 'none');
+            
+            if (formType === 'login') {
+                document.querySelectorAll('.auth-tab')[0].classList.add('active');
+                document.getElementById('login-form').style.display = 'block';
+            } else if (formType === 'register') {
+                document.querySelectorAll('.auth-tab')[1].classList.add('active');
+                document.getElementById('register-form').style.display = 'block';
+            } else if (formType === 'forgot') {
+                document.getElementById('forgot-form').style.display = 'block';
+                pendingResetRegNo = '';
+                pendingResetHint = '';
+                document.getElementById('security-hint-container').style.display = 'none';
+            } else if (formType === 'verify') {
+                document.getElementById('verify-security-form').style.display = 'block';
+                // Show hint if available
+                if (pendingResetHint) {
+                    document.getElementById('security-hint-text').textContent = pendingResetHint;
+                    document.getElementById('security-hint-container').style.display = 'block';
+                } else {
+                    document.getElementById('security-hint-container').style.display = 'none';
+                }
+            } else if (formType === 'reset') {
+                document.getElementById('reset-form').style.display = 'block';
+            }
+            
+            clearMessages();
+        }
+        
+        function clearMessages() {
+            document.querySelectorAll('.error-message, .success-message, .info-message').forEach(msg => {
+                msg.style.display = 'none';
+                msg.textContent = '';
+            });
+        }
+        
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+        
+        function showSuccess(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+        
+        function showInfo(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+        
+        function togglePassword(passwordId, button) {
+            const passwordInput = document.getElementById(passwordId);
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                button.textContent = '🙈';
+            } else {
+                passwordInput.type = 'password';
+                button.textContent = '👁️';
+            }
+        }
+        
+        // ============ REGISTRATION VALIDATION ============
+        
+        async function validateRegistrationNumber(regno) {
+            try {
+                const response = await fetch('/api/auth/validate-registration', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ registrationNumber: regno })
+                });
+                
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Validation error:', error);
+                return { valid: false, message: "Validation service unavailable" };
+            }
+        }
+        
+        async function validateRegistrationNumberRealTime() {
+            const regnoInput = document.getElementById('register-regno');
+            const regno = regnoInput.value.trim();
+            const validationDiv = document.getElementById('regno-validation');
+            
+            clearTimeout(regnoValidationTimeout);
+            
+            if (!regno) {
+                validationDiv.style.display = 'none';
+                return;
+            }
+            
+            if (!regno.includes('/') && !regno.includes('-') && !regno.includes(' ')) {
+                validationDiv.textContent = 'Format: 225/088 or 225-088 or 225 088';
+                validationDiv.className = 'validation-message invalid';
+                validationDiv.style.display = 'block';
+                return;
+            }
+            
+            regnoValidationTimeout = setTimeout(async () => {
+                try {
+                    const validation = await validateRegistrationNumber(regno);
+                    
+                    if (validation.valid) {
+                        validationDiv.textContent = '✓ Valid NERIST registration number';
+                        validationDiv.className = 'validation-message valid';
+                        validationDiv.style.display = 'block';
+                    } else {
+                        validationDiv.textContent = validation.message;
+                        validationDiv.className = 'validation-message invalid';
+                        validationDiv.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Real-time validation error:', error);
+                }
+            }, 500);
+        }
+        
+        function checkPasswordStrength() {
+            const password = document.getElementById('register-password').value;
+            const strengthDiv = document.getElementById('password-strength');
+            
+            if (!password) {
+                strengthDiv.style.display = 'none';
+                return;
+            }
+            
+            let strength = 'Weak';
+            let color = 'invalid';
+            
+            if (password.length >= 8) {
+                strength = 'Good';
+                color = 'valid';
+            }
+            
+            if (password.length >= 12 && /[A-Z]/.test(password) && /[0-9]/.test(password) && /[^A-Za-z0-9]/.test(password)) {
+                strength = 'Strong';
+                color = 'valid';
+            }
+            
+            strengthDiv.textContent = `Password strength: ${strength}`;
+            strengthDiv.className = `validation-message ${color}`;
+            strengthDiv.style.display = 'block';
+        }
+        
+        function checkPasswordMatch() {
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-confirm-password').value;
+            const matchDiv = document.getElementById('password-match');
+            
+            if (!confirmPassword) {
+                matchDiv.style.display = 'none';
+                return;
+            }
+            
+            if (password === confirmPassword) {
+                matchDiv.textContent = '✓ Passwords match';
+                matchDiv.className = 'validation-message valid';
+                matchDiv.style.display = 'block';
+            } else {
+                matchDiv.textContent = '✗ Passwords do not match';
+                matchDiv.className = 'validation-message invalid';
+                matchDiv.style.display = 'block';
+            }
+        }
+        
+        // ============ AUTH FUNCTIONS ============
+        
+        async function login() {
+            const regno = document.getElementById('login-regno').value.trim();
+            const password = document.getElementById('login-password').value;
+            
+            if (!regno || !password) {
+                showError('login-error', 'Please fill in all fields');
+                return;
+            }
+            
+            const loginBtn = document.querySelector('#login-form .btn');
+            const originalText = loginBtn.textContent;
+            loginBtn.textContent = 'Logging in...';
+            loginBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ registrationNumber: regno, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    showSuccess('login-success', 'Login successful! Redirecting...');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
+                } else {
+                    showError('login-error', data.error || 'Login failed');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('login-error', 'Network error. Please try again.');
+            } finally {
+                loginBtn.textContent = originalText;
+                loginBtn.disabled = false;
+            }
+        }
+        
+        async function register() {
+            console.log('Register function called');
+            
+            const regno = document.getElementById('register-regno').value.trim();
+            const name = document.getElementById('register-name').value.trim();
+            const securityCode = document.getElementById('register-security-code').value.trim();
+            const securityHint = document.getElementById('register-security-hint').value.trim();
+            const email = document.getElementById('register-email').value.trim();
+            const phone = document.getElementById('register-phone').value.trim();
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-confirm-password').value;
+            
+            clearMessages();
+            
+            // Validation
+            if (!regno || !name || !securityCode || !password || !confirmPassword) {
+                showError('register-error', 'Please fill in all required fields (*)');
+                return;
+            }
+            
+            if (securityCode.length < 3) {
+                showError('register-error', 'Security code must be at least 3 characters');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showError('register-error', 'Passwords do not match');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showError('register-error', 'Password must be at least 6 characters');
+                return;
+            }
+            
+            const registerBtn = document.querySelector('#register-form .btn');
+            const originalText = registerBtn.textContent;
+            registerBtn.textContent = 'Registering...';
+            registerBtn.disabled = true;
+            
+            try {
+                console.log('Sending registration request:', { 
+                    registrationNumber: regno, 
+                    name, 
+                    securityCode,
+                    securityHint,
+                    email, 
+                    phone 
+                });
+                
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        registrationNumber: regno, 
+                        name, 
+                        password,
+                        securityCode,
+                        securityCodeHint: securityHint,
+                        email,
+                        phone 
+                    })
+                });
+                
+                console.log('Response status:', response.status);
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (data.success) {
+                    showSuccess('register-success', 'Registration successful! Please login with your credentials.');
+                    
+                    // Clear form
+                    document.getElementById('register-regno').value = '';
+                    document.getElementById('register-name').value = '';
+                    document.getElementById('register-security-code').value = '';
+                    document.getElementById('register-security-hint').value = '';
+                    document.getElementById('register-email').value = '';
+                    document.getElementById('register-phone').value = '';
+                    document.getElementById('register-password').value = '';
+                    document.getElementById('register-confirm-password').value = '';
+                    
+                    document.getElementById('regno-validation').style.display = 'none';
+                    document.getElementById('password-strength').style.display = 'none';
+                    document.getElementById('password-match').style.display = 'none';
+                    
+                    setTimeout(() => {
+                        showForm('login');
+                        document.getElementById('login-regno').value = regno;
+                    }, 3000);
+                } else {
+                    showError('register-error', data.error || 'Registration failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showError('register-error', 'Network error. Please check your connection and try again.');
+            } finally {
+                registerBtn.textContent = originalText;
+                registerBtn.disabled = false;
+            }
+        }
+        
+        // ============ PASSWORD RESET FUNCTIONS ============
+        
+        async function verifyRegistrationForReset() {
+            const regno = document.getElementById('forgot-regno').value.trim();
+            
+            if (!regno) {
+                showError('forgot-error', 'Please enter your registration number');
+                return;
+            }
+            
+            const verifyBtn = document.querySelector('#forgot-form .btn');
+            const originalText = verifyBtn.textContent;
+            verifyBtn.textContent = 'Verifying...';
+            verifyBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/auth/verify-registration', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ registrationNumber: regno })
+                });
+                
+                const data = await response.json();
+                
+                if (data.exists) {
+                    // Store the registration number and hint for later use
+                    pendingResetRegNo = data.registrationNumber;
+                    pendingResetHint = data.hint || '';
+                    
+                    showSuccess('forgot-success', 'Registration number verified. Please enter your security code.');
+                    
+                    // Show security code verification form
+                    setTimeout(() => {
+                        showForm('verify');
+                        // Clear security code field
+                        document.getElementById('verify-security-code').value = '';
+                    }, 1500);
+                } else {
+                    showError('forgot-error', 'Registration number not found');
+                }
+            } catch (error) {
+                console.error('Verification error:', error);
+                showError('forgot-error', 'Network error. Please try again.');
+            } finally {
+                verifyBtn.textContent = originalText;
+                verifyBtn.disabled = false;
+            }
+        }
+        
+        async function verifySecurityCode() {
+            const securityCode = document.getElementById('verify-security-code').value.trim();
+            
+            if (!securityCode) {
+                showError('verify-error', 'Please enter your security code');
+                return;
+            }
+            
+            if (!pendingResetRegNo) {
+                showError('verify-error', 'Session expired. Please start over.');
+                showForm('forgot');
+                return;
+            }
+            
+            const verifyBtn = document.querySelector('#verify-security-form .btn');
+            const originalText = verifyBtn.textContent;
+            verifyBtn.textContent = 'Verifying...';
+            verifyBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/auth/verify-security-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        registrationNumber: pendingResetRegNo,
+                        securityCode: securityCode 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.valid) {
+                    // Store the reset token
+                    resetToken = data.resetToken;
+                    
+                    showSuccess('verify-success', 'Security code verified! You can now reset your password.');
+                    
+                    setTimeout(() => {
+                        showForm('reset');
+                        // Clear password fields
+                        document.getElementById('reset-password').value = '';
+                        document.getElementById('reset-confirm-password').value = '';
+                    }, 1500);
+                } else {
+                    showError('verify-error', data.error || 'Invalid security code');
+                }
+            } catch (error) {
+                console.error('Security code verification error:', error);
+                showError('verify-error', 'Network error. Please try again.');
+            } finally {
+                verifyBtn.textContent = originalText;
+                verifyBtn.disabled = false;
+            }
+        }
+        
+        async function resetPassword() {
+            const password = document.getElementById('reset-password').value;
+            const confirmPassword = document.getElementById('reset-confirm-password').value;
+            
+            if (!password || !confirmPassword) {
+                showError('reset-error', 'Please fill in all fields');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showError('reset-error', 'Passwords do not match');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showError('reset-error', 'Password must be at least 6 characters');
+                return;
+            }
+            
+            if (!resetToken) {
+                showError('reset-error', 'Session expired. Please start over.');
+                showForm('forgot');
+                return;
+            }
+            
+            const resetBtn = document.querySelector('#reset-form .btn');
+            const originalText = resetBtn.textContent;
+            resetBtn.textContent = 'Resetting...';
+            resetBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/auth/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        token: resetToken,
+                        newPassword: password 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess('reset-success', 'Password reset successful! You can now login with your new password.');
+                    
+                    // Clear reset data
+                    resetToken = '';
+                    pendingResetRegNo = '';
+                    pendingResetHint = '';
+                    
+                    setTimeout(() => {
+                        showForm('login');
+                    }, 2000);
+                } else {
+                    showError('reset-error', data.error || 'Password reset failed');
+                }
+            } catch (error) {
+                console.error('Reset password error:', error);
+                showError('reset-error', 'Network error. Please try again.');
+            } finally {
+                resetBtn.textContent = originalText;
+                resetBtn.disabled = false;
+            }
+        }
+        
+        // Check URL for token
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenFromUrl = urlParams.get('token');
+        if (tokenFromUrl) {
+            resetToken = tokenFromUrl;
+            showForm('reset');
+        }
+        
+        // Redirect if already logged in
+        const token = localStorage.getItem('token');
+        if (token) {
+            window.location.href = 'index.html';
+        }
+        
+        // Enter key submission
+        document.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                if (document.getElementById('login-form').style.display !== 'none') {
+                    login();
+                } else if (document.getElementById('register-form').style.display !== 'none') {
+                    register();
+                } else if (document.getElementById('forgot-form').style.display !== 'none') {
+                    verifyRegistrationForReset();
+                } else if (document.getElementById('verify-security-form').style.display !== 'none') {
+                    verifySecurityCode();
+                } else if (document.getElementById('reset-form').style.display !== 'none') {
+                    resetPassword();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

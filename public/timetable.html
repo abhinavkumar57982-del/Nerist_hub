@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="description" content="NERIST Campus Hub - Navigation, Marketplace, Lost & Found, Study Resources">
+<title>NERIST Campus Hub</title>
+<link rel="icon" href="feviconicon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>NERIST Timetable Viewer</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Include PDF.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        /* Additional styles for timetable page */
+        .timetable-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .timetable-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border-left: 6px solid var(--accent-primary);
+        }
+
+        .timetable-header h1 {
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .branch-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .branch-tag {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--accent-primary);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .timetable-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .timetable-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .filters-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+        }
+
+        .viewer-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            box-shadow: var(--shadow-md);
+            min-height: 700px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group {
+            margin-bottom: 20px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .filter-group select:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            outline: none;
+        }
+
+        .program-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .program-tab {
+            padding: 12px 20px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            flex: 1;
+            text-align: center;
+        }
+
+        .program-tab.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .program-tab:hover:not(.active) {
+            background: var(--border-color);
+        }
+
+        .view-button {
+            width: 100%;
+            padding: 16px;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .view-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .view-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .timetable-display {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 40px;
+        }
+
+        .timetable-display i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: var(--accent-primary);
+            opacity: 0.5;
+        }
+
+        .timetable-info {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            width: 100%;
+            text-align: center;
+        }
+
+        .page-display {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+        }
+
+        .page-display button {
+            padding: 8px 16px;
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .page-display button:hover:not(:disabled) {
+            background: var(--accent-secondary);
+        }
+
+        .page-display button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .page-display span {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid var(--accent-danger);
+            color: var(--accent-danger);
+            padding: 15px;
+            border-radius: var(--radius-sm);
+            margin: 15px 0;
+            text-align: center;
+            display: none;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(var(--bg-primary-rgb), 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            border-radius: var(--radius-lg);
+            display: none;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .timetable-preview {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+            position: relative;
+        }
+
+        .timetable-canvas {
+            max-width: 100%;
+            max-height: 100%;
+            box-shadow: var(--shadow-md);
+            border-radius: var(--radius-sm);
+        }
+
+        .download-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            text-align: center;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background: var(--gradient-primary);
+            color: white;
+            text-decoration: none;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .zoom-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .zoom-btn {
+            padding: 8px 15px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            flex: 1;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .zoom-btn:hover {
+            background: var(--border-color);
+            border-color: var(--accent-primary);
+        }
+
+        .zoom-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .view-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .view-option-btn {
+            padding: 8px 15px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            flex: 1;
+            text-align: center;
+        }
+
+        .view-option-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .view-option-btn:hover:not(.active) {
+            background: var(--border-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+  <div class="nav-left">
+    <a href="/index.html" class="logo">
+      <span class="logo-icon">🧑‍🎓</span>
+      <span>NERIST Hub</span>
+    </a>
+    
+    <div class="menu">
+      <span><i class="fas fa-search"></i> Lost & Found ▾</span>
+      <div class="dropdown">
+        <a href="/lost.html"><i class="fas fa-question-circle"></i> Lost Items</a>
+        <a href="/found.html"><i class="fas fa-check-circle"></i> Found Items</a>
+      </div>
+    </div>
+
+    <div class="menu">
+      <span><i class="fas fa-store"></i> Marketplace ▾</span>
+      <div class="dropdown">
+        <a href="/marketplace.html"><i class="fas fa-tag"></i> Sell Items</a>
+        <a href="/buy-requests.html"><i class="fas fa-shopping-cart"></i> Buy Requests</a>
+      </div>
+    </div>
+
+    <div class="menu">
+      <span><i class="fas fa-file-alt"></i> Study ▾</span>
+      <div class="dropdown">
+        <a href="/questionpaper.html"><i class="fas fa-book"></i> Question Papers</a>
+        <a href="/upload-paper.html"><i class="fas fa-upload"></i> Upload Papers</a>
+        <a href="/timetable.html"><i class="fas fa-calendar-alt"></i> TimeTable</a>
+      </div>
+    </div>
+    
+    <!-- NEW: Teacher Directory Menu -->
+    <div class="menu">
+      <span><i class="fas fa-chalkboard-teacher"></i> Faculty ▾</span>
+      <div class="dropdown">
+        <a href="/teachers.html"><i class="fas fa-users"></i> Teacher Directory</a>
+        <a href="/teachers.html#staff-directory"><i class="fas fa-search"></i> Search Faculty</a>
+      </div>
+    </div>
+    
+    <div class="menu">
+      <span><i class="fa-solid fa-briefcase"></i></i> Services ▾</span>
+      <div class="dropdown">
+        <a href="/rentals.html"><i class="fa-solid fa-briefcase"></i> Services</a>
+      </div>
+    </div>
+    
+    <div class="menu">
+      <span><i class="fas fa-map"></i> Navigation ▾</span>
+      <div class="dropdown">
+        <a href="/map.html"><i class="fas fa-location-dot"></i> Campus Map</a>
+      </div>
+    </div>
+  </div>
+  
+  <!-- AUTH SECTION IN NAVBAR -->
+  <div class="nav-right">
+    <div id="user-info" class="user-info">
+      <span id="welcome-message" class="welcome-message" style="display: none;">
+        <i class="fas fa-user-circle"></i>
+        <span id="user-name"></span> (<span id="user-regno"></span>)
+      </span>
+      <button id="login-btn" class="auth-btn login-btn">
+        <i class="fas fa-sign-in-alt"></i>
+        <span>Login / Register</span>
+      </button>
+      <button id="logout-btn" class="auth-btn logout-btn" style="display: none;">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </button>
+    </div>
+    
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <i class="fas fa-moon"></i>
+      <span>Theme</span>
+    </button>
+  </div>
+</nav>
+
+    <!-- TIMETABLE VIEWER -->
+    <div class="timetable-container">
+        <div class="timetable-header">
+            <h1><i class="fas fa-calendar-alt"></i> NERIST Timetable Viewer</h1>
+            <p>Select your program, year, branch, and semester to view your timetable (Currently only Available for Base and Btech)</p>
+            <div class="branch-tags">
+                <span class="branch-tag">Base (1st & 2nd Year)</span>
+                <span class="branch-tag">B.Tech</span>
+                <span class="branch-tag">AE</span>
+                <span class="branch-tag">CE</span>
+                <span class="branch-tag">CSE</span>
+                <span class="branch-tag">EC</span>
+                <span class="branch-tag">EE</span>
+                <span class="branch-tag">ME</span>
+                <span class="branch-tag">AG (Agriculture)</span>
+                <span class="branch-tag">FR (Forestry)</span>
+            </div>
+        </div>
+
+        <div class="timetable-content">
+            <div class="filters-card">
+                <h2 class="section-title">Select Filters</h2>
+                
+                <div class="program-tabs">
+                    <div class="program-tab active" data-program="Base">Base (1st-2nd Year)</div>
+                    <div class="program-tab" data-program="Btech">B.Tech</div>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="year"><i class="fas fa-calendar"></i> Year</label>
+                    <select id="year">
+                        <option value="">-- Select Year --</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="branch"><i class="fas fa-code-branch"></i> Branch</label>
+                    <select id="branch">
+                        <option value="">-- Select Branch --</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="semester"><i class="fas fa-book"></i> Semester</label>
+                    <select id="semester">
+                        <option value="">-- Select Semester --</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group" id="divisionGroup" style="display: none;">
+                    <label for="division"><i class="fas fa-layer-group"></i> Division/Batch</label>
+                    <select id="division">
+                        <option value="">-- Select Division --</option>
+                    </select>
+                </div>
+                
+                <div class="zoom-controls">
+                    <div class="zoom-btn active" data-zoom="1.0">100%</div>
+                    <div class="zoom-btn" data-zoom="1.25">125%</div>
+                    <div class="zoom-btn" data-zoom="1.5">150%</div>
+                    <div class="zoom-btn" data-zoom="fit">Fit Width</div>
+                </div>
+                
+                <button id="viewButton" class="view-button" disabled>
+                    <i class="fas fa-eye"></i> View Timetable
+                </button>
+                
+                <div class="download-section">
+                    <p style="margin-bottom: 10px; color: var(--text-secondary);">Need the complete timetable?</p>
+                    <a href="timetable_odd_2026.pdf" class="download-btn" download>
+                        <i class="fas fa-download"></i> Download Full PDF (114 pages)
+                    </a>
+                </div>
+            </div>
+            
+            <div class="viewer-card">
+                <div class="timetable-info" id="timetableInfo">Select your program, year, branch, and semester to view timetable</div>
+                
+                <div id="errorMessage" class="error-message" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Timetable Not Available</h3>
+                    <p>The selected timetable page is not available in the current PDF.</p>
+                    <p>Please download the full PDF to view all timetables.</p>
+                    <div style="margin-top: 15px;">
+                        <a href="timetable_odd_2026.pdf" class="download-btn" download style="display: inline-block;">
+                            <i class="fas fa-download"></i> Download Full PDF
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="loading-overlay" id="loadingOverlay">
+                    <div class="spinner"></div>
+                    <p>Loading timetable...</p>
+                </div>
+                
+                <div id="placeholderView" class="timetable-display">
+                    <i class="fas fa-search"></i>
+                    <h3>Select Your Timetable</h3>
+                    <p>Choose your program, year, branch, and semester from the filters to view your timetable.</p>
+                    <div style="margin-top: 20px; text-align: left; max-width: 500px; color: var(--text-secondary); font-size: 0.9rem;">
+                        <p><i class="fas fa-check-circle" style="color: var(--accent-success);"></i> Supports Base (1st-2nd Year) and B.Tech programs</p>
+                        <p><i class="fas fa-check-circle" style="color: var(--accent-success);"></i> Multiple branch systems</p>
+                        <p><i class="fas fa-check-circle" style="color: var(--accent-success);"></i> Shows only the selected timetable page</p>
+                    </div>
+                </div>
+                
+                <div id="timetableView" class="timetable-preview" style="display: none;">
+                    <!-- PDF will be rendered here as canvas -->
+                </div>
+                
+                <div id="pageControls" class="page-display" style="display: none;">
+                    <button id="prevPage" disabled>
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                    <span id="pageInfo">Page 1 of 1</span>
+                    <button id="nextPage" disabled>
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+  <div class="container">
+    <div class="footer-content">
+      <!-- Brand Section -->
+      <div class="footer-section">
+        <h3>NERIST Campus Hub</h3>
+        <div class="developer-credit">
+          <p>Unofficial student platform for NERIST campus services and resources.</p>
+          <div class="developer-name">
+            <i class="fas fa-code"></i>
+            Developed by Abhinav Kumar
+            <span style="font-size: 12px; color: var(--text-secondary);">(BTech 1st Year CSE)</span>
+          </div>
+        </div>
+        <div class="social-links">
+          <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+          <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+          <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+          <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+      
+      <!-- Quick Links Section -->
+      <div class="footer-section">
+        <h3>Quick Links</h3>
+        <ul class="footer-links">
+          <li><a href="/lost.html"><i class="fas fa-arrow-right"></i> Lost & Found</a></li>
+          <li><a href="/marketplace.html"><i class="fas fa-arrow-right"></i> Marketplace</a></li>
+          <li><a href="/questionpaper.html"><i class="fas fa-arrow-right"></i> Question Papers</a></li>
+          <li><a href="/rentals.html"><i class="fas fa-arrow-right"></i> Services</a></li>
+          <li><a href="/map.html"><i class="fas fa-arrow-right"></i> Campus Map</a></li>
+          <li><a href="/timetable.html"><i class="fas fa-arrow-right"></i> Timetable</a></li>
+        </ul>
+      </div>
+      
+      <!-- Contact & Feedback Section -->
+      <div class="footer-section">
+        <h3>Get in Touch</h3>
+        <div class="contact-info">
+          <div class="contact-item">
+            <i class="fas fa-envelope"></i>
+            <span>abhinavkumar53210@gmail.com</span>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-phone-alt"></i>
+            <span>Campus Help Desk</span>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>NERIST, Nirjuli - 791109</span>
+          </div>
+        </div>
+        
+        <!-- Feedback Form Link - Styled as Button -->
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSe1XYRtRNLUKZoS1a44XJWvRnq5Amk0UD036FmEJMXb974_VA/viewform?usp=header" class="feedback-link">
+          <i class="fas fa-comment-dots"></i>
+          Give Feedback
+        </a>
+      </div>
+    </div>
+    
+    <!-- Footer Bottom -->
+    <div class="footer-bottom">
+      <p>
+        © 2026 NERIST Campus Hub. 
+        Made with <span class="heart"><i class="fas fa-heart"></i></span> 
+        for students.
+      </p>
+      <div class="footer-bottom-links">
+        <a href="/privacy.html"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+        <a href="/terms.html"><i class="fas fa-file-alt"></i> Terms of Use</a>
+        <a href="/contact.html"><i class="fas fa-headset"></i> Contact Us</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+    <script>
+        // PDF Configuration
+        const PDF_FILENAME = 'timetable_odd_2026.pdf';
+        const TOTAL_PAGES = 114;
+
+        // Timetable data structure with Agriculture Engineering (AE)
+        const timetableData = {
+            "Base": {
+                "AE": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "even-odd",
+                                "even": 2,
+                                "odd": 1
+                            }
+                        }
+                    },
+                    "2": {
+                        "semesters": {
+                            "4": {
+                                "type": "even-odd",
+                                "even": 4,
+                                "odd": 3
+                            }
+                        }
+                    }
+                },
+                "CE": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "even-odd",
+                                "even": 17,
+                                "odd": 16
+                            }
+                        }
+                    },
+                    "2": {
+                        "semesters": {
+                            "4": {
+                                "type": "Batch",
+                                "batches": {
+                                    "1": 18,
+                                    "2": 19,
+                                    "3": 20
+                                }
+                            }
+                        }
+                    }
+                },
+                "EC": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "even-odd",
+                                "even": 56,
+                                "odd": 55
+                            }
+                        }
+                    },
+                    "2": {
+                        "semesters": {
+                            "4": {
+                                "type": "even-odd",
+                                "even": 58,
+                                "odd": 57
+                            }
+                        }
+                    }
+                },
+                "EE": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "even-odd",
+                                "even": 74,
+                                "odd": 73
+                            }
+                        }
+                    },
+                    "2": {
+                        "semesters": {
+                            "4": {
+                                "type": "even-odd",
+                                "even": 76,
+                                "odd": 75
+                            }
+                        }
+                    }
+                },
+                "ME": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "even-odd",
+                                "even": 96,
+                                "odd": 95
+                            }
+                        }
+                    },
+                    "2": {
+                        "semesters": {
+                            "4": {
+                                "type": "even-odd",
+                                "even": 98,
+                                "odd": 97
+                            }
+                        }
+                    }
+                }
+            },
+            "Btech": {
+                "AE": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "even-odd",
+                                "even": 6,
+                                "odd": 5
+                            }
+                        }
+                    },
+                    "2": {
+                        "semesters": {
+                            "4": {
+                                "type": "even-odd",
+                                "even": 8,
+                                "odd": 7
+                            }
+                        }
+                    },
+                    "3": {
+                        "semesters": {
+                            "6": {
+                                "type": "even-odd",
+                                "even": 10,
+                                "odd": 9
+                            }
+                        }
+                    },
+                    "4": {
+                        "semesters": {
+                            "8": {
+                                "type": "even-odd",
+                                "even": 12,
+                                "odd": 11
+                            }
+                        }
+                    }
+                },
+                "CE": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "Batch",
+                                "batches": {
+                                    "1": 21,
+                                    "2": 22,
+                                    "3": 23,
+                                    "4": 24
+                                }
+                            }
+                        }
+                    },
+                    "2": {
+                        "semesters": {
+                            "4": {
+                                "type": "Batch",
+                                "batches": {
+                                    "1": 25,
+                                    "2": 26,
+                                    "3": 27,
+                                    "4": 28
+                                }
+                            }
+                        }
+                    },
+                    "3": {
+                        "semesters": {
+                            "6": {
+                                "type": "Batch",
+                                "batches": {
+                                    "1": 29,
+                                    "2": 30,
+                                    "3": 31,
+                                    "4": 32
+                                }
+                            }
+                        }
+                    },
+                    "4": {
+                        "semesters": {
+                            "8": {
+                                "type": "Batch",
+                                "batches": {
+                                    "1": 33
+                                }
+                            }
+                        }
+                    }
+                },
+                "CSE": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "even-odd",
+                                "even": 41,
+                                "odd": 40
+                            }
+                        }
+                    },
+                    "2": {
+                        "semesters": {
+                            "4": {
+                                "type": "even-odd",
+                                "even": 43,
+                                "odd": 42
+                            }
+                        }
+                    },
+                    "3": {
+                        "semesters": {
+                            "6": {
+                                "type": "even-odd",
+                                "even": 45,
+                                "odd": 44
+                            }
+                        }
+                    },
+                    "4": {
+                        "semesters": {
+                            "8": {
+                                "type": "even-odd",
+                                "even": 47,
+                                "odd": 46
+                            }
+                        }
+                    }
+                },
+                "EC": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "even-odd",
+                                "even": 60,
+                                "odd": 59
+                            }
+                        }
+                    },
+                    "2": {
+                        "semesters": {
+                            "4": {
+                                "type": "Batch",
+                                "batches": {
+                                    "1": 61,
+                                    "2": 62,
+                                    "3": 63
+                                }
+                            }
+                        }
+                    },
+                    "3": {
+                        "semesters": {
+                            "6": {
+                                "type": "Batch",
+                                "batches": {
+                                    "1": 64,
+                                    "2": 65,
+                                    "3": 66
+                                }
+                            }
+                        }
+                    },
+                    "4": {
+                        "semesters": {
+                            "8": {
+                                "type": "Batch",
+                                "batches": {
+                                    "1": 67,
+                                    "2": 68,
+                                    "3": 69
+                                }
+                            }
+                        }
+                    }
+                },
+                "EE": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "even-odd",
+                                "even": 78,
+                                "odd": 77
+                            }
+                        }
+                    },
+                    "2": {
+                        "semesters": {
+                            "4": {
+                                "type": "even-odd",
+                                "even": 80,
+                                "odd": 79
+                            }
+                        }
+                    },
+                    "3": {
+                        "semesters": {
+                            "6": {
+                                "type": "even-odd",
+                                "even": 82,
+                                "odd": 81
+                            }
+                        }
+                    },
+                    "4": {
+                        "semesters": {
+                            "8": {
+                                "type": "even-odd",
+                                "even": 84,
+                                "odd": 83
+                            }
+                        }
+                    }
+                },
+                "FR": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "even-odd",
+                                "even": 87,
+                                "odd": 86
+                            }
+                        }
+                    },
+                    "2": {
+                        "semesters": {
+                            "4": {
+                                "type": "Batch",
+                                "batches": {
+                                    "1": 88
+                                }
+                            }
+                        }
+                    },
+                    "3": {
+                        "semesters": {
+                            "6": {
+                                "type": "Batch",
+                                "batches": {
+                                    "1": 89
+                                }
+                            }
+                        }
+                    },
+                    "4": {
+                        "semesters": {
+                            "8": {
+                                "type": "Batch",
+                                "batches": {
+                                    "1": 90
+                                }
+                            }
+                        }
+                    }
+                },
+                "ME": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "even-odd",
+                                "even": 100,
+                                "odd": 99
+                            }
+                        }
+                    },
+                    "2": {
+                        "semesters": {
+                            "4": {
+                                "type": "even-odd",
+                                "even": 102,
+                                "odd": 101
+                            }
+                        }
+                    },
+                    "3": {
+                        "semesters": {
+                            "6": {
+                                "type": "even-odd",
+                                "even": 104,
+                                "odd": 103
+                            }
+                        }
+                    },
+                    "4": {
+                        "semesters": {
+                            "8": {
+                                "type": "even-odd",
+                                "even": 106,
+                                "odd": 105
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        // DOM Elements
+        const programTabs = document.querySelectorAll('.program-tab');
+        const yearSelect = document.getElementById('year');
+        const branchSelect = document.getElementById('branch');
+        const semesterSelect = document.getElementById('semester');
+        const divisionGroup = document.getElementById('divisionGroup');
+        const divisionSelect = document.getElementById('division');
+        const viewButton = document.getElementById('viewButton');
+        const placeholderView = document.getElementById('placeholderView');
+        const timetableView = document.getElementById('timetableView');
+        const errorMessage = document.getElementById('errorMessage');
+        const timetableInfo = document.getElementById('timetableInfo');
+        const pageControls = document.getElementById('pageControls');
+        const pageInfo = document.getElementById('pageInfo');
+        const prevPageButton = document.getElementById('prevPage');
+        const nextPageButton = document.getElementById('nextPage');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const zoomControls = document.querySelectorAll('.zoom-btn');
+
+        // Current state
+        let currentProgram = 'Base';
+        let currentYear = '';
+        let currentBranch = '';
+        let currentSemester = '';
+        let currentDivision = '';
+        let currentPage = 1;
+        let currentZoom = 1.0;
+        let pdfDocument = null;
+        let totalPages = TOTAL_PAGES;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setupProgramTabs();
+            setupEventListeners();
+            updateYearOptions();
+            setupZoomControls();
+            checkAuth();
+        });
+
+        // Setup program tabs
+        function setupProgramTabs() {
+            programTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    programTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentProgram = tab.dataset.program;
+                    
+                    resetFilters();
+                    updateYearOptions();
+                    updateViewButtonState();
+                });
+            });
+        }
+
+        // Setup zoom controls
+        function setupZoomControls() {
+            zoomControls.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    zoomControls.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentZoom = btn.dataset.zoom === 'fit' ? 'fit' : parseFloat(btn.dataset.zoom);
+                    
+                    // Update PDF viewer if currently showing
+                    if (timetableView.style.display !== 'none') {
+                        showTimetablePage();
+                    }
+                });
+            });
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            yearSelect.addEventListener('change', () => {
+                currentYear = yearSelect.value;
+                updateBranchOptions();
+                updateViewButtonState();
+            });
+            
+            branchSelect.addEventListener('change', () => {
+                currentBranch = branchSelect.value;
+                updateSemesterOptions();
+                updateViewButtonState();
+            });
+            
+            semesterSelect.addEventListener('change', () => {
+                currentSemester = semesterSelect.value;
+                updateDivisionOptions();
+                updateViewButtonState();
+            });
+            
+            divisionSelect.addEventListener('change', () => {
+                currentDivision = divisionSelect.value;
+                updateViewButtonState();
+            });
+            
+            viewButton.addEventListener('click', viewTimetable);
+            
+            prevPageButton.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderPDFPage();
+                }
+            });
+            
+            nextPageButton.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderPDFPage();
+                }
+            });
+            
+            // Theme toggle
+            const themeToggle = document.querySelector('.theme-toggle');
+            if (themeToggle) {
+                themeToggle.addEventListener('click', toggleTheme);
+            }
+        }
+
+        // Reset all filters
+        function resetFilters() {
+            yearSelect.innerHTML = '<option value="">-- Select Year --</option>';
+            branchSelect.innerHTML = '<option value="">-- Select Branch --</option>';
+            semesterSelect.innerHTML = '<option value="">-- Select Semester --</option>';
+            divisionSelect.innerHTML = '<option value="">-- Select Division --</option>';
+            divisionGroup.style.display = 'none';
+            
+            currentYear = '';
+            currentBranch = '';
+            currentSemester = '';
+            currentDivision = '';
+            
+            yearSelect.disabled = false;
+            branchSelect.disabled = true;
+            semesterSelect.disabled = true;
+            divisionSelect.disabled = true;
+            
+            // Reset display
+            placeholderView.style.display = 'flex';
+            timetableView.style.display = 'none';
+            errorMessage.style.display = 'none';
+            pageControls.style.display = 'none';
+            timetableInfo.textContent = 'Select your program, year, branch, and semester to view timetable';
+            
+            // Clear any existing PDF
+            if (pdfDocument) {
+                pdfDocument.destroy();
+                pdfDocument = null;
+            }
+        }
+
+        // Update year options based on program
+        function updateYearOptions() {
+            const programData = timetableData[currentProgram];
+            yearSelect.innerHTML = '<option value="">-- Select Year --</option>';
+            
+            if (programData) {
+                const years = new Set();
+                for (const branch in programData) {
+                    for (const year in programData[branch]) {
+                        years.add(year);
+                    }
+                }
+                
+                Array.from(years).sort().forEach(year => {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = `Year ${year}`;
+                    yearSelect.appendChild(option);
+                });
+            }
+            
+            yearSelect.disabled = false;
+        }
+
+        // Update branch options based on program and year
+        function updateBranchOptions() {
+            const programData = timetableData[currentProgram];
+            branchSelect.innerHTML = '<option value="">-- Select Branch --</option>';
+            semesterSelect.innerHTML = '<option value="">-- Select Semester --</option>';
+            divisionSelect.innerHTML = '<option value="">-- Select Division --</option>';
+            divisionGroup.style.display = 'none';
+            
+            if (programData && currentYear) {
+                const branches = [];
+                for (const branch in programData) {
+                    if (programData[branch][currentYear]) {
+                        branches.push(branch);
+                    }
+                }
+                
+                branches.sort().forEach(branch => {
+                    const option = document.createElement('option');
+                    option.value = branch;
+                    
+                    // Show full branch names (changed AE to Agriculture Engineering)
+                    let branchName = branch;
+                    if (branch === 'AE') branchName = 'Agriculture Engineering';
+                    else if (branch === 'CE') branchName = 'Civil Engineering';
+                    else if (branch === 'CSE') branchName = 'Computer Science & Engineering';
+                    else if (branch === 'EC') branchName = 'Electronics & Communication';
+                    else if (branch === 'EE') branchName = 'Electrical Engineering';
+                    else if (branch === 'ME') branchName = 'Mechanical Engineering';
+                    else if (branch === 'FR') branchName = 'Forestry';
+                    
+                    option.textContent = `${branch} - ${branchName}`;
+                    branchSelect.appendChild(option);
+                });
+                
+                branchSelect.disabled = branches.length === 0;
+            } else {
+                branchSelect.disabled = true;
+            }
+            
+            semesterSelect.disabled = true;
+            divisionSelect.disabled = true;
+        }
+
+        // Update semester options based on program, year, and branch
+        function updateSemesterOptions() {
+            const programData = timetableData[currentProgram];
+            semesterSelect.innerHTML = '<option value="">-- Select Semester --</option>';
+            divisionSelect.innerHTML = '<option value="">-- Select Division --</option>';
+            divisionGroup.style.display = 'none';
+            
+            if (programData && currentYear && currentBranch && programData[currentBranch] && programData[currentBranch][currentYear]) {
+                const yearData = programData[currentBranch][currentYear];
+                const semesters = yearData.semesters;
+                
+                for (const semester in semesters) {
+                    const option = document.createElement('option');
+                    option.value = semester;
+                    option.textContent = `Semester ${semester}`;
+                    semesterSelect.appendChild(option);
+                }
+                
+                semesterSelect.disabled = false;
+            } else {
+                semesterSelect.disabled = true;
+            }
+            
+            divisionSelect.disabled = true;
+        }
+
+        // Update division options based on semester type
+        function updateDivisionOptions() {
+            const programData = timetableData[currentProgram];
+            divisionSelect.innerHTML = '<option value="">-- Select Division --</option>';
+            
+            if (programData && currentYear && currentBranch && currentSemester && 
+                programData[currentBranch][currentYear] && 
+                programData[currentBranch][currentYear].semesters[currentSemester]) {
+                
+                const semesterData = programData[currentBranch][currentYear].semesters[currentSemester];
+                
+                if (semesterData.type === 'even-odd') {
+                    divisionGroup.style.display = 'block';
+                    
+                    const evenOption = document.createElement('option');
+                    evenOption.value = 'even';
+                    evenOption.textContent = 'Even Semester';
+                    divisionSelect.appendChild(evenOption);
+                    
+                    const oddOption = document.createElement('option');
+                    oddOption.value = 'odd';
+                    oddOption.textContent = 'Odd Semester';
+                    divisionSelect.appendChild(oddOption);
+                    
+                    divisionSelect.disabled = false;
+                } else if (semesterData.type === 'Batch' && semesterData.batches) {
+                    divisionGroup.style.display = 'block';
+                    
+                    for (const batch in semesterData.batches) {
+                        const option = document.createElement('option');
+                        option.value = batch;
+                        option.textContent = `Batch ${batch}`;
+                        divisionSelect.appendChild(option);
+                    }
+                    
+                    divisionSelect.disabled = false;
+                } else {
+                    divisionGroup.style.display = 'none';
+                    divisionSelect.disabled = true;
+                }
+            } else {
+                divisionGroup.style.display = 'none';
+                divisionSelect.disabled = true;
+            }
+        }
+
+        // Update view button state
+        function updateViewButtonState() {
+            let isEnabled = false;
+            
+            if (currentProgram && currentYear && currentBranch && currentSemester) {
+                const programData = timetableData[currentProgram];
+                if (programData && programData[currentBranch] && programData[currentBranch][currentYear] &&
+                    programData[currentBranch][currentYear].semesters[currentSemester]) {
+                    
+                    const semesterData = programData[currentBranch][currentYear].semesters[currentSemester];
+                    
+                    if (semesterData.type === 'even-odd' && currentDivision) {
+                        isEnabled = true;
+                    } else if (semesterData.type === 'Batch' && currentDivision) {
+                        isEnabled = true;
+                    }
+                }
+            }
+            
+            viewButton.disabled = !isEnabled;
+        }
+
+        // View timetable
+        async function viewTimetable() {
+            const programData = timetableData[currentProgram];
+            
+            if (!programData || !currentYear || !currentBranch || !currentSemester) {
+                alert('Please select all required filters');
+                return;
+            }
+            
+            const semesterData = programData[currentBranch][currentYear].semesters[currentSemester];
+            
+            // Get page number based on type
+            let pageNumber = 1;
+            
+            if (semesterData.type === 'even-odd' && currentDivision) {
+                pageNumber = semesterData[currentDivision];
+            } else if (semesterData.type === 'Batch' && currentDivision && semesterData.batches) {
+                pageNumber = semesterData.batches[currentDivision];
+            }
+            
+            if (!pageNumber) {
+                showError('Timetable not found for selected options');
+                return;
+            }
+            
+            // Update current page
+            currentPage = pageNumber;
+            
+            // Update UI
+            placeholderView.style.display = 'none';
+            errorMessage.style.display = 'none';
+            timetableView.style.display = 'flex';
+            pageControls.style.display = 'flex';
+            
+            // Update info display
+            let branchName = currentBranch;
+            if (currentBranch === 'AE') branchName = 'Agriculture Engineering';
+            else if (currentBranch === 'CE') branchName = 'Civil Engineering';
+            else if (currentBranch === 'CSE') branchName = 'Computer Science & Engineering';
+            else if (currentBranch === 'EC') branchName = 'Electronics & Communication';
+            else if (currentBranch === 'EE') branchName = 'Electrical Engineering';
+            else if (currentBranch === 'ME') branchName = 'Mechanical Engineering';
+            else if (currentBranch === 'FR') branchName = 'Forestry';
+            
+            let divisionText = '';
+            if (semesterData.type === 'even-odd') {
+                divisionText = currentDivision === 'even' ? 'Even Semester' : 'Odd Semester';
+            } else if (semesterData.type === 'Batch') {
+                divisionText = `Batch ${currentDivision}`;
+            }
+            
+            timetableInfo.textContent = `${currentProgram} - ${branchName} - Year ${currentYear} - Sem ${currentSemester} - ${divisionText}`;
+            
+            // Show the timetable page
+            await showTimetablePage();
+        }
+
+        // Show timetable page using PDF.js
+        async function showTimetablePage() {
+            loadingOverlay.style.display = 'flex';
+            
+            try {
+                // Clear previous content
+                timetableView.innerHTML = '';
+                
+                // Load PDF if not already loaded
+                if (!pdfDocument) {
+                    // Set worker source
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                    
+                    // Load the PDF document
+                    const loadingTask = pdfjsLib.getDocument({
+                        url: PDF_FILENAME,
+                        cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+                        cMapPacked: true,
+                    });
+                    
+                    pdfDocument = await loadingTask.promise;
+                    totalPages = pdfDocument.numPages;
+                }
+                
+                // Render the specific page
+                await renderPDFPage();
+                
+            } catch (error) {
+                console.error('Error loading PDF:', error);
+                loadingOverlay.style.display = 'none';
+                showError(`Could not load PDF: ${error.message}. Please make sure '${PDF_FILENAME}' is in the same directory.`);
+            }
+        }
+
+        // Render PDF page
+        async function renderPDFPage() {
+            try {
+                if (!pdfDocument) return;
+                
+                // Get the page
+                const page = await pdfDocument.getPage(currentPage);
+                
+                // Calculate scale based on zoom setting
+                let scale = 1.5; // Default scale
+                const viewport = page.getViewport({ scale: 1 });
+                
+                if (currentZoom === 'fit') {
+                    // Fit to container width
+                    const containerWidth = timetableView.clientWidth - 40; // Account for padding
+                    scale = containerWidth / viewport.width;
+                } else {
+                    scale = currentZoom * 1.5; // Base scale of 1.5 for 100%
+                }
+                
+                // Create canvas
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.className = 'timetable-canvas';
+                
+                // Set canvas dimensions
+                const scaledViewport = page.getViewport({ scale });
+                canvas.height = scaledViewport.height;
+                canvas.width = scaledViewport.width;
+                
+                // Render PDF page to canvas
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: scaledViewport
+                };
+                
+                await page.render(renderContext).promise;
+                
+                // Clear and add canvas to view
+                timetableView.innerHTML = '';
+                timetableView.appendChild(canvas);
+                
+                // Update page controls
+                pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+                prevPageButton.disabled = currentPage <= 1;
+                nextPageButton.disabled = currentPage >= totalPages;
+                
+                // Hide loading overlay
+                loadingOverlay.style.display = 'none';
+                
+            } catch (error) {
+                console.error('Error rendering PDF page:', error);
+                loadingOverlay.style.display = 'none';
+                showError(`Could not load page ${currentPage}. ${error.message}`);
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            errorMessage.style.display = 'block';
+            errorMessage.querySelector('p').textContent = message;
+            placeholderView.style.display = 'none';
+            timetableView.style.display = 'none';
+            pageControls.style.display = 'none';
+        }
+
+        // Authentication functions
+        function checkAuth() {
+            const user = Auth ? Auth.getCurrentUser() : null;
+            
+            if (user) {
+                document.getElementById('welcome-message').style.display = 'flex';
+                document.getElementById('user-name').textContent = user.name || 'User';
+                document.getElementById('user-regno').textContent = user.registrationNumber || '';
+                document.getElementById('login-btn').style.display = 'none';
+                document.getElementById('logout-btn').style.display = 'flex';
+            } else {
+                document.getElementById('login-btn').style.display = 'flex';
+                document.getElementById('logout-btn').style.display = 'none';
+                document.getElementById('welcome-message').style.display = 'none';
+            }
+            
+            // Setup auth button events
+            document.getElementById('login-btn').addEventListener('click', () => {
+                window.location.href = 'login.html';
+            });
+            
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                if (Auth && Auth.logout) {
+                    Auth.logout();
+                }
+                checkAuth();
+            });
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            document.body.classList.toggle('light-theme');
+            localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-theme');
+        }
+    </script>
+    <script src="auth.js"></script>
+</body>
+</html>

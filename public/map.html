@@ -1,0 +1,1846 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="description" content="NERIST Campus Hub - Navigation, Marketplace, Lost & Found, Study Resources">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>NERIST Campus Hub - Campus Navigation</title>
+  <link rel="icon" href="feviconicon.png">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    /* ===== ONLY ESSENTIAL MAP STYLES HERE ===== */
+    
+    /* Map container base styles */
+    #map-container {
+      position: relative;
+      width: 100%;
+      height: 600px;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-md);
+    }
+    
+    #map {
+      height: 100%;
+      width: 100%;
+      background: var(--bg-secondary);
+    }
+    
+    /* Control Panel - Desktop */
+    .map-page-container {
+      display: flex;
+      gap: 20px;
+      min-height: calc(100vh - 180px);
+      padding: 20px 0;
+    }
+    
+    .map-sidebar {
+      flex: 0 0 400px;
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 25px;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-color);
+      overflow-y: auto;
+      max-height: 700px;
+    }
+    
+    .map-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Control Panel Styles */
+    #controlPanel {
+      margin-bottom: 25px;
+    }
+    
+    #controlPanel h2 {
+      margin-bottom: 20px;
+      color: var(--text-primary);
+      border-bottom: 3px solid var(--accent-primary);
+      padding-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .control-group {
+      margin-bottom: 20px;
+    }
+    
+    #controlPanel label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    #controlPanel select,
+    #controlPanel input {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      transition: var(--transition);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+    
+    #controlPanel select:focus,
+    #controlPanel input:focus {
+      border-color: var(--accent-primary);
+      outline: none;
+      background: var(--bg-card);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    
+    #controlPanel button {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    #calculateRoute {
+      background: var(--gradient-primary);
+      color: white;
+    }
+    
+    #calculateRoute:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    #locateBtn {
+      background: var(--accent-success);
+      color: white;
+    }
+    
+    #locateBtn:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    #clearRoute {
+      background: var(--accent-danger);
+      color: white;
+    }
+    
+    #clearRoute:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    /* Route Info */
+    #routeInfo {
+      margin-top: 25px;
+      padding: 20px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      border-left: 5px solid var(--accent-primary);
+      display: none;
+      animation: slideIn 0.4s ease;
+    }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .route-detail {
+      margin: 12px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      background: var(--bg-card);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    /* Search list */
+    #searchList {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin-top: 10px;
+      background: var(--bg-card);
+      display: none;
+    }
+    
+    .search-item {
+      padding: 15px;
+      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .search-item:hover {
+      background: var(--accent-primary);
+      color: white;
+      transform: translateX(8px);
+    }
+    
+    .search-item.selected {
+      background: var(--accent-primary);
+      color: white;
+      border-left: 5px solid var(--accent-secondary);
+    }
+    
+    .search-icon {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+    }
+    
+    /* Layer controls */
+    .layer-controls {
+      background: var(--bg-card);
+      padding: 20px;
+      border-radius: var(--radius-md);
+      margin-bottom: 20px;
+      border: 1px solid var(--border-color);
+    }
+    
+    .layer-controls h4 {
+      margin-bottom: 15px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .layer-toggle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 10px 0;
+    }
+    
+    .layer-toggle input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--accent-primary);
+    }
+    
+    /* Legend */
+    .legend-box {
+      background: var(--bg-card);
+      padding: 20px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+    
+    .legend-box h4 {
+      margin-bottom: 15px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin: 12px 0;
+    }
+    
+    .legend-color {
+      width: 25px;
+      height: 25px;
+      margin-right: 15px;
+      border-radius: 5px;
+      border: 2px solid white;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    /* Map labels */
+    .map-label {
+      font-weight: bold;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 4px 8px;
+      border-radius: 4px;
+      pointer-events: auto;
+      text-align: center;
+      border: 1px solid;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      z-index: 1000 !important;
+    }
+    
+    .building-label { color: #3498db; border-color: #3498db; }
+    .room-label { color: #27ae60; border-color: #27ae60; }
+    .department-label { color: #e74c3c; border-color: #e74c3c; }
+    .corridor-label { color: #9b59b6; border-color: #9b59b6; }
+    .road-label { color: #34495e; border-color: #34495e; }
+    
+    .label-hover {
+      transform: scale(1.1) !important;
+      z-index: 2500 !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+      border-width: 3px !important;
+    }
+    
+    .label-selected {
+      background: #f39c12 !important;
+      color: white !important;
+      border-color: #d68910 !important;
+      box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.3);
+      z-index: 3000 !important;
+    }
+    
+    /* Loading overlay */
+    #loadingOverlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--gradient-primary);
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.5s;
+      border-radius: var(--radius-lg);
+    }
+    
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 25px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Zoom indicator */
+    .zoom-indicator {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      z-index: 1000;
+      pointer-events: none;
+      border: none;
+    }
+    
+    /* Label popup */
+    .label-popup {
+      position: absolute;
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      z-index: 4000;
+      max-width: 280px;
+      font-size: 14px;
+      border-left: 4px solid;
+      pointer-events: auto;
+    }
+    
+    /* ===== MOBILE RESPONSIVE STYLES ===== */
+    @media (max-width: 768px) {
+      .map-page-container {
+        flex-direction: column;
+        padding: 0;
+        gap: 0;
+        min-height: calc(100vh - 60px);
+      }
+      
+      .map-sidebar {
+        flex: none;
+        width: 100%;
+        max-height: none;
+        border-radius: 0;
+        box-shadow: none;
+        border-left: none;
+        border-right: none;
+        padding: 20px 16px;
+        margin: 0;
+      }
+      
+      .map-content {
+        width: 100%;
+        padding: 0 16px 20px;
+      }
+      
+      #map-container {
+        height: 50vh;
+        min-height: 400px;
+        margin: 0;
+        border-radius: 16px;
+      }
+      
+      .button-group {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .button-group button {
+        width: 100%;
+        padding: 14px;
+        font-size: 15px;
+      }
+      
+      #controlPanel h2 {
+        font-size: 20px;
+        margin-bottom: 16px;
+      }
+      
+      .control-group {
+        margin-bottom: 16px;
+      }
+      
+      #controlPanel select,
+      #controlPanel input {
+        padding: 14px;
+        font-size: 16px;
+      }
+      
+      .layer-controls,
+      .legend-box {
+        padding: 16px;
+        margin-top: 16px;
+      }
+      
+      .map-content h1 {
+        font-size: 22px;
+        margin-bottom: 8px;
+      }
+      
+      .map-content p {
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      
+      .map-label {
+        font-size: 11px !important;
+        padding: 3px 6px !important;
+        max-width: 130px !important;
+      }
+      
+      .label-popup {
+        max-width: 240px;
+        padding: 12px;
+        left: 50% !important;
+        transform: translateX(-50%);
+        top: auto !important;
+        bottom: 20px !important;
+      }
+      
+      .leaflet-control-zoom {
+        display: none !important;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .map-sidebar {
+        padding: 16px;
+      }
+      
+      #map-container {
+        height: 45vh;
+        min-height: 350px;
+      }
+      
+      .map-content h1 {
+        font-size: 20px;
+      }
+      
+      .map-label {
+        font-size: 10px !important;
+        padding: 2px 5px !important;
+        max-width: 110px !important;
+      }
+    }
+    
+    /* iOS Safari fix */
+    @supports (-webkit-touch-callout: none) {
+      .map-page-container {
+        min-height: -webkit-fill-available;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-left">
+    <a href="/index.html" class="logo">
+      <span class="logo-icon">🧑‍🎓</span>
+      <span>NERIST Hub</span>
+    </a>
+    
+    <div class="menu">
+      <span><i class="fas fa-search"></i> Lost & Found ▾</span>
+      <div class="dropdown">
+        <a href="/lost.html"><i class="fas fa-question-circle"></i> Lost Items</a>
+        <a href="/found.html"><i class="fas fa-check-circle"></i> Found Items</a>
+      </div>
+    </div>
+
+    <div class="menu">
+      <span><i class="fas fa-store"></i> Marketplace ▾</span>
+      <div class="dropdown">
+        <a href="/marketplace.html"><i class="fas fa-tag"></i> Sell Items</a>
+        <a href="/buy-requests.html"><i class="fas fa-shopping-cart"></i> Buy Requests</a>
+      </div>
+    </div>
+
+    <div class="menu">
+      <span><i class="fas fa-file-alt"></i> Study ▾</span>
+      <div class="dropdown">
+        <a href="/questionpaper.html"><i class="fas fa-book"></i> Question Papers</a>
+        <a href="/upload-paper.html"><i class="fas fa-upload"></i> Upload Papers</a>
+        <a href="/timetable.html"><i class="fas fa-calendar-alt"></i> TimeTable</a>
+      </div>
+    </div>
+    
+    <!-- NEW: Teacher Directory Menu -->
+    <div class="menu">
+      <span><i class="fas fa-chalkboard-teacher"></i> Faculty ▾</span>
+      <div class="dropdown">
+        <a href="/teachers.html"><i class="fas fa-users"></i> Teacher Directory</a>
+        <a href="/teachers.html#staff-directory"><i class="fas fa-search"></i> Search Faculty</a>
+      </div>
+    </div>
+    
+    <div class="menu">
+      <span><i class="fa-solid fa-briefcase"></i></i> Services ▾</span>
+      <div class="dropdown">
+        <a href="/rentals.html"><i class="fa-solid fa-briefcase"></i> Services</a>
+      </div>
+    </div>
+    
+    <div class="menu">
+      <span><i class="fas fa-map"></i> Navigation ▾</span>
+      <div class="dropdown">
+        <a href="/map.html"><i class="fas fa-location-dot"></i> Campus Map</a>
+      </div>
+    </div>
+  </div>
+  
+  <!-- AUTH SECTION IN NAVBAR -->
+  <div class="nav-right">
+    <div id="user-info" class="user-info">
+      <span id="welcome-message" class="welcome-message" style="display: none;">
+        <i class="fas fa-user-circle"></i>
+        <span id="user-name"></span> (<span id="user-regno"></span>)
+      </span>
+      <button id="login-btn" class="auth-btn login-btn">
+        <i class="fas fa-sign-in-alt"></i>
+        <span>Login / Register</span>
+      </button>
+      <button id="logout-btn" class="auth-btn logout-btn" style="display: none;">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </button>
+    </div>
+    
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <i class="fas fa-moon"></i>
+      <span>Theme</span>
+    </button>
+  </div>
+</nav>
+
+  <!-- MAP PAGE CONTENT -->
+  <div class="container map-page-container">
+    <!-- Sidebar with controls -->
+    <div class="map-sidebar">
+      <div id="controlPanel">
+        <h2><i class="fas fa-map-marked-alt"></i> Campus Navigation</h2>
+        
+        <div class="control-group">
+          <label for="startPoint"><i class="fas fa-location-arrow"></i> Start Point</label>
+          <select id="startPoint">
+            <option value="current">📍 My Current Location</option>
+            <option value="entry">🚪 Main Entry Point</option>
+            <option value="select">🗺️ Select on Map</option>
+          </select>
+        </div>
+        
+        <div class="control-group">
+          <label for="searchInput"><i class="fas fa-search"></i> Search Campus</label>
+          <input type="text" id="searchInput" placeholder="Search buildings, rooms, departments...">
+          <div id="searchList"></div>
+        </div>
+        
+        <div class="button-group">
+          <button id="calculateRoute"><i class="fas fa-route"></i> Get Route</button>
+          <button id="locateBtn"><i class="fas fa-crosshairs"></i> Locate Me</button>
+          <button id="clearRoute"><i class="fas fa-times"></i> Clear</button>
+        </div>
+        
+        <div id="routeInfo">
+          <h4><i class="fas fa-info-circle"></i> Route Details</h4>
+          <div class="route-detail">
+            <span><i class="fas fa-ruler"></i> Distance:</span>
+            <span id="routeDistance">-</span>
+          </div>
+          <div class="route-detail">
+            <span><i class="fas fa-clock"></i> Time:</span>
+            <span id="routeTime">-</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Layer Controls -->
+      <div class="layer-controls">
+        <h4><i class="fas fa-layer-group"></i> Map Layers</h4>
+        <div class="layer-toggle">
+          <input type="checkbox" id="toggleBuildings" checked>
+          <label for="toggleBuildings">Buildings</label>
+        </div>
+        <div class="layer-toggle">
+          <input type="checkbox" id="toggleRooms" checked>
+          <label for="toggleRooms">Rooms</label>
+        </div>
+        <div class="layer-toggle">
+          <input type="checkbox" id="toggleDepartments" checked>
+          <label for="toggleDepartments">Departments</label>
+        </div>
+        <div class="layer-toggle">
+          <input type="checkbox" id="toggleRoads" checked>
+          <label for="toggleRoads">Roads</label>
+        </div>
+        <div class="layer-toggle">
+          <input type="checkbox" id="toggleLabels" checked>
+          <label for="toggleLabels">Labels</label>
+        </div>
+      </div>
+      
+      <!-- Legend -->
+      <div class="legend-box">
+        <h4><i class="fas fa-key"></i> Map Legend</h4>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #3498db;"></div>
+          <span>Academic Buildings</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #2ecc71;"></div>
+          <span>Rooms</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #e74c3c;"></div>
+          <span>Departments</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #9b59b6;"></div>
+          <span>Corridors</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #34495e;"></div>
+          <span>Main Roads</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background-color: #f39c12;"></div>
+          <span>Route</span>
+        </div>
+      </div>
+      
+      <!-- Zoom Level Info -->
+      <div class="legend-box" style="margin-top: 20px;">
+        <h4><i class="fas fa-search-plus"></i> Zoom Levels</h4>
+        <div class="legend-item">
+          <i class="fas fa-minus-circle" style="color: #666;"></i>
+          <span>Zoom 15-16: Building labels only</span>
+        </div>
+        <div class="legend-item">
+          <i class="fas fa-search" style="color: #e74c3c;"></i>
+          <span>Zoom 17: Department labels</span>
+        </div>
+        <div class="legend-item">
+          <i class="fas fa-search-plus" style="color: #2ecc71;"></i>
+          <span>Zoom 18+: All room labels</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Map Content -->
+    <div class="map-content">
+      <h1><i class="fas fa-map-marked-alt"></i> Campus Navigation System</h1>
+      <p>Find your way around the NERIST campus with our interactive map. Search for buildings, rooms, departments, and get optimal routes.</p>
+      
+      <!-- Loading Overlay -->
+      <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <h3 style="color: white;">Loading Campus Map</h3>
+        <p id="loadingStatus" style="color: white;">Initializing...</p>
+      </div>
+      
+      <!-- Map Container -->
+      <div id="map-container">
+        <div id="map"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+ <footer class="footer">
+  <div class="container">
+    <div class="footer-content">
+      <!-- Brand Section -->
+      <div class="footer-section">
+        <h3>NERIST Campus Hub</h3>
+        <div class="developer-credit">
+          <p>Unofficial student platform for NERIST campus services and resources.</p>
+          <div class="developer-name">
+            <i class="fas fa-code"></i>
+            Developed by Abhinav Kumar
+            <span style="font-size: 12px; color: var(--text-secondary);">(BTech 1st Year CSE)</span>
+          </div>
+        </div>
+        <div class="social-links">
+          <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+          <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+          <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+          <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+      
+      <!-- Quick Links Section -->
+      <div class="footer-section">
+        <h3>Quick Links</h3>
+        <ul class="footer-links">
+          <li><a href="/lost.html"><i class="fas fa-arrow-right"></i> Lost & Found</a></li>
+          <li><a href="/marketplace.html"><i class="fas fa-arrow-right"></i> Marketplace</a></li>
+          <li><a href="/questionpaper.html"><i class="fas fa-arrow-right"></i> Question Papers</a></li>
+          <li><a href="/rentals.html"><i class="fas fa-arrow-right"></i> Services</a></li>
+          <li><a href="/map.html"><i class="fas fa-arrow-right"></i> Campus Map</a></li>
+          <li><a href="/timetable.html"><i class="fas fa-arrow-right"></i> Timetable</a></li>
+        </ul>
+      </div>
+      
+      <!-- Contact & Feedback Section -->
+      <div class="footer-section">
+        <h3>Get in Touch</h3>
+        <div class="contact-info">
+          <div class="contact-item">
+            <i class="fas fa-envelope"></i>
+            <span>abhinavkumar53210@gmail.com</span>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-phone-alt"></i>
+            <span>Campus Help Desk</span>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>NERIST, Nirjuli - 791109</span>
+          </div>
+        </div>
+        
+        <!-- Feedback Form Link - Styled as Button -->
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSe1XYRtRNLUKZoS1a44XJWvRnq5Amk0UD036FmEJMXb974_VA/viewform?usp=header" class="feedback-link">
+          <i class="fas fa-comment-dots"></i>
+          Give Feedback
+        </a>
+      </div>
+    </div>
+    
+    <!-- Footer Bottom -->
+    <div class="footer-bottom">
+      <p>
+        © 2026 NERIST Campus Hub. 
+        Made with <span class="heart"><i class="fas fa-heart"></i></span> 
+        for students.
+      </p>
+      <div class="footer-bottom-links">
+        <a href="/privacy.html"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+        <a href="/terms.html"><i class="fas fa-file-alt"></i> Terms of Use</a>
+        <a href="/contact.html"><i class="fas fa-headset"></i> Contact Us</a>
+      </div>
+    </div>
+  </div>
+</footer>
+  
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="auth.js"></script>
+  <script src="app.js"></script>
+  
+  <!-- AUTH UI FIX FOR MAP PAGE -->
+  <script>
+    (function() {
+      // Function to update auth UI
+      function updateAuthUI() {
+        const user = window.Auth ? window.Auth.getCurrentUser() : null;
+        const welcomeMessage = document.getElementById('welcome-message');
+        const userName = document.getElementById('user-name');
+        const userRegno = document.getElementById('user-regno');
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        
+        if (user) {
+          if (welcomeMessage) {
+            welcomeMessage.style.display = 'flex';
+            if (userName) userName.textContent = user.name || 'User';
+            if (userRegno) userRegno.textContent = user.registrationNumber || '';
+          }
+          if (loginBtn) loginBtn.style.display = 'none';
+          if (logoutBtn) logoutBtn.style.display = 'flex';
+        } else {
+          if (welcomeMessage) welcomeMessage.style.display = 'none';
+          if (loginBtn) loginBtn.style.display = 'flex';
+          if (logoutBtn) logoutBtn.style.display = 'none';
+        }
+      }
+      
+      // Set up event listeners for auth buttons
+      function setupAuthListeners() {
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        
+        if (loginBtn) {
+          loginBtn.addEventListener('click', function() {
+            window.location.href = 'login.html';
+          });
+        }
+        
+        if (logoutBtn) {
+          logoutBtn.addEventListener('click', function() {
+            if (window.Auth) {
+              window.Auth.logout();
+            }
+          });
+        }
+      }
+      
+      // Run immediately
+      updateAuthUI();
+      setupAuthListeners();
+      
+      // Run after various delays to ensure scripts are loaded
+      setTimeout(updateAuthUI, 50);
+      setTimeout(updateAuthUI, 100);
+      setTimeout(updateAuthUI, 200);
+      setTimeout(updateAuthUI, 300);
+      setTimeout(updateAuthUI, 500);
+      setTimeout(updateAuthUI, 1000);
+      
+      // Listen for auth state changes
+      window.addEventListener('authStateChanged', updateAuthUI);
+      
+      // Also run on load
+      window.addEventListener('load', function() {
+        updateAuthUI();
+        setupAuthListeners();
+      });
+      
+      // Run on DOMContentLoaded
+      document.addEventListener('DOMContentLoaded', function() {
+        updateAuthUI();
+        setupAuthListeners();
+      });
+    })();
+  </script>
+  
+  <script>
+    // ============================================
+    // GLOBAL VARIABLES
+    // ============================================
+    let currentLocation = null;
+    let selectedLocation = null;
+    let currentRoute = null;
+    let searchDatabase = [];
+    let labelDatabase = [];
+    let labelLayers = [];
+    
+    // Layer storage
+    let buildingLayers = [];
+    let roomLayers = [];
+    let departmentLayers = [];
+    let roadLayers = [];
+    let corridorLayers = [];
+
+    // ============================================
+    // MAP INITIALIZATION
+    // ============================================
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize map with viewport checking
+      const isMobile = window.innerWidth <= 768;
+      const defaultZoom = isMobile ? 16 : 17;
+      
+      const map = L.map('map').setView([27.131, 93.744], defaultZoom);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 22,
+        minZoom: 15
+      }).addTo(map);
+      
+      // Store map globally for app.js to access
+      window.campusMap = map;
+      
+      // Force map to recalculate size on mobile
+      setTimeout(() => {
+        map.invalidateSize();
+        console.log('Map size invalidated on init');
+      }, 300);
+      
+      // Initialize all map features
+      initializeMapFeatures(map);
+    });
+
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    function updateLoadingStatus(status) {
+      const loadingStatus = document.getElementById('loadingStatus');
+      if (loadingStatus) loadingStatus.textContent = status;
+    }
+    
+    function getColorForType(type) {
+      const colors = {
+        'building': '#3498db',
+        'department': '#e74c3c',
+        'room': '#2ecc71',
+        'corridor': '#9b59b6',
+        'road': '#34495e'
+      };
+      return colors[type] || '#7f8c8d';
+    }
+    
+    function getIconForType(type) {
+      const icons = {
+        'building': 'fas fa-building',
+        'department': 'fas fa-university',
+        'room': 'fas fa-door-closed',
+        'corridor': 'fas fa-walking',
+        'road': 'fas fa-road'
+      };
+      return icons[type] || 'fas fa-map-marker-alt';
+    }
+    
+    function extractNameFromProperties(properties, filename, type) {
+      if (!properties) {
+        return filename.replace('.geojson', '').replace(/_/g, ' ');
+      }
+      
+      const propNames = ['ROOM NO.', 'ROOM_NO', 'ROOM NO', 'ROOM', 'NAME', 'name', 'LABEL', 'label', 'NUMBER', 'number'];
+      
+      for (const propName of propNames) {
+        if (properties[propName]) {
+          let name = String(properties[propName]);
+          
+          if (type === 'room' && filename === 'AGRI ROOM.geojson') {
+            name = name.replace(/LADIE'S/i, 'LADIES').replace(/BOY'S/i, 'BOYS');
+            if (properties.FLOOR !== undefined) {
+              name = `F${properties.FLOOR} - ${name}`;
+            }
+          }
+          
+          if (filename === 'DB ROOM.geojson' && properties.FLOOR !== undefined) {
+            name = `F${properties.FLOOR} - ${name}`;
+          }
+          
+          if (filename === 'DEPT ROOM.geojson') {
+            if (name.includes('ROOM-')) {
+              name = name.replace('ROOM-', 'Room ');
+            } else if (name.includes('ROOM ')) {
+              name = name.replace('ROOM ', 'Room ');
+            }
+            if (properties.FLOOR !== undefined && !name.includes('F' + properties.FLOOR)) {
+              name = `F${properties.FLOOR} - ${name}`;
+            }
+          }
+          
+          if (filename === 'MECHANICAL ROOMS.geojson' && properties.FLOOR !== undefined) {
+            name = `F${properties.FLOOR} - ${name}`;
+          }
+          
+          if (filename === 'ROOM ACADEMIC.geojson' && properties.ROOM_NO) {
+            name = properties.ROOM_NO;
+            if (properties.FLOOR !== undefined) {
+              name = `F${properties.FLOOR} - ${name}`;
+            }
+          }
+          
+          if (filename === 'FORESTRY ROOMS.geojson') {
+            if (properties['ROOM TYPE']) {
+              name = `${name} (${properties['ROOM TYPE']})`;
+            }
+            if (properties.FLOOR !== undefined) {
+              name = `F${properties.FLOOR} - ${name}`;
+            }
+          }
+          
+          return name;
+        }
+      }
+      
+      if (type === 'department') {
+        if (properties.DEPT) return properties.DEPT;
+        if (properties.DEPARTMENT) return properties.DEPARTMENT;
+        if (properties.BUILDING) return properties.BUILDING;
+      }
+      
+      if (type === 'building') {
+        if (properties.BUILDING) return properties.BUILDING;
+        if (properties.NAME) return properties.NAME;
+      }
+      
+      return filename.replace('.geojson', '').replace(/_/g, ' ');
+    }
+    
+    function getBuildingNameForRoom(filename, properties) {
+      const fileBuildingMap = {
+        'MECHANICAL ROOMS.geojson': 'Mechanical Dept',
+        'AGRI ROOM.geojson': 'Agriculture Dept',
+        'FORESTRY ROOMS.geojson': 'Forestry Dept',
+        'DB ROOM.geojson': 'Degree Block',
+        'DEPT ROOM.geojson': 'Department Block',
+        'ROOM ACADEMIC.geojson': 'Academic Block'
+      };
+      
+      let buildingName = fileBuildingMap[filename];
+      
+      if (!buildingName && properties) {
+        if (properties.BUILDING) buildingName = properties.BUILDING;
+        else if (properties.DEPT) buildingName = properties.DEPT;
+        else if (properties.DEPARTMENT) buildingName = properties.DEPARTMENT;
+      }
+      
+      if (!buildingName) {
+        buildingName = filename.replace('.geojson', '')
+          .replace(' ROOMS', ' Dept')
+          .replace(' ROOM', '')
+          .replace('_', ' ');
+      }
+      
+      return buildingName;
+    }
+
+    // ============================================
+    // LABEL MANAGEMENT SYSTEM
+    // ============================================
+    function createLabel(name, type, latlng, properties = {}, filename = '') {
+      const color = getColorForType(type);
+      const labelClass = `${type}-label`;
+      
+      let displayName = name;
+      let tooltipText = name;
+      
+      if (type === 'room') {
+        const buildingName = getBuildingNameForRoom(filename, properties);
+        const buildingAbbr = buildingName.split(' ')
+          .map(word => word.charAt(0))
+          .join('')
+          .toUpperCase()
+          .substring(0, 3);
+        
+        displayName = `${buildingAbbr}: ${name}`;
+        tooltipText = `${name}\n${buildingName}`;
+        
+        if (properties.FLOOR !== undefined) {
+          tooltipText += `\nFloor: ${properties.FLOOR}`;
+        }
+        
+        if (properties['ROOM TYPE']) {
+          tooltipText += `\nType: ${properties['ROOM TYPE']}`;
+        }
+      }
+      
+      const labelIcon = L.divIcon({
+        html: `<div class="map-label ${labelClass}" 
+                     data-label-name="${displayName}" 
+                     data-label-type="${type}"
+                     title="${tooltipText.replace(/\n/g, '&#10;')}">
+                ${displayName}
+              </div>`,
+        className: `custom-label ${type}-label-icon`,
+        iconSize: [220, 45],
+        iconAnchor: [110, 22],
+        popupAnchor: [0, -22]
+      });
+      
+      const labelMarker = L.marker(latlng, {
+        icon: labelIcon,
+        zIndexOffset: 1000,
+        interactive: true,
+        title: tooltipText
+      });
+      
+      labelMarker.on('click', function(e) {
+        highlightLabel(labelMarker, displayName, type);
+        showLabelPopup(e.latlng, displayName, type, properties, filename);
+      });
+      
+      labelMarker.on('mouseover', function(e) {
+        const labelEl = this.getElement();
+        if (labelEl) {
+          const mapLabel = labelEl.querySelector('.map-label');
+          if (mapLabel) mapLabel.classList.add('label-hover');
+        }
+      });
+      
+      labelMarker.on('mouseout', function(e) {
+        const labelEl = this.getElement();
+        if (labelEl) {
+          const mapLabel = labelEl.querySelector('.map-label');
+          if (mapLabel) mapLabel.classList.remove('label-hover');
+        }
+      });
+      
+      const labelData = {
+        id: `label_${labelDatabase.length}`,
+        name: displayName,
+        originalName: name,
+        fullName: tooltipText,
+        type: type,
+        category: type.charAt(0).toUpperCase() + type.slice(1),
+        marker: labelMarker,
+        latlng: latlng,
+        properties: properties,
+        filename: filename,
+        building: type === 'room' ? getBuildingNameForRoom(filename, properties) : null,
+        floor: properties.FLOOR
+      };
+      
+      labelDatabase.push(labelData);
+      
+      searchDatabase.push({
+        id: `search_${searchDatabase.length}`,
+        name: displayName,
+        originalName: name,
+        fullName: tooltipText,
+        type: type,
+        category: type.charAt(0).toUpperCase() + type.slice(1),
+        marker: labelMarker,
+        latlng: latlng,
+        color: color,
+        icon: getIconForType(type),
+        filename: filename,
+        isLabel: true,
+        properties: properties,
+        building: type === 'room' ? getBuildingNameForRoom(filename, properties) : null,
+        floor: properties.FLOOR
+      });
+      
+      labelLayers.push(labelMarker);
+      return labelMarker;
+    }
+    
+    function updateLabelVisibility() {
+      const map = window.campusMap;
+      if (!map) return;
+      
+      const zoom = map.getZoom();
+      
+      const labelZoomRules = {
+        building: { min: 16, max: 22, fontSize: 14 },
+        department: { min: 17, max: 22, fontSize: 13 },
+        room: { min: 18, max: 22, fontSize: 12 },
+        corridor: { min: 19, max: 22, fontSize: 11 },
+        road: { min: 17, max: 22, fontSize: 11 }
+      };
+      
+      labelLayers.forEach(label => {
+        const labelElement = label.getElement();
+        if (!labelElement) return;
+        
+        const labelDiv = labelElement.querySelector('.map-label');
+        if (!labelDiv) return;
+        
+        const type = labelDiv.getAttribute('data-label-type');
+        const rules = labelZoomRules[type];
+        
+        if (!rules) {
+          labelDiv.style.display = 'block';
+          return;
+        }
+        
+        if (zoom < rules.min || zoom > rules.max) {
+          labelDiv.style.display = 'none';
+          label.setZIndexOffset(-1000);
+        } else {
+          labelDiv.style.display = 'block';
+          label.setZIndexOffset(1000);
+          const fontSize = rules.fontSize + Math.max(0, zoom - rules.min);
+          labelDiv.style.fontSize = `${Math.min(fontSize, 16)}px`;
+          labelDiv.style.padding = `${Math.max(3, zoom - 16)}px ${Math.max(6, zoom - 15)}px`;
+        }
+      });
+      
+      const zoomIndicator = document.getElementById('zoomIndicator');
+      if (zoomIndicator) {
+        zoomIndicator.textContent = `Zoom: ${zoom}`;
+      }
+    }
+    
+    function highlightLabel(labelMarker, name, type) {
+      labelLayers.forEach(l => {
+        const el = l.getElement();
+        if (el) {
+          const mapLabel = el.querySelector('.map-label');
+          if (mapLabel) mapLabel.classList.remove('label-selected');
+        }
+      });
+      
+      const labelEl = labelMarker.getElement();
+      if (labelEl) {
+        const mapLabel = labelEl.querySelector('.map-label');
+        if (mapLabel) mapLabel.classList.add('label-selected');
+      }
+      
+      window.campusMap.setView(labelMarker.getLatLng(), Math.max(window.campusMap.getZoom(), 19));
+    }
+    
+    function showLabelPopup(latlng, name, type, properties, filename) {
+      const color = getColorForType(type);
+      const icon = getIconForType(type);
+      
+      const existingPopup = document.querySelector('.label-popup');
+      if (existingPopup) existingPopup.remove();
+      
+      const popup = document.createElement('div');
+      popup.className = 'label-popup';
+      popup.style.borderLeftColor = color;
+      popup.style.position = 'absolute';
+      
+      const pixelPoint = window.campusMap.latLngToContainerPoint(latlng);
+      popup.style.left = (pixelPoint.x + 15) + 'px';
+      popup.style.top = (pixelPoint.y - 100) + 'px';
+      
+      let details = '';
+      if (properties) {
+        if (properties.ROOM_NO || properties['ROOM NO.'] || properties['ROOM NO']) {
+          const roomNo = properties.ROOM_NO || properties['ROOM NO.'] || properties['ROOM NO'];
+          details += `<p><strong>Room No:</strong> ${roomNo}</p>`;
+        }
+        if (properties.BUILDING) details += `<p><strong>Building:</strong> ${properties.BUILDING}</p>`;
+        if (properties.DEPT) details += `<p><strong>Department:</strong> ${properties.DEPT}</p>`;
+        if (properties.FLOOR !== undefined) details += `<p><strong>Floor:</strong> ${properties.FLOOR}</p>`;
+        if (properties['ROOM TYPE']) details += `<p><strong>Type:</strong> ${properties['ROOM TYPE']}</p>`;
+      }
+      
+      popup.innerHTML = `
+        <h4 style="color: ${color}; margin: 0 0 5px 0;">
+          <i class="${icon}"></i> ${name}
+        </h4>
+        <p style="margin: 0 0 3px 0;"><strong>Type:</strong> ${type}</p>
+        ${details}
+        <p style="margin: 0 0 10px 0; font-size: 12px; color: #666;">Click to search or get directions</p>
+        <div style="display: flex; gap: 5px;">
+          <button onclick="window.searchForLabel('${name.replace(/'/g, "\\'")}')" 
+                  style="background: ${color}; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+            <i class="fas fa-search"></i> Search
+          </button>
+          <button onclick="window.centerOnLabel('${name.replace(/'/g, "\\'")}')" 
+                  style="background: #2ecc71; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+            <i class="fas fa-crosshairs"></i> Center
+          </button>
+        </div>
+      `;
+      
+      const mapContainer = document.getElementById('map-container');
+      if (mapContainer) {
+        mapContainer.appendChild(popup);
+      }
+      
+      const closePopup = function(e) {
+        if (!popup.contains(e.target)) {
+          popup.remove();
+          window.campusMap.off('click', closePopup);
+        }
+      };
+      
+      setTimeout(() => window.campusMap.on('click', closePopup), 100);
+    }
+
+    // ============================================
+    // GEOJSON LOADER
+    // ============================================
+    async function loadGeoJSONFile(filename, type, color) {
+      const url = `/geojson/${filename}`;
+      const map = window.campusMap;
+      
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          console.warn(`⚠️ File not found: ${filename}`);
+          return { success: false, layer: null, features: 0 };
+        }
+        
+        const data = await response.json();
+        const features = data.features || [];
+        
+        const layer = L.geoJSON(data, {
+          style: {
+            fillColor: color,
+            weight: type === 'road' ? 3 : 2,
+            opacity: 1,
+            color: color,
+            fillOpacity: type === 'road' ? 0 : 0.6,
+            dashArray: type === 'corridor' ? '5,5' : null
+          },
+          onEachFeature: function(feature, layer) {
+            const name = extractNameFromProperties(feature.properties, filename, type);
+            
+            layer.bindPopup(`
+              <div style="padding: 15px; min-width: 220px;">
+                <h4 style="margin: 0 0 10px 0; color: ${color}; border-bottom: 2px solid ${color}; padding-bottom: 5px;">
+                  <i class="${getIconForType(type)}"></i> ${name}
+                </h4>
+                <p><strong>Type:</strong> ${type}</p>
+                <p><strong>File:</strong> ${filename}</p>
+                ${feature.properties ? Object.entries(feature.properties).map(([key, value]) => 
+                  `<p><strong>${key}:</strong> ${value}</p>`
+                ).join('') : ''}
+                <button onclick="window.centerOnLayer(this)" 
+                        data-lat="${layer.getBounds ? layer.getBounds().getCenter().lat : 27.131}" 
+                        data-lng="${layer.getBounds ? layer.getBounds().getCenter().lng : 93.744}"
+                        style="background: ${color}; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-top: 10px; width: 100%; font-weight: bold;">
+                  <i class="fas fa-crosshairs"></i> Center Here
+                </button>
+              </div>
+            `);
+            
+            const featureData = {
+              id: `${type}_${searchDatabase.length}`,
+              name: name,
+              originalName: name,
+              type: type,
+              category: type.charAt(0).toUpperCase() + type.slice(1),
+              layer: layer,
+              color: color,
+              icon: getIconForType(type),
+              filename: filename,
+              properties: feature.properties || {},
+              isLabel: false
+            };
+            
+            if (layer.getBounds && layer.getBounds().isValid()) {
+              featureData.latlng = layer.getBounds().getCenter();
+              const labelMarker = createLabel(name, type, featureData.latlng, feature.properties || {}, filename);
+              labelMarker.addTo(map);
+            }
+            
+            searchDatabase.push(featureData);
+            
+            const layerInfo = { layer };
+            if (type === 'building') buildingLayers.push(layerInfo);
+            else if (type === 'room') roomLayers.push(layerInfo);
+            else if (type === 'department') departmentLayers.push(layerInfo);
+            else if (type === 'road') roadLayers.push(layerInfo);
+            else if (type === 'corridor') corridorLayers.push(layerInfo);
+            
+            console.log(`📝 Loaded ${type}: ${name} from ${filename}`);
+          }
+        }).addTo(map);
+        
+        return { success: true, layer: layer, features: features.length };
+        
+      } catch (error) {
+        console.error(`❌ ERROR loading ${filename}:`, error);
+        return { success: false, layer: null, features: 0 };
+      }
+    }
+
+    // ============================================
+    // LOAD ALL GEOJSON FILES
+    // ============================================
+    async function loadAllGeoJSONFiles() {
+      updateLoadingStatus('Loading campus data...');
+      
+      const geoFiles = [
+        { filename: 'BUILDING.geojson', type: 'building', color: '#3498db' },
+        { filename: 'CSE DEPT.geojson', type: 'department', color: '#e74c3c' },
+        { filename: 'MECHANICAL.geojson', type: 'department', color: '#e74c3c' },
+        { filename: 'AGRI.geojson', type: 'department', color: '#e74c3c' },
+        { filename: 'DEGREE BLOCK.geojson', type: 'department', color: '#e74c3c' },
+        { filename: 'DEPT OF FORESTRY.geojson', type: 'department', color: '#e74c3c' },
+        { filename: 'ROOM ACADEMIC.geojson', type: 'room', color: '#2ecc71' },
+        { filename: 'FORESTRY ROOMS.geojson', type: 'room', color: '#2ecc71' },
+        { filename: 'MECHANICAL ROOMS.geojson', type: 'room', color: '#2ecc71' },
+        { filename: 'AGRI ROOM.geojson', type: 'room', color: '#2ecc71' },
+        { filename: 'DB ROOM.geojson', type: 'room', color: '#2ecc71' },
+        { filename: 'DEPT ROOM.geojson', type: 'room', color: '#2ecc71' },
+        { filename: 'ROAD.geojson', type: 'road', color: '#34495e' },
+        { filename: 'CORRIDOR.geojson', type: 'corridor', color: '#9b59b6' }
+      ];
+      
+      let loadedCount = 0;
+      let totalFeatures = 0;
+      
+      console.log('📂 Starting to load GeoJSON files...');
+      
+      for (const geoFile of geoFiles) {
+        updateLoadingStatus(`Loading ${geoFile.filename}...`);
+        console.log(`\n🔍 Loading: ${geoFile.filename}`);
+        
+        const result = await loadGeoJSONFile(geoFile.filename, geoFile.type, geoFile.color);
+        
+        if (result.success) {
+          loadedCount++;
+          totalFeatures += result.features;
+          console.log(`   ✅ Success: ${result.features} features`);
+        } else {
+          console.log(`   ❌ Failed to load`);
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      
+      return { loadedCount, totalFeatures };
+    }
+
+    // ============================================
+    // SEARCH FUNCTIONALITY
+    // ============================================
+    function performSearch(searchTerm) {
+      const term = searchTerm.toLowerCase().trim();
+      if (!term) {
+        const searchList = document.getElementById('searchList');
+        if (searchList) searchList.style.display = 'none';
+        return;
+      }
+      
+      const searchList = document.getElementById('searchList');
+      if (!searchList) return;
+      
+      searchList.innerHTML = '';
+      
+      const results = searchDatabase.filter(item => 
+        item.name.toLowerCase().includes(term) ||
+        (item.originalName && item.originalName.toLowerCase().includes(term)) ||
+        (item.fullName && item.fullName.toLowerCase().includes(term)) ||
+        (item.building && item.building.toLowerCase().includes(term)) ||
+        (item.properties && JSON.stringify(item.properties).toLowerCase().includes(term))
+      );
+      
+      if (results.length === 0) {
+        searchList.innerHTML = '<div class="search-item">No results found</div>';
+        searchList.style.display = 'block';
+        return;
+      }
+      
+      results.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'search-item';
+        
+        let description = `${item.category} • ${item.type}`;
+        if (item.floor !== undefined) description += ` • Floor: ${item.floor}`;
+        if (item.building) description += ` • ${item.building}`;
+        
+        div.innerHTML = `
+          <div class="search-icon" style="background: ${item.color}">
+            <i class="${item.icon}"></i>
+          </div>
+          <div>
+            <strong style="color: ${item.color}">${item.name}</strong><br>
+            <small style="color: #666;">${description}</small>
+            ${item.isLabel ? '<br><small><i class="fas fa-tag"></i> Label</small>' : ''}
+          </div>
+        `;
+        
+        div.addEventListener('click', () => {
+          handleSearchResultClick(item);
+        });
+        
+        searchList.appendChild(div);
+      });
+      
+      searchList.style.display = 'block';
+    }
+    
+    function handleSearchResultClick(item) {
+      selectedLocation = item;
+      const searchInput = document.getElementById('searchInput');
+      const searchList = document.getElementById('searchList');
+      
+      if (searchInput) searchInput.value = item.name;
+      if (searchList) searchList.style.display = 'none';
+      
+      if (item.latlng) {
+        window.campusMap.setView(item.latlng, 19);
+        if (item.isLabel && item.marker) {
+          highlightLabel(item.marker, item.name, item.type);
+        } else if (item.layer) {
+          item.layer.openPopup();
+        }
+      } else if (item.layer && item.layer.getBounds) {
+        window.campusMap.fitBounds(item.layer.getBounds());
+        item.layer.openPopup();
+      }
+    }
+
+    // ============================================
+    // EVENT HANDLERS
+    // ============================================
+    function setupEventListeners(map) {
+      // Search input event
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+          performSearch(e.target.value);
+        });
+      }
+      
+      // Map zoom event for label visibility
+      map.on('zoomend', updateLabelVisibility);
+      map.on('moveend', updateLabelVisibility);
+      
+      // Layer controls
+      const toggleBuildings = document.getElementById('toggleBuildings');
+      if (toggleBuildings) {
+        toggleBuildings.addEventListener('change', function(e) {
+          buildingLayers.forEach(item => {
+            if (e.target.checked) map.addLayer(item.layer);
+            else map.removeLayer(item.layer);
+          });
+        });
+      }
+      
+      const toggleRooms = document.getElementById('toggleRooms');
+      if (toggleRooms) {
+        toggleRooms.addEventListener('change', function(e) {
+          roomLayers.forEach(item => {
+            if (e.target.checked) map.addLayer(item.layer);
+            else map.removeLayer(item.layer);
+          });
+        });
+      }
+      
+      const toggleDepartments = document.getElementById('toggleDepartments');
+      if (toggleDepartments) {
+        toggleDepartments.addEventListener('change', function(e) {
+          departmentLayers.forEach(item => {
+            if (e.target.checked) map.addLayer(item.layer);
+            else map.removeLayer(item.layer);
+          });
+        });
+      }
+      
+      const toggleRoads = document.getElementById('toggleRoads');
+      if (toggleRoads) {
+        toggleRoads.addEventListener('change', function(e) {
+          roadLayers.forEach(item => {
+            if (e.target.checked) map.addLayer(item.layer);
+            else map.removeLayer(item.layer);
+          });
+        });
+      }
+      
+      const toggleLabels = document.getElementById('toggleLabels');
+      if (toggleLabels) {
+        toggleLabels.addEventListener('change', function(e) {
+          labelLayers.forEach(label => {
+            if (e.target.checked) map.addLayer(label);
+            else map.removeLayer(label);
+          });
+        });
+      }
+      
+      // Route calculation
+      const calculateRoute = document.getElementById('calculateRoute');
+      if (calculateRoute) {
+        calculateRoute.addEventListener('click', function() {
+          if (!selectedLocation) {
+            alert('Please select a destination first (search for a location).');
+            return;
+          }
+          
+          let startLatLng;
+          const startOption = document.getElementById('startPoint').value;
+          
+          if (startOption === 'current') {
+            if (!currentLocation) {
+              alert('Please use "Locate Me" button first or select a different start point.');
+              return;
+            }
+            startLatLng = L.latLng(currentLocation[0], currentLocation[1]);
+          } else if (startOption === 'entry') {
+            startLatLng = L.latLng(27.131, 93.744);
+          } else {
+            startLatLng = map.getCenter();
+          }
+          
+          const endLatLng = selectedLocation.latlng;
+          
+          if (currentRoute) {
+            map.removeLayer(currentRoute);
+          }
+          
+          currentRoute = L.polyline([startLatLng, endLatLng], {
+            color: '#f39c12',
+            weight: 6,
+            opacity: 0.9
+          }).addTo(map);
+          
+          L.marker(startLatLng, {
+            icon: L.divIcon({
+              html: '<div style="background: #3498db; color: white; padding: 8px; border-radius: 50%; font-size: 18px; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"><i class="fas fa-play"></i></div>',
+              className: 'route-start',
+              iconSize: [40, 40]
+            })
+          }).addTo(map).bindPopup('<b>Start Point</b>').openPopup();
+          
+          L.marker(endLatLng, {
+            icon: L.divIcon({
+              html: '<div style="background: #e74c3c; color: white; padding: 8px; border-radius: 50%; font-size: 18px; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"><i class="fas fa-flag"></i></div>',
+              className: 'route-end',
+              iconSize: [40, 40]
+            })
+          }).addTo(map).bindPopup(`<b>Destination:</b> ${selectedLocation.name}`).openPopup();
+          
+          const routeInfo = document.getElementById('routeInfo');
+          if (routeInfo) routeInfo.style.display = 'block';
+          
+          const distance = map.distance(startLatLng, endLatLng);
+          const routeDistance = document.getElementById('routeDistance');
+          const routeTime = document.getElementById('routeTime');
+          
+          if (routeDistance) routeDistance.textContent = (distance / 1000).toFixed(2) + ' km';
+          if (routeTime) routeTime.textContent = Math.round((distance / 1000) * 15) + ' minutes';
+          
+          const bounds = L.latLngBounds([startLatLng, endLatLng]);
+          map.fitBounds(bounds, { padding: [100, 100], maxZoom: 19 });
+        });
+      }
+      
+      // Clear route
+      const clearRoute = document.getElementById('clearRoute');
+      if (clearRoute) {
+        clearRoute.addEventListener('click', function() {
+          if (currentRoute) {
+            map.removeLayer(currentRoute);
+            currentRoute = null;
+          }
+          
+          map.eachLayer(layer => {
+            if (layer instanceof L.Marker && layer.options && 
+                (layer.options.className === 'route-start' || 
+                 layer.options.className === 'route-end')) {
+              map.removeLayer(layer);
+            }
+          });
+          
+          const routeInfo = document.getElementById('routeInfo');
+          if (routeInfo) routeInfo.style.display = 'none';
+          
+          const searchInput = document.getElementById('searchInput');
+          if (searchInput) searchInput.value = '';
+          
+          const searchList = document.getElementById('searchList');
+          if (searchList) searchList.style.display = 'none';
+          
+          selectedLocation = null;
+        });
+      }
+      
+      // Locate me button
+      const locateBtn = document.getElementById('locateBtn');
+      if (locateBtn) {
+        locateBtn.addEventListener('click', function() {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+              const userLat = position.coords.latitude;
+              const userLng = position.coords.longitude;
+              
+              currentLocation = [userLat, userLng];
+              
+              L.marker([userLat, userLng], {
+                icon: L.divIcon({
+                  html: '<div style="background: #2ecc71; color: white; padding: 10px; border-radius: 50%; font-size: 20px; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"><i class="fas fa-user"></i></div>',
+                  className: 'custom-marker',
+                  iconSize: [45, 45]
+                })
+              }).addTo(map).bindPopup('<b>Your Current Location</b>').openPopup();
+              
+              map.setView([userLat, userLng], 19);
+              const startPoint = document.getElementById('startPoint');
+              if (startPoint) startPoint.value = 'current';
+              
+            }, function(error) {
+              alert('Could not get your location. Please make sure location services are enabled.');
+            });
+          } else {
+            alert('Geolocation is not supported by your browser.');
+          }
+        });
+      }
+    }
+
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    async function initializeMapFeatures(map) {
+      try {
+        console.log('🚀 Starting map initialization...');
+        
+        // Add zoom indicator
+        const mapContainer = document.getElementById('map-container');
+        if (mapContainer) {
+          const indicator = document.createElement('div');
+          indicator.className = 'zoom-indicator';
+          indicator.id = 'zoomIndicator';
+          indicator.textContent = `Zoom: ${map.getZoom()}`;
+          mapContainer.appendChild(indicator);
+        }
+        
+        // Setup event listeners
+        setupEventListeners(map);
+        
+        // Load all GeoJSON files
+        const result = await loadAllGeoJSONFiles();
+        
+        console.log('\n' + '='.repeat(60));
+        console.log('🎉 MAP INITIALIZATION COMPLETE');
+        console.log('='.repeat(60));
+        console.log(`✅ Loaded ${result.loadedCount} files`);
+        console.log(`📊 Total features: ${result.totalFeatures}`);
+        console.log(`🔍 Search database: ${searchDatabase.length} items`);
+        console.log(`🏷️ Labels created: ${labelDatabase.length} labels`);
+        
+        // Ensure labels are visible
+        const labelsToggle = document.getElementById('toggleLabels');
+        if (labelsToggle && !labelsToggle.checked) {
+          labelsToggle.checked = true;
+          labelsToggle.dispatchEvent(new Event('change'));
+        }
+        
+        updateLabelVisibility();
+        
+        // Hide loading overlay
+        setTimeout(() => {
+          const loadingOverlay = document.getElementById('loadingOverlay');
+          if (loadingOverlay) {
+            loadingOverlay.style.opacity = '0';
+            setTimeout(() => {
+              loadingOverlay.style.display = 'none';
+              console.log('✅ Loading overlay hidden');
+            }, 300);
+          }
+        }, 1500);
+        
+      } catch (error) {
+        console.error('❌ Fatal error initializing app:', error);
+        updateLoadingStatus('Error loading map. Check console.');
+        
+        setTimeout(() => {
+          const loadingOverlay = document.getElementById('loadingOverlay');
+          if (loadingOverlay) loadingOverlay.style.display = 'none';
+        }, 2000);
+      }
+    }
+
+    // ============================================
+    // GLOBAL FUNCTIONS FOR POPUP BUTTONS
+    // ============================================
+    window.searchForLabel = function(labelName) {
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) {
+        searchInput.value = labelName;
+        searchInput.focus();
+        performSearch(labelName);
+      }
+      
+      const popup = document.querySelector('.label-popup');
+      if (popup) popup.remove();
+    };
+    
+    window.centerOnLabel = function(labelName) {
+      const label = labelDatabase.find(l => l.name === labelName);
+      if (label) {
+        window.campusMap.setView(label.latlng, 19);
+        highlightLabel(label.marker, label.name, label.type);
+        
+        const popup = document.querySelector('.label-popup');
+        if (popup) popup.remove();
+      }
+    };
+    
+    window.centerOnLayer = function(button) {
+      const lat = parseFloat(button.getAttribute('data-lat'));
+      const lng = parseFloat(button.getAttribute('data-lng'));
+      window.campusMap.setView([lat, lng], 19);
+    };
+
+    // ============================================
+    // DEBUG FUNCTION
+    // ============================================
+    window.debugLabels = function() {
+      console.log('🏷️ === LABEL DATABASE ===');
+      console.log('='.repeat(80));
+      console.log(`Total Labels: ${labelDatabase.length}`);
+      console.log('='.repeat(80));
+      
+      const grouped = {};
+      labelDatabase.forEach(label => {
+        if (!grouped[label.type]) grouped[label.type] = [];
+        grouped[label.type].push(label);
+      });
+      
+      Object.keys(grouped).forEach(type => {
+        console.log(`\n📁 ${type.toUpperCase()}S (${grouped[type].length}):`);
+        console.log('-'.repeat(40));
+        grouped[type].slice(0, 5).forEach((label, index) => {
+          console.log(`${index + 1}. ${label.name}`);
+          if (label.building) console.log(`   Building: ${label.building}`);
+          if (label.floor !== undefined) console.log(`   Floor: ${label.floor}`);
+          if (label.filename) console.log(`   File: ${label.filename}`);
+        });
+        if (grouped[type].length > 5) {
+          console.log(`... and ${grouped[type].length - 5} more`);
+        }
+      });
+    };
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+      document.body.classList.add('light-theme');
+    }
+  </script>
+</body>
+</html>

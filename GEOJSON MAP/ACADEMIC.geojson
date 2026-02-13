@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "ACADEMIC",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 1, "academic": "academic-building", "floors": null }, "geometry": { "type": "MultiPolygon", "coordinates": [ [ [ [ 93.74222086435357, 27.131337570130007 ], [ 93.743978165138159, 27.131275168772685 ], [ 93.743903666102412, 27.129691722677325 ], [ 93.742137600725357, 27.129707323240833 ], [ 93.74222086435357, 27.131337570130007 ] ] ] ] } }
+]
+}

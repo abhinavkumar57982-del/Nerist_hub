@@ -1,0 +1,32 @@
+{
+"type": "FeatureCollection",
+"name": "DB ENTRY POINT",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "DBR-14", "FLOOR": 1 }, "geometry": { "type": "Point", "coordinates": [ 93.738071818649985, 27.127844823146852 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "BOYS TOILET", "FLOOR": 1 }, "geometry": { "type": "Point", "coordinates": [ 93.738241535559979, 27.127839604057755 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "OFFICIER'S TOILET", "FLOOR": 1 }, "geometry": { "type": "Point", "coordinates": [ 93.738356749885071, 27.127842674110191 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "GIRL'S TOILET", "FLOOR": 1 }, "geometry": { "type": "Point", "coordinates": [ 93.738473344022438, 27.127851577261819 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "DBR-4", "FLOOR": 1 }, "geometry": { "type": "Point", "coordinates": [ 93.738543024542409, 27.127854647313935 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "DBR-12", "FLOOR": 1 }, "geometry": { "type": "Point", "coordinates": [ 93.738538885105555, 27.127641585496917 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "DBR-11", "FLOOR": 1 }, "geometry": { "type": "Point", "coordinates": [ 93.738490246722819, 27.127616104013235 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "DBR-10", "FLOOR": 1 }, "geometry": { "type": "Point", "coordinates": [ 93.738378309451889, 27.12761518299564 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "DBR-8", "FLOOR": 1 }, "geometry": { "type": "Point", "coordinates": [ 93.73817340732883, 27.127615029492706 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "DBR-7", "FLOOR": 1 }, "geometry": { "type": "Point", "coordinates": [ 93.738077596613863, 27.127614799238305 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "DBR-6", "FLOOR": 1 }, "geometry": { "type": "Point", "coordinates": [ 93.738040686635472, 27.127654095982248 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "DBR-2", "FLOOR": 0 }, "geometry": { "type": "Point", "coordinates": [ 93.738071818649985, 27.127844823146852 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "BOYS TOILET", "FLOOR": 0 }, "geometry": { "type": "Point", "coordinates": [ 93.738241535559979, 27.127839604057755 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "OFFICIER'S TOILET", "FLOOR": 0 }, "geometry": { "type": "Point", "coordinates": [ 93.738356749885071, 27.127842674110191 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "GIRL'S TOILET", "FLOOR": 0 }, "geometry": { "type": "Point", "coordinates": [ 93.738473344022438, 27.127851577261819 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "DBR-1", "FLOOR": 0 }, "geometry": { "type": "Point", "coordinates": [ 93.738543024542409, 27.127854647313935 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "DBR-15", "FLOOR": 0 }, "geometry": { "type": "Point", "coordinates": [ 93.738538885105555, 27.127641585496917 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "APPLIED MICROBIOLOGY LAB", "FLOOR": 0 }, "geometry": { "type": "Point", "coordinates": [ 93.738490246722819, 27.127616104013235 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "INSTRUMENTATION LAB", "FLOOR": 0 }, "geometry": { "type": "Point", "coordinates": [ 93.738378309451889, 27.12761518299564 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "CHEMISTRY PG-4", "FLOOR": 0 }, "geometry": { "type": "Point", "coordinates": [ 93.73817340732883, 27.127615029492706 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "CHEMISTRY PG-5", "FLOOR": 0 }, "geometry": { "type": "Point", "coordinates": [ 93.738077596613863, 27.127614799238305 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "DBR-3", "FLOOR": 0 }, "geometry": { "type": "Point", "coordinates": [ 93.738040686635472, 27.127654095982248 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "DBR-5", "FLOOR": 1 }, "geometry": { "type": "Point", "coordinates": [ 93.738034822433377, 27.127806524237297 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "DBR-9", "FLOOR": 1 }, "geometry": { "type": "Point", "coordinates": [ 93.738260421740563, 27.127611268670798 ] } },
+{ "type": "Feature", "properties": { "id": null, "ROOM NO": "DBR-13", "FLOOR": 1 }, "geometry": { "type": "Point", "coordinates": [ 93.73855225203701, 27.12782003247143 ] } }
+]
+}

@@ -1,0 +1,1980 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="description" content="NERIST Campus Hub - Navigation, Marketplace, Lost & Found, Study Resources">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+<title>NERIST Campus Hub</title>
+<link rel="icon" href="feviconicon.png">
+  <title>NERIST Faculty Directory | NERIST Campus Hub</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- NAVBAR WITH AUTHENTICATION -->
+  <nav class="navbar">
+  <div class="nav-left">
+    <a href="/index.html" class="logo">
+      <span class="logo-icon">🧑‍🎓</span>
+      <span>NERIST Hub</span>
+    </a>
+    
+    <div class="menu">
+      <span><i class="fas fa-search"></i> Lost & Found ▾</span>
+      <div class="dropdown">
+        <a href="/lost.html"><i class="fas fa-question-circle"></i> Lost Items</a>
+        <a href="/found.html"><i class="fas fa-check-circle"></i> Found Items</a>
+      </div>
+    </div>
+
+    <div class="menu">
+      <span><i class="fas fa-store"></i> Marketplace ▾</span>
+      <div class="dropdown">
+        <a href="/marketplace.html"><i class="fas fa-tag"></i> Sell Items</a>
+        <a href="/buy-requests.html"><i class="fas fa-shopping-cart"></i> Buy Requests</a>
+      </div>
+    </div>
+
+    <div class="menu">
+      <span><i class="fas fa-file-alt"></i> Study ▾</span>
+      <div class="dropdown">
+        <a href="/questionpaper.html"><i class="fas fa-book"></i> Question Papers</a>
+        <a href="/upload-paper.html"><i class="fas fa-upload"></i> Upload Papers</a>
+        <a href="/timetable.html"><i class="fas fa-calendar-alt"></i> TimeTable</a>
+      </div>
+    </div>
+    
+    <!-- NEW: Teacher Directory Menu -->
+    <div class="menu">
+      <span><i class="fas fa-chalkboard-teacher"></i> Faculty ▾</span>
+      <div class="dropdown">
+        <a href="/teachers.html"><i class="fas fa-users"></i> Teacher Directory</a>
+        <a href="/teachers.html#staff-directory"><i class="fas fa-search"></i> Search Faculty</a>
+      </div>
+    </div>
+    
+    <div class="menu">
+      <span><i class="fa-solid fa-briefcase"></i></i> Services ▾</span>
+      <div class="dropdown">
+        <a href="/rentals.html"><i class="fa-solid fa-briefcase"></i> Services</a>
+      </div>
+    </div>
+    
+    <div class="menu">
+      <span><i class="fas fa-map"></i> Navigation ▾</span>
+      <div class="dropdown">
+        <a href="/map.html"><i class="fas fa-location-dot"></i> Campus Map</a>
+      </div>
+    </div>
+  </div>
+  
+  <!-- AUTH SECTION IN NAVBAR -->
+  <div class="nav-right">
+    <div id="user-info" class="user-info">
+      <span id="welcome-message" class="welcome-message" style="display: none;">
+        <i class="fas fa-user-circle"></i>
+        <span id="user-name"></span> (<span id="user-regno"></span>)
+      </span>
+      <button id="login-btn" class="auth-btn login-btn">
+        <i class="fas fa-sign-in-alt"></i>
+        <span>Login / Register</span>
+      </button>
+      <button id="logout-btn" class="auth-btn logout-btn" style="display: none;">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </button>
+    </div>
+    
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <i class="fas fa-moon"></i>
+      <span>Theme</span>
+    </button>
+  </div>
+</nav>
+
+  <!-- HERO SECTION FOR TEACHERS PAGE -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <h1>NERIST Faculty & Staff Directory</h1>
+        <p>Find contact information for all faculty members, department heads, and campus staff</p>
+        
+        <div class="hero-stats">
+          <div class="stat">
+            <span class="stat-number">150+</span>
+            <span class="stat-label">Faculty Members</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number">8</span>
+            <span class="stat-label">Departments</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number">20+</span>
+            <span class="stat-label">HODs & Professors</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number">50+</span>
+            <span class="stat-label">Research Guides</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Teacher & Staff Directory Section -->
+  <section id="staff-directory" class="directory-section">
+    <div class="container">
+      <header class="section-header">
+        <h2><i class="fas fa-chalkboard-teacher"></i> Faculty & Staff Directory</h2>
+        <p>Find contact information for teachers, wardens, and department staff</p>
+      </header>
+
+      <!-- Search and Filter Controls -->
+      <div class="directory-controls">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="teacher-search" placeholder="Search by name, department, or role...">
+        </div>
+        
+        <div class="filter-options">
+         <select id="department-filter">
+    <option value="all">All Departments</option>
+    <option value="cse">Computer Science & Engineering</option>
+    <option value="ece">Electronics & Communication</option>
+    <option value="ee">Electrical Engineering</option>
+    <option value="me">Mechanical Engineering</option>
+    <option value="ce">Civil Engineering</option>
+    <option value="ae">Agriculture Engineering</option>
+    <option value="math">Mathematics</option>
+    <option value="physics">Physics</option>
+    <option value="chemistry">Chemistry</option>
+    <option value="humanities">Humanities & Social Sciences</option>
+    <option value="forestry">Forestry</option>
+</select>
+          
+          <select id="role-filter">
+            <option value="all">All Roles</option>
+            <option value="hod">HOD / Head</option>
+            <option value="professor">Professor</option>
+            <option value="associate">Associate Professor</option>
+            <option value="assistant">Assistant Professor</option>
+            <option value="warden">Hostel Warden</option>
+            <option value="staff">Support Staff</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Directory Grid -->
+      <div class="directory-grid" id="teacher-grid">
+        <!-- Teacher cards will be loaded here by JavaScript -->
+      </div>
+
+      <!-- Note for students -->
+      <div class="text-center" style="color: var(--text-secondary); margin-top: 40px; padding: 20px; background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+        <p><i class="fas fa-info-circle"></i> <strong>Note:</strong> This directory contains publicly available information from NERIST official website. For official communication, please use institute email addresses.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHATBOT -->
+  <!-- <div id="chatbot-btn" onclick="toggleChat()">
+    <i class="fas fa-robot"></i>
+  </div>
+
+  <div id="chatbot-box">
+    <div id="chatbot-header">
+      NERIST Assistant 🤖
+      <span onclick="toggleChat()"><i class="fas fa-times"></i></span>
+    </div>
+
+    <div id="chatbot-messages">
+      <div class="bot-msg">
+        👋 Hi! Looking for faculty information? I can help you find professors by department or specialization!
+      </div>
+    </div>
+
+    <div id="chatbot-input">
+      <input id="chat-input" placeholder="Ask about faculty or departments..." />
+      <button onclick="sendMessage()">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div> -->
+
+  <!-- FOOTER -->
+ <footer class="footer">
+  <div class="container">
+    <div class="footer-content">
+      <!-- Brand Section -->
+      <div class="footer-section">
+        <h3>NERIST Campus Hub</h3>
+        <div class="developer-credit">
+          <p>Unofficial student platform for NERIST campus services and resources.</p>
+          <div class="developer-name">
+            <i class="fas fa-code"></i>
+            Developed by Abhinav Kumar
+            <span style="font-size: 12px; color: var(--text-secondary);">(BTech 1st Year CSE)</span>
+          </div>
+        </div>
+        <div class="social-links">
+          <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+          <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+          <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+          <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+      
+      <!-- Quick Links Section -->
+      <div class="footer-section">
+        <h3>Quick Links</h3>
+        <ul class="footer-links">
+          <li><a href="/lost.html"><i class="fas fa-arrow-right"></i> Lost & Found</a></li>
+          <li><a href="/marketplace.html"><i class="fas fa-arrow-right"></i> Marketplace</a></li>
+          <li><a href="/questionpaper.html"><i class="fas fa-arrow-right"></i> Question Papers</a></li>
+          <li><a href="/rentals.html"><i class="fas fa-arrow-right"></i> Services</a></li>
+          <li><a href="/map.html"><i class="fas fa-arrow-right"></i> Campus Map</a></li>
+          <li><a href="/timetable.html"><i class="fas fa-arrow-right"></i> Timetable</a></li>
+        </ul>
+      </div>
+      
+      <!-- Contact & Feedback Section -->
+      <div class="footer-section">
+        <h3>Get in Touch</h3>
+        <div class="contact-info">
+          <div class="contact-item">
+            <i class="fas fa-envelope"></i>
+            <span>abhinavkumar53210@gmail.com</span>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-phone-alt"></i>
+            <span>Campus Help Desk</span>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>NERIST, Nirjuli - 791109</span>
+          </div>
+        </div>
+        
+        <!-- Feedback Form Link - Styled as Button -->
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSe1XYRtRNLUKZoS1a44XJWvRnq5Amk0UD036FmEJMXb974_VA/viewform?usp=header" class="feedback-link">
+          <i class="fas fa-comment-dots"></i>
+          Give Feedback
+        </a>
+      </div>
+    </div>
+    
+    <!-- Footer Bottom -->
+    <div class="footer-bottom">
+      <p>
+        © 2026 NERIST Campus Hub. 
+        Made with <span class="heart"><i class="fas fa-heart"></i></span> 
+        for students.
+      </p>
+      <div class="footer-bottom-links">
+        <a href="/privacy.html"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+        <a href="/terms.html"><i class="fas fa-file-alt"></i> Terms of Use</a>
+        <a href="/contact.html"><i class="fas fa-headset"></i> Contact Us</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+  <script src="auth.js"></script>
+  <script>
+    // Teacher Directory JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    // Complete teacher data with unique IDs
+    const teachers = [
+    {
+        id: 1,
+        name: "Dr. Margaret Kathing",
+        role: "Head of the Department",
+        department: "cse",
+        departmentName: "Computer Science and Engineering",
+        email: "mk[AT]nerist(dot)ac(dot)in",
+        phone: "9436059101",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/faculties-04.jpg"
+    },
+    {
+        id: 2,
+        name: "Dr. Ningrinla Marchang",
+        role: "Professor",
+        department: "cse",
+        departmentName: "Computer Science and Engineering",
+        email: "ningrinla[AT]gmail(dot)com",
+        phone: "0360-2257401-8 extn. 6139",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/ning_photo-1.png"
+    },
+    {
+        id: 3,
+        name: "Dr. Satya Jyoti Borah",
+        role: "Associate Professor",
+        department: "cse",
+        departmentName: "Computer Science and Engineering",
+        email: "sjb[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401-8 extn. 6415, 9862092451(M)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/sjb-1.png"
+    },
+    {
+        id: 4,
+        name: "Mr. Kapang Legoh",
+        role: "Associate Professor",
+        department: "cse",
+        departmentName: "Computer Science and Engineering",
+        email: "kl [AT] nerist(dot)ac(dot)in",
+        phone: "0360-2257401-",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/KLegoh1-1.png"
+    },
+    {
+        id: 5,
+        name: "Dr. Moirangthem Marjit Singh",
+        role: "Professor",
+        department: "cse",
+        departmentName: "Computer Science and Engineering",
+        email: "mjs[AT]nerist(dot)ac(dot)in",
+        phone: "03602257401- Extn 6140",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/ks-19-1.png"
+    },
+    {
+        id: 6,
+        name: "Dr. Aswini Kumar Patra",
+        role: "Assistant Professor",
+        department: "cse",
+        departmentName: "Computer Science and Engineering",
+        email: "akp@nerist.ac.in",
+        phone: "0360-2257401-6229",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/web_pic.jpeg"
+    },
+    {
+        id: 7,
+        name: "Dr. Monjul Saikia",
+        role: "Assistant Professor",
+        department: "cse",
+        departmentName: "Computer Science and Engineering",
+        email: "msk[AT]nerist(dot)ac(dot)in",
+        phone: "03602257401-8 extn. 6241(O)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/IMG_1480_0-1.png"
+    },
+    {
+        id: 8,
+        name: "Dr. Amar Taggu",
+        role: "Assistant Professor",
+        department: "cse",
+        departmentName: "Computer Science and Engineering",
+        email: "atg [AT] nerist(dot)ac(dot)in",
+        phone: "+91-360-2257401 to 410 (Extn: 6142)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/AT.png"
+    },
+    {
+        id: 9,
+        name: "Mr. Pradeep Kamboj",
+        role: "Assistant Professor",
+        department: "cse",
+        departmentName: "Computer Science and Engineering",
+        email: "pko [AT] nerist(dot)ac(dot)in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/pk123-1.png"
+    },
+    {
+        id: 10,
+        name: "Dr. Ajit Kumar Singh Yadav (On Lien)",
+        role: "Assistant Professor",
+        department: "cse",
+        departmentName: "Computer Science and Engineering",
+        email: "aky [AT] nerist(dot)ac(dot)in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/ajit1.png"
+    },
+    {
+        id: 11,
+        name: "Mr. Yogendra Mohan",
+        role: "Assistant Professor",
+        department: "cse",
+        departmentName: "Computer Science and Engineering",
+        email: "ymo[AT]nerist(dot)ac(dot)in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/YM_PP_PIC_2023_Website.jpg"
+    },
+    {
+        id: 12,
+        name: "Dr. Kaushik Ray",
+        role: "Assistant Professor",
+        department: "cse",
+        departmentName: "Computer Science and Engineering",
+        email: "kry@nerist.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/resize-latest.png"
+    },
+    {
+        id: 13,
+        name: "Dr. Lilapati Waikhom",
+        role: "Assistant Professor",
+        department: "cse",
+        departmentName: "Computer Science and Engineering",
+        email: "lpw@nerist.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/param_sundari.png"
+    },
+    {
+        id: 14,
+        name: "Dr. Manoj Das",
+        role: "Assistant Professor",
+        department: "cse",
+        departmentName: "Computer Science and Engineering",
+        email: "mnd@nerist.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/Manoj_Das_Profile_Photo-_NERIST.jpg"
+    },
+    {
+        id: 15,
+        name: "Dr. Joyatri Bora Hazarika",
+        role: "Head of the Department",
+        department: "ece",
+        departmentName: "Electronics and Communication Engineering",
+        email: "jb [AT] nerist(dot)ac(dot)in",
+        phone: "0360-2257401-8/6259(extn)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/photo_JB-min_new1.jpg"
+    },
+    {
+        id: 16,
+        name: "Dr. Rajesh Kumar",
+        role: "Professor",
+        department: "ece",
+        departmentName: "Electronics and Communication Engineering",
+        email: "rk[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401-8 extn. 7115",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/dr-1.png"
+    },
+    {
+        id: 17,
+        name: "Dr. Tripurari Sharan",
+        role: "Professor",
+        department: "ece",
+        departmentName: "Electronics and Communication Engineering",
+        email: "ts[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401-8 ext. 7103",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/ts-photo-1.png"
+    },
+    {
+        id: 18,
+        name: "Dr. Madhusudhan Mishra",
+        role: "Professor",
+        department: "ece",
+        departmentName: "Electronics and Communication Engineering",
+        email: "mma [AT] nerist(dot)ac(dot)in",
+        phone: "257401 - 410 extn. 6258 (Off)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/MMS.jpg"
+    },
+    {
+        id: 19,
+        name: "Dr. Pranab Kishore Dutta",
+        role: "Professor",
+        department: "ece",
+        departmentName: "Electronics and Communication Engineering",
+        email: "pkda[AT]nerist(dot)ac(dot)in",
+        phone: "0360 2257401-8 extn. 9109",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/pranab-1.png"
+    },
+    {
+        id: 20,
+        name: "Dr. Ashok Kumar Ray",
+        role: "Associate Professor",
+        department: "ece",
+        departmentName: "Electronics and Communication Engineering",
+        email: "akr[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401-8 extn. 7108",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/akr-1.png"
+    },
+    {
+        id: 21,
+        name: "Dr. Kurmendra",
+        role: "Associate Professor",
+        department: "ece",
+        departmentName: "Electronics and Communication Engineering",
+        email: "krm@nerist.ac.in",
+        phone: "8415912663",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/02/image22.jpeg"
+    },
+    {
+        id: 22,
+        name: "Dr. Ram Gopal",
+        role: "Associate Professor",
+        department: "ece",
+        departmentName: "Electronics and Communication Engineering",
+        email: "rgp@nerist.ac.in",
+        phone: "+91-9918111107",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/02/5r6bihns.png"
+    },
+    {
+        id: 23,
+        name: "Mr. Rusni Kima Mangang",
+        role: "Associate Professor",
+        department: "ece",
+        departmentName: "Electronics and Communication Engineering",
+        email: "mrk [AT] nerist(dot)ac(dot)in",
+        phone: "0360-2257401-410 (6162 extn.)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/MRK.jpg"
+    },
+    {
+        id: 24,
+        name: "Dr. Anil Kumar Gautam",
+        role: "Associate Professor",
+        department: "ece",
+        departmentName: "Electronics and Communication Engineering",
+        email: "akg [AT] nerist(dot)ac(dot)in",
+        phone: "0360 2257401-8 Ext:7112",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/AKG-2.jpeg"
+    },
+    {
+        id: 25,
+        name: "Mr. Akho John Richa",
+        role: "Associate Professor",
+        department: "ece",
+        departmentName: "Electronics and Communication Engineering",
+        email: "ajr[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401 (6167)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/akho-passport1-1.png"
+    },
+    {
+        id: 26,
+        name: "Mr. Moirangthem Edison Singh",
+        role: "Associate Professor",
+        department: "ece",
+        departmentName: "Electronics and Communication Engineering",
+        email: "em[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401-8 extn. 6166",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/profile-1.png"
+    },
+    {
+        id: 27,
+        name: "Bhagyalakshmi Narayanapuram",
+        role: "Associate Professor",
+        department: "ece",
+        departmentName: "Electronics and Communication Engineering",
+        email: "bgl@nerist.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/BHAGYA_photo-1.jpg"
+    },
+    {
+        id: 28,
+        name: "Mr. Rajarshi Sen",
+        role: "Associate Professor",
+        department: "ece",
+        departmentName: "Electronics and Communication Engineering",
+        email: "rjs@nerist.ac.in",
+        phone: "+91 7002945383",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/new_prof_image.png"
+    },
+    {
+        id: 29,
+        name: "Dr. Rajib Sharma",
+        role: "Associate Professor",
+        department: "ece",
+        departmentName: "Electronics and Communication Engineering",
+        email: "rsm@nerist.ac.in",
+        phone: "+91 7002945383",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/35_x_45mm_179x139pixels.jpg"
+    },
+    {
+        id: 30,
+        name: "Dr. Chitranjan Kumar Rai",
+        role: "Associate Professor",
+        department: "ece",
+        departmentName: "Electronics and Communication Engineering",
+        email: "ckr@nerist.ac.in",
+        phone: "+91-7280976271",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/04/DSC_7923.jpg"
+    },
+    {
+        id: 31,
+        name: "Prof. Radak Blange",
+        role: "Head of the Department",
+        department: "ee",
+        departmentName: "Electrical Engineering",
+        email: "rb[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401-8 extn. 6218",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/rb-profile.jpg"
+    },
+    {
+        id: 32,
+        name: "Dr. Shiv Kumar Bhagat",
+        role: "Professor",
+        department: "ee",
+        departmentName: "Electrical Engineering",
+        email: "skb[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401-8 extn. 7003",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/bhagat.jpg"
+    },
+    {
+        id: 33,
+        name: "Dr. Om Prakash Roy",
+        role: "Professor",
+        department: "ee",
+        departmentName: "Electrical Engineering",
+        email: "opr [AT] nerist(dot)ac(dot)in",
+        phone: "7004(o)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/roy.jpg"
+    },
+    {
+        id: 34,
+        name: "Dr. Ram Krishna Mehta",
+        role: "Professor",
+        department: "ee",
+        departmentName: "Electrical Engineering",
+        email: "rkm[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401-8 extn. 7002",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/ramkrishna.jpg"
+    },
+    {
+        id: 35,
+        name: "Dr. Sarsing Gao",
+        role: "Professor",
+        department: "ee",
+        departmentName: "Electrical Engineering",
+        email: "sg [AT] nerist(dot)ac(dot)in",
+        phone: "2257401 - 411 Ext. 7005",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/IMG-20160415-WA0020-2-1.png"
+    },
+    {
+        id: 36,
+        name: "Dr. Arvind Kumar Singh",
+        role: "Professor",
+        department: "ee",
+        departmentName: "Electrical Engineering",
+        email: "aksh [AT] nerist(dot)ac(dot)in",
+        phone: "257401 extn 7009",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/arvind.jpg"
+    },
+    {
+        id: 37,
+        name: "Mr. T Vimal Prakash Singh",
+        role: "Associate Professor",
+        department: "ee",
+        departmentName: "Electrical Engineering",
+        email: "vimal@nerist.ac.in",
+        phone: "2257401",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/vimal.jpg"
+    },
+    {
+        id: 38,
+        name: "Dr. M. Deben Singh",
+        role: "Associate Professor",
+        department: "ee",
+        departmentName: "Electrical Engineering",
+        email: "mds [AT] nerist(dot)ac(dot)in",
+        phone: "+91 (0)360 2257401-08 – 7011 (O)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/deben.jpg"
+    },
+    {
+        id: 39,
+        name: "DR. Adikanda Parida",
+        role: "Professor",
+        department: "ee",
+        departmentName: "Electrical Engineering",
+        email: "ap[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401-8 extn. 6156",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/parida.jpg"
+    },
+    {
+        id: 40,
+        name: "Dr. Devendra Potnuru",
+        role: "Professor",
+        department: "ee",
+        departmentName: "Electrical Engineering",
+        email: "dpn@nerist.ac.in",
+        phone: "8555827095",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/dev1.jpg"
+    },
+    {
+        id: 41,
+        name: "Dr. Anu Kumar Das",
+        role: "Associate Professor",
+        department: "ee",
+        departmentName: "Electrical Engineering",
+        email: "akd[at]nerist(dot)ac(dot)in",
+        phone: "0360-2257401-8 extn. 7012",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/AKD-1.png"
+    },
+    {
+        id: 42,
+        name: "Dr. Bijoy Krishna Mukherjee",
+        role: "Associate Professor",
+        department: "ee",
+        departmentName: "Electrical Engineering",
+        email: "bkm[at]nerist[dot]ac[dot]in",
+        phone: "7407050131",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/07/image-150x180-1.png"
+    },
+    {
+        id: 43,
+        name: "Dr. Nameirakpam Loyalakpa Meitei",
+        role: "Associate Professor",
+        department: "ee",
+        departmentName: "Electrical Engineering",
+        email: "nlm[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401-8 extn. 7013",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/2-10-1.png"
+    },
+    {
+        id: 44,
+        name: "Mrs. Somila Hashunao",
+        role: "Associate Professor",
+        department: "ee",
+        departmentName: "Electrical Engineering",
+        email: "somila[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401-8 extn. 7016",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/somila.jpg"
+    },
+    {
+        id: 45,
+        name: "Dr. Akhilesh Sharma",
+        role: "Associate Professor",
+        department: "ee",
+        departmentName: "Electrical Engineering",
+        email: "as [AT] nerist(dot)ac(dot)in",
+        phone: "0360-2257 401-410, 6150 (Extn.)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/20140914-0007-1.png"
+    },
+    {
+        id: 46,
+        name: "DR. (Ms) Piyali Das",
+        role: "Associate Professor",
+        department: "ee",
+        departmentName: "Electrical Engineering",
+        email: "pd[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401-8 extn. 7015",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/piyali.jpg"
+    },
+    {
+        id: 47,
+        name: "Dr. Pukhrambam Devachandra Singh",
+        role: "Associate Professor",
+        department: "ee",
+        departmentName: "Electrical Engineering",
+        email: "pds[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401-8 extn. 7017",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/website-nerist-profile.jpg"
+    },
+    {
+        id: 48,
+        name: "Dr. Sutanu Samanta",
+        role: "Head of the Department",
+        department: "me",
+        departmentName: "Mechanical Engineering",
+        email: "ssa [AT] nerist(dot)ac(dot)in",
+        phone: "(0360) 2257401-11 Extn. 6226 (O)6599 (R)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/samanta.jpg"
+    },
+    {
+        id: 49,
+        name: "Dr. Asis Giri",
+        role: "Professor",
+        department: "me",
+        departmentName: "Mechanical Engineering",
+        email: "sag@nerist.ac.in,",
+        phone: "03602247401-6191",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/ag.jpg"
+    },
+    {
+        id: 50,
+        name: "Dr. Muthumari Chandrasekaran",
+        role: "Professor",
+        department: "me",
+        departmentName: "Mechanical Engineering",
+        email: "mc[AT]nerist(dot)ac(dot)in",
+        phone: "0360 2257401-8 Ext:6184",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/chandra-1.png"
+    },
+    {
+        id: 51,
+        name: "Dr. Sachindra Mahto",
+        role: "Professor",
+        department: "me",
+        departmentName: "Mechanical Engineering",
+        email: "smh [AT] nerist(dot)ac(dot)in",
+        phone: "0360 2257401-8 Ext: 6188",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/s-mahto-1.png"
+    },
+    {
+        id: 52,
+        name: "Dr. Satyam Shivam Gautam",
+        role: "Professor",
+        department: "me",
+        departmentName: "Mechanical Engineering",
+        email: "ssg@nerist.ac.in",
+        phone: "0360-2257401-8 (Extn.) 6245",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/sathyam-1.png"
+    },
+    {
+        id: 53,
+        name: "Dr. Sandeep Singh",
+        role: "Professor",
+        department: "me",
+        departmentName: "Mechanical Engineering",
+        email: "Sandeep[AT]nerist(dot)ac(dot)in",
+        phone: "03602257401-8 Extn. 6224",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/sandeep-1.png"
+    },
+    {
+        id: 54,
+        name: "Dr. Kajal Kumar Mandal",
+        role: "Associate Professor",
+        department: "me",
+        departmentName: "Mechanical Engineering",
+        email: "kkm[AT]nerist(dot)ac(dot)in",
+        phone: "0360 2257401-8 extn. 6222",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/KKm.jpg"
+    },
+    {
+        id: 55,
+        name: "Dr. Narendra Kumar Rana",
+        role: "Associate Professor",
+        department: "me",
+        departmentName: "Mechanical Engineering",
+        email: "nkr@nerist.ac.in",
+        phone: "0360 2257401-8 Exnt. 6243",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/NKR-1.png"
+    },
+    {
+        id: 56,
+        name: "Dr. Maryom Dabi",
+        role: "Associate Professor",
+        department: "me",
+        departmentName: "Mechanical Engineering",
+        email: "md[AT]nerist(dot)ac(dot)in",
+        phone: "(0360)2257401-8 extn 6244",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/MD-1.jpg"
+    },
+    {
+        id: 57,
+        name: "Dr. Nabam Teyi",
+        role: "Associate Professor",
+        department: "me",
+        departmentName: "Mechanical Engineering",
+        email: "nbt[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401-Extn. 6183",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/nbt.jpg"
+    },
+    {
+        id: 58,
+        name: "Dr. Santosh Kumar Tamang",
+        role: "Associate Professor",
+        department: "me",
+        departmentName: "Mechanical Engineering",
+        email: "skt[AT]nerist(dot)ac(dot)in",
+        phone: "03602257401-8 Extn. 6185",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/santosh.jpeg"
+    },
+    {
+        id: 59,
+        name: "Md. S. Mujaheed Khan",
+        role: "Associate Professor",
+        department: "me",
+        departmentName: "Mechanical Engineering",
+        email: "msmk[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401-8 (Extn.6187)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/mk.jpg"
+    },
+    {
+        id: 60,
+        name: "Dr. Yadaiah Nirsanametla",
+        role: "Associate Professor",
+        department: "me",
+        departmentName: "Mechanical Engineering",
+        email: "ny [AT] nerist(dot)ac(dot)in",
+        phone: "+91-360-2257401 (extension:6190)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/yadiah.jpg"
+    },
+    {
+        id: 61,
+        name: "Dr. Sanjib Kalita",
+        role: "Associate Professor",
+        department: "me",
+        departmentName: "Mechanical Engineering",
+        email: "sjk@nerist.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/02/IMG_20250225_150917.jpg"
+    },
+    {
+        id: 62,
+        name: "Dr. Jyotisman Borah",
+        role: "Associate Professor",
+        department: "me",
+        departmentName: "Mechanical Engineering",
+        email: "mb@nerist.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/02/oie_418656WIJzYQ7j.jpg"
+    },
+    {
+        id: 63,
+        name: "Dr. Sohini Chowdhury",
+        role: "Associate Professor",
+        department: "me",
+        departmentName: "Mechanical Engineering",
+        email: "scd(at)nerist(dot)ac(dot)in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/image-150x180-1.png"
+    },
+    {
+        id: 64,
+        name: "Mr. Kaustav Moni Bora",
+        role: "Associate Professor",
+        department: "me",
+        departmentName: "Mechanical Engineering",
+        email: "kmb@nerist.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/kmb.jpg"
+    },
+    {
+        id: 65,
+        name: "Dr. Nitish Kumar",
+        role: "Associate Professor",
+        department: "me",
+        departmentName: "Mechanical Engineering",
+        email: "",
+        phone: "+91-947670XX70",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/Web-image.jpg"
+    },
+    {
+        id: 66,
+        name: "Dr.(Mrs.) Dipika Devi",
+        role: "Head Of Department",
+        department: "ce",
+        departmentName: "Civil Engineering",
+        email: "dd [AT] nerist(dot)ac(dot)in",
+        phone: "0360 - 2257401-8 Extn. 6223",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/dipika.jpg"
+    },
+    {
+        id: 67,
+        name: "Dr. Ram Kailash Prasad",
+        role: "Professor",
+        department: "ce",
+        departmentName: "Civil Engineering",
+        email: "rkp [AT] nerist(dot)ac(dot)in",
+        phone: "03602258579 Ext.: 6133",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/12/RK-prasad.jpg"
+    },
+    {
+        id: 68,
+        name: "Dr. Sukumar Baishya",
+        role: "Professor",
+        department: "ce",
+        departmentName: "Civil Engineering",
+        email: "sb [AT] nerist(dot)ac(dot)in",
+        phone: "+91 360 2257401 Ext: 6125",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/SukumarBaishya-1.png"
+    },
+    {
+        id: 69,
+        name: "Dr. Sudisht Mishra",
+        role: "Professor",
+        department: "ce",
+        departmentName: "Civil Engineering",
+        email: "sudisht_mishra [AT] nerist(dot)ac(dot)in",
+        phone: "0360 2257919",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/Photograph-for-uploading-1.png"
+    },
+    {
+        id: 70,
+        name: "Dr. Ajay Bharti",
+        role: "Professor",
+        department: "ce",
+        departmentName: "Civil Engineering",
+        email: "abt[AT]nerist(dot)ac(dot)in",
+        phone: "0360 - 2257401-8 Extn. 6225",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/12/Ajay-Bharti.jpg"
+    },
+    {
+        id: 71,
+        name: "Sri. Saroj Kumar Sahu",
+        role: "Associate Professor",
+        department: "ce",
+        departmentName: "Civil Engineering",
+        email: "sksh[AT]nerist(dot)ac(dot)in",
+        phone: "0360 - 2257401-8 Extn. 6242",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/sahu.jpg"
+    },
+    {
+        id: 72,
+        name: "Dr.(Mrs.)Mudo Puming",
+        role: "Associate Professor",
+        department: "ce",
+        departmentName: "Civil Engineering",
+        email: "mp@nerist.ac.in",
+        phone: "0360-2257401-8 extn. 6248 (Off)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/Photo_MP2-1.png"
+    },
+    {
+        id: 73,
+        name: "Dr.(Mrs.) Ajanta Kalita",
+        role: "Associate Professor",
+        department: "ce",
+        departmentName: "Civil Engineering",
+        email: "",
+        phone: "+91-9435000959; +91-8794616513",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/001-1.png"
+    },
+    {
+        id: 74,
+        name: "Dr. Dibyendu Pal",
+        role: "Associate Professor",
+        department: "ce",
+        departmentName: "Civil Engineering",
+        email: "dpl [AT] nerist(dot)ac(dot)in",
+        phone: "0360-2257401-10 (extn 6128);",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/dibyendupal-1.png"
+    },
+    {
+        id: 75,
+        name: "Dr. Neero Gumsar Sorum",
+        role: "Associate Professor",
+        department: "ce",
+        departmentName: "Civil Engineering",
+        email: "sng [AT] nerist(dot)ac(dot)in",
+        phone: "0360-2257401 (Extension Number-6132);",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/Institute-Poto-1.png"
+    },
+    {
+        id: 76,
+        name: "Dr. Yamem Tamut",
+        role: "Associate Professor",
+        department: "ce",
+        departmentName: "Civil Engineering",
+        email: "ymt@nerist.ac.in",
+        phone: "2257401 - 410 extn. 6115 (Off)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/12/Tamut.jpg"
+    },
+    {
+        id: 77,
+        name: "Ms. Yumnam Bidyalaxmi Devi",
+        role: "Associate Professor",
+        department: "ce",
+        departmentName: "Civil Engineering",
+        email: "ybd[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401 - 8 extn. 6253 (Off)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/05/bidyalaxmi-1.jpg"
+    },
+    {
+        id: 78,
+        name: "Mr. Konthoujam James Singh",
+        role: "Associate Professor",
+        department: "ce",
+        departmentName: "Civil Engineering",
+        email: "kjs[AT]nerist(dot)ac(dot)in",
+        phone: "0360 - 2257401-8 Ext. 6118 (office)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/REDUCED_PHOTO_KJS_small.jpeg"
+    },
+    {
+        id: 79,
+        name: "Dr. Jeetendra Singh Khichad",
+        role: "Associate Professor",
+        department: "ce",
+        departmentName: "Civil Engineering",
+        email: "jsk@nerist.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/j.jpg"
+    },
+    {
+        id: 80,
+        name: "Dr. Tori Basar",
+        role: "Associate Professor",
+        department: "ce",
+        departmentName: "Civil Engineering",
+        email: "trb@nerist.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/imgonline-com-ua-resize-F5uwuXt87rw8P4z.jpg"
+    },
+    {
+        id: 81,
+        name: "Mr. Debabrata Das",
+        role: "Associate Professor",
+        department: "ce",
+        departmentName: "Civil Engineering",
+        email: "dbd@nerist.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/Portal-Photo.jpg"
+    },
+    {
+        id: 82,
+        name: "Dr. Aditi Bhadra",
+        role: "Head Of Department",
+        department: "ae",
+        departmentName: "Agriculture Engineering",
+        email: "ab[AT]nerist(dot)ac(dot)in",
+        phone: "+91 (0)360 2257401-08 Extns. 6209 (O)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/Aditi2-1-1.jpg"
+    },
+    {
+        id: 83,
+        name: "Dr. Parmendra Prasad Dabral",
+        role: "Professor",
+        department: "ae",
+        departmentName: "Agriculture Engineering",
+        email: "ppd@nerist.ac.in",
+        phone: "0360 - 2257401-8 Extn. 6107",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/PPDabralPhoto.jpg"
+    },
+    {
+        id: 84,
+        name: "Dr. Krishna Narayan Dewangan",
+        role: "Professor",
+        department: "ae",
+        departmentName: "Agriculture Engineering",
+        email: "knd@nerist.ac.in",
+        phone: "0360 - 2257401-8 Extn. 6101",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/dewangan_0.jpg"
+    },
+    {
+        id: 85,
+        name: "Dr. Arnab Bandyopadhyay",
+        role: "Professor",
+        department: "ae",
+        departmentName: "Agriculture Engineering",
+        email: "arnabbandyo[AT]nerist(dot)ac(dot)in",
+        phone: "+91 (0)360 2257401-08 Extns. 6102 (O), 6587 (R)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/01/enginneering-dep-image-1.png"
+    },
+    {
+        id: 86,
+        name: "Dr. Pankaj Kumar Pandey",
+        role: "Professor",
+        department: "ae",
+        departmentName: "Agriculture Engineering",
+        email: "pkp[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401-8 Extn 6264",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/PKPandey.jpeg"
+    },
+    {
+        id: 87,
+        name: "Dr. Thaneswer Patel",
+        role: "Professor",
+        department: "ae",
+        departmentName: "Agriculture Engineering",
+        email: "tp@nerist.ac.in",
+        phone: "+91 (0)360 2257401-08 Extns. 6263 (O)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/ThaneswerPatel-1.jpg"
+    },
+    {
+        id: 88,
+        name: "Mr. M. Ukil Singh",
+        role: "Assistant Professor",
+        department: "ae",
+        departmentName: "Agriculture Engineering",
+        email: "us@nerist.ac.in",
+        phone: "+91 9436230701",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/123.jpg"
+    },
+    {
+        id: 89,
+        name: "Dr. Anubhab Pal",
+        role: "Assistant Professor",
+        department: "ae",
+        departmentName: "Agriculture Engineering",
+        email: "anp@nerist.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/12/ANUBHAV_PAUL.jpg"
+    },
+    {
+        id: 90,
+        name: "Ms. Vanita Pandey",
+        role: "Assistant Professor",
+        department: "ae",
+        departmentName: "Agriculture Engineering",
+        email: "vp@nerisr.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/12/vinita_pandey.jpg"
+    },
+    {
+        id: 91,
+        name: "Dr. Tage Tapang",
+        role: "Assistant Professor",
+        department: "ae",
+        departmentName: "Agriculture Engineering",
+        email: "tt@nerist.ac.in",
+        phone: "0360 - 2257401-8 Extn. 6108 +91 98638 10608(M)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/IMG_6678.jpg"
+    },
+    {
+        id: 92,
+        name: "Dr. Madan Mohan Dixit",
+        role: "Head of the Department",
+        department: "math",
+        departmentName: "Mathematics",
+        email: "mmd[AT]nerist(dot)ac(dot)in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/01/MMD-1.jpg"
+    },
+    {
+        id: 93,
+        name: "Dr. Bhupendra Kumar Singh",
+        role: "Professor",
+        department: "math",
+        departmentName: "Mathematics",
+        email: "bks[AT]nerist(dot)ac(dot)in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/bks.png"
+    },
+    {
+        id: 94,
+        name: "Dr. Mohammad Hassan",
+        role: "Assistant Professor",
+        department: "math",
+        departmentName: "Mathematics",
+        email: "moh[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401-410, Extn-6192(off)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/01/MoH.jpg"
+    },
+    {
+        id: 95,
+        name: "Dr. Chandra Prakash Pandey",
+        role: "Assistant Professor",
+        department: "math",
+        departmentName: "Mathematics",
+        email: "cpp[AT]nerist(dot)ac(dot)in ",
+        phone: "0360-2257401-410,Extn-6180",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/01/CPP.jpeg"
+    },
+    {
+        id: 96,
+        name: "Dr. Amit Patra",
+        role: "Assistant Professor",
+        department: "math",
+        departmentName: "Mathematics",
+        email: "amp@nerist.ac.in/amitpatramath@gmail.com ",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/IMG-20250414-WA0030-3.jpg"
+    },
+    {
+        id: 97,
+        name: "Dr. Upasana Gogoi",
+        role: "Assistant Professor",
+        department: "math",
+        departmentName: "Mathematics",
+        email: "upa@nerist.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/Upa-1.jpg"
+    },
+    {
+        id: 98,
+        name: "Dr. Biswajit Pandit",
+        role: "Assistant Professor",
+        department: "math",
+        departmentName: "Mathematics",
+        email: "bpt@nerist.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/rsz_whatsapp_image_2025-07-01_at_105134.jpg"
+    },
+    {
+        id: 99,
+        name: "Dr. Pranjal Vishwakarma",
+        role: "Assistant Professor",
+        department: "math",
+        departmentName: "Mathematics",
+        email: "pvk@nerist.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/Pranjal_Photo-Nerist.jpg"
+    },
+    {
+        id: 100,
+        name: "Dr. Shekhar Singh Negi",
+        role: "Assistant Professor",
+        department: "math",
+        departmentName: "Mathematics",
+        email: "ssn@nerist.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/image-500x650-1-2.jpg"
+    },
+    {
+        id: 101,
+        name: "Dr. Neelabja Chatterjee",
+        role: "Assistant Professor",
+        department: "math",
+        departmentName: "Mathematics",
+        email: "nlc@nerist.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/nlc_2-1.jpg"
+    },
+    {
+        id: 102,
+        name: "Dr. Mukesh Upadhyay",
+        role: "Head Of Department",
+        department: "physics",
+        departmentName: "Physics",
+        email: "mu[AT]nerist(dot)ac(dot)in",
+        phone: "0360 2257401-408 (O), 2999732 (R)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/daead093a726a9245adb4f8f12f5689f.jpg"
+    },
+    {
+        id: 103,
+        name: "Dr. Tado Karlo",
+        role: "Professor",
+        department: "physics",
+        departmentName: "Physics",
+        email: "tk[AT]nerist(dot)ac(dot)in",
+        phone: "2257401 - 410 extn. 6198 (Off)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/TK_1.jpg"
+    },
+    {
+        id: 104,
+        name: "Dr. Rajesh Kumar Yadav",
+        role: "Professor",
+        department: "physics",
+        departmentName: "Physics",
+        email: "rky[AT]nerist(dot)ac(dot)in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/IMG20250324094228.jpg"
+    },
+    {
+        id: 105,
+        name: "Dr. Kamal Saharia (on Lien)",
+        role: "Associate Professor",
+        department: "physics",
+        departmentName: "Physics",
+        email: "ksr[AT]nerist(dot)ac(dot)in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/KSR.jpg"
+    },
+    {
+        id: 106,
+        name: "Dr. Kunal Borah",
+        role: "Associate Professor",
+        department: "physics",
+        departmentName: "Physics",
+        email: "kb@nerist.ac.in",
+        phone: "2257401 - 410 extn. 6201",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/PP_new.jpg"
+    },
+    {
+        id: 107,
+        name: "Dr. Pawan Chetri",
+        role: "Associate Professor",
+        department: "physics",
+        departmentName: "Physics",
+        email: "pcr@nerist.ac.in",
+        phone: "7002893950",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/Passport-photo-1.jpg"
+    },
+    {
+        id: 108,
+        name: "Dr. Akbari Jahan",
+        role: "Associate Professor",
+        department: "physics",
+        departmentName: "Physics",
+        email: "aj[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401-410 extn. 6194 (Office)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/A-J_0.jpeg"
+    },
+    {
+        id: 109,
+        name: "Dr. Wahengbam Joychandra Singh ",
+        role: "Associate Professor",
+        department: "physics",
+        departmentName: "Physics",
+        email: "wjs@nerist.ac.in",
+        phone: "8837305691",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/photo.jpg"
+    },
+    {
+        id: 110,
+        name: "Dr. Chiging Sonia",
+        role: "Associate Professor",
+        department: "physics",
+        departmentName: "Physics",
+        email: "cgs@nerist.ac.in",
+        phone: "+918794825722",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/Sonia-pp-1.jpg"
+    },
+    {
+        id: 111,
+        name: "Dr. Mihir Paul",
+        role: "Associate Professor",
+        department: "physics",
+        departmentName: "Physics",
+        email: "mpl@nerist.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/Mihir-Paul.jpg"
+    },
+    {
+        id: 112,
+        name: "Dr. Raju Kumar Biswas",
+        role: "Associate Professor",
+        department: "physics",
+        departmentName: "Physics",
+        email: "rkb@nerist.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/raju11.jpg"
+    },
+    {
+        id: 113,
+        name: "Dr. Meera Yadav",
+        role: "Head Of Department",
+        department: "chemistry",
+        departmentName: "Chemistry",
+        email: "my[AT] nerist(dot)ac(dot)in",
+        phone: "2257401 - 410 extn. 6122 (off)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/WhatsApp-Image-2024-10-10-at-21.15.03-Copy.jpeg"
+    },
+    {
+        id: 114,
+        name: "Dr. Pradeep Kumar Tripathy",
+        role: "Professor",
+        department: "chemistry",
+        departmentName: "Chemistry",
+        email: "pkt [AT] nerist(dot)ac(dot)in",
+        phone: "2257401 - 410 extn. 6124 (off)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/PKT.jpg"
+    },
+    {
+        id: 115,
+        name: "Dr. Nidhuban Deb",
+        role: "Professor",
+        department: "chemistry",
+        departmentName: "Chemistry",
+        email: "nd [AT] nerist(dot)ac(dot)in",
+        phone: "0360-2257401-10-Extn-6116",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/ND.jpg"
+    },
+    {
+        id: 116,
+        name: "Dr. Amit Anthwal",
+        role: "Associate Professor",
+        department: "chemistry",
+        departmentName: "Chemistry",
+        email: "aaw@nerist.ac.in",
+        phone: "0360-2257401-10-Extn-6116",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/02/resize-17407330211958787488Myphoto.jpg"
+    },
+    {
+        id: 117,
+        name: "Dr. Ningthoujam Ghanashyam Singh",
+        role: "Associate Professor",
+        department: "chemistry",
+        departmentName: "Chemistry",
+        email: "ngs[AT] nerist(dot)ac(dot)in,",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/NGS.jpg"
+    },
+    {
+        id: 118,
+        name: "Dr. Jagannath Bhuyan (On Lien)",
+        role: "Associate Professor",
+        department: "chemistry",
+        departmentName: "Chemistry",
+        email: "jn[AT]nerist(dot)ac(dot)in",
+        phone: "+91-360-2257401 to 411; Ext. 6114",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/jagnnath.jpg"
+    },
+    {
+        id: 119,
+        name: "Dr. Shashi Lata Bharati",
+        role: "Associate Professor",
+        department: "chemistry",
+        departmentName: "Chemistry",
+        email: "slb [AT] nerist(dot)ac(dot)in",
+        phone: "0360-2257401-8 extn.6126",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/WhatsApp-Image-2024-10-23-at-11.55.36_6d5c15ed-1.jpg"
+    },
+    {
+        id: 120,
+        name: "Dr. Arumugam Murugan",
+        role: "Associate Professor",
+        department: "chemistry",
+        departmentName: "Chemistry",
+        email: "amu[AT] nerist(dot)ac(dot)in",
+        phone: "0360-2257401 to 408; Ext. 7134",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/DSCN0952.jpg"
+    },
+    {
+        id: 121,
+        name: "Dr. Nagendra Nath Yadav",
+        role: "Associate Professor",
+        department: "chemistry",
+        departmentName: "Chemistry",
+        email: "nny[AT]nerist(dot)ac(dot)in",
+        phone: "+91-360-2257401 to 408; Ext. 7134",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/visa.jpg"
+    },
+    {
+        id: 122,
+        name: "Dr. Karuna Mahato",
+        role: "Associate Professor",
+        department: "chemistry",
+        departmentName: "Chemistry",
+        email: "kmh@nerist.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/IMG_20230215_1409283.jpg"
+    },
+    {
+        id: 123,
+        name: "Dr. Raju Barthakur",
+        role: "Head of the Department",
+        department: "humanities",
+        departmentName: "Humanities and Social Sciences",
+        email: "raju[AT]nerist(dot)ac(dot)in",
+        phone: "+91-360-2257401 Ext: 6205",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/IMG_5622.jpg"
+    },
+    {
+        id: 124,
+        name: "Dr. Prataprudra Parida",
+        role: "Professor",
+        department: "humanities",
+        departmentName: "Humanities and Social Sciences",
+        email: "prp[AT]nerist(dot)ac(dot)in",
+        phone: "0360- 2257401-408 Ext: 6171",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/PP.jpg"
+    },
+    {
+        id: 125,
+        name: "Mr. Ranendra Prasad",
+        role: "Associate Professor",
+        department: "humanities",
+        departmentName: "Humanities and Social Sciences",
+        email: "rpr[AT]nerist(dot)ac(dot)in",
+        phone: "+91-360- 2257401-408 Extension:6173",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/RP.jpg"
+    },
+    {
+        id: 126,
+        name: "Dr. Ravi Kumar Gupta",
+        role: "Associate Professor",
+        department: "humanities",
+        departmentName: "Humanities and Social Sciences",
+        email: "rkg@nerist.ac.in",
+        phone: "9936149685",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/Dr.-Ravi-Kumar-Gupta.jpg"
+    },
+    {
+        id: 127,
+        name: "Dr. Yuma Narah",
+        role: "Associate Professor",
+        department: "humanities",
+        departmentName: "Humanities and Social Sciences",
+        email: "ynr@nerist.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/Dr.-Yuma-Narah.jpg"
+    },
+    {
+        id: 128,
+        name: "Dr. Geling Modi",
+        role: "Associate Professor",
+        department: "humanities",
+        departmentName: "Humanities and Social Sciences",
+        email: "glm@nerist.ac.in",
+        phone: "",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/03/Dr.-Geling-Modi.jpg"
+    },
+    {
+        id: 129,
+        name: "Dr. Awadhesh Kumar",
+        role: "Head of Department",
+        department: "forestry",
+        departmentName: "Forestry",
+        email: "adk[AT]nerist(dot)ac(dot)in",
+        phone: "+91-360-2257401-11, Ext. 6250",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/Awadhesh.jpg"
+    },
+    {
+        id: 130,
+        name: "Dr. Binay Singh",
+        role: "Professor",
+        department: "forestry",
+        departmentName: "Forestry",
+        email: "bs[AT]nerist(dot)ac(dot)in",
+        phone: "+94360-225401-11, Ext. 6113",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/BS.jpg"
+    },
+    {
+        id: 131,
+        name: "Dr. Chaman Lal Sharma",
+        role: "Professor",
+        department: "forestry",
+        departmentName: "Forestry",
+        email: "cls[AT]nerist(dot)ac(dot)in",
+        phone: "2257401-8 Extension: 7153",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/cls.jpg"
+    },
+    {
+        id: 132,
+        name: "Dr. Madhu Bala Sharma",
+        role: "Professor",
+        department: "forestry",
+        departmentName: "Forestry",
+        email: "ms[AT]nerist(dot)ac(dot)in",
+        phone: "2257401-8 Extension 7154",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/mbs.jpg.jpg"
+    },
+    {
+        id: 133,
+        name: "Dr. Karuna Shrivastava",
+        role: "Professor",
+        department: "forestry",
+        departmentName: "Forestry",
+        email: "ks[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401-8 extn.6155",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/KS.jpg"
+    },
+    {
+        id: 134,
+        name: "Dr. Padma Raj Gajurel",
+        role: "Professor",
+        department: "forestry",
+        departmentName: "Forestry",
+        email: "prg[AT]nerist(dot)ac(dot)in",
+        phone: "360 2257401-08 extn. 6110",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/11.png"
+    },
+    {
+        id: 135,
+        name: "Dr. Govinda Pangging",
+        role: "Associate Professor",
+        department: "forestry",
+        departmentName: "Forestry",
+        email: "gp[AT]nerist(dot)ac(dot)in",
+        phone: "0360-2257401-8 (extn.7157 and 6598)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/01/Presentation2.jpg"
+    },
+    {
+        id: 136,
+        name: "Dr. Ashish Paul",
+        role: "Associate Professor",
+        department: "forestry",
+        departmentName: "Forestry",
+        email: "apl[AT]nerist(dot)ac(dot)in",
+        phone: "+91-360-2257401-411 Ext. 7162 (O)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/Ashish-1.jpg"
+    },
+    {
+        id: 137,
+        name: "Dr. Madhu Kamle",
+        role: "Associate Professor",
+        department: "forestry",
+        departmentName: "Forestry",
+        email: "mka[AT]nerist(dot)ac(dot)in",
+        phone: "+91-360-2257401-411 Ext. 7164 (O)",
+        photo: "https://nerist.ac.in/wp-content/uploads/2024/02/mkvh.jpg"
+    },
+    {
+        id: 138,
+        name: "Dr. Gurumayum Ranibala",
+        role: "Associate Professor",
+        department: "forestry",
+        departmentName: "Forestry",
+        email: "gmr@nerist.ac.in",
+        phone: "9862634627",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/02/Dr.-Ranibala-Devi.jpeg"
+    },
+    {
+        id: 139,
+        name: "Dr. Mihir Ranjan Panda",
+        role: "Associate Professor",
+        department: "forestry",
+        departmentName: "Forestry",
+        email: "mrp[AT]nerist(dot)ac(dot)in",
+        phone: "+91-8280001310",
+        photo: "https://nerist.ac.in/wp-content/uploads/2025/02/Dr.-Mihir-Ranjan-Panda.jpg"
+    }
+    ];
+
+    // DOM Elements
+    const teacherGrid = document.getElementById('teacher-grid');
+    const searchInput = document.getElementById('teacher-search');
+    const deptFilter = document.getElementById('department-filter');
+    const roleFilter = document.getElementById('role-filter');
+    const teacherForm = document.getElementById('teacher-form');
+    const addForm = document.getElementById('add-teacher-form');
+    const toggleFormBtn = document.getElementById('toggle-form-btn');
+    const cancelBtn = document.getElementById('cancel-add');
+
+    // Initialize directory
+    if (teacherGrid) {
+        renderTeacherGrid(teachers);
+    }
+
+    // Search functionality
+    if (searchInput) {
+        searchInput.addEventListener('input', filterTeachers);
+    }
+    if (deptFilter) {
+        deptFilter.addEventListener('change', filterTeachers);
+    }
+    if (roleFilter) {
+        roleFilter.addEventListener('change', filterTeachers);
+    }
+
+    // Show/hide add form
+    if (toggleFormBtn) {
+        toggleFormBtn.addEventListener('click', () => {
+            addForm.style.display = addForm.style.display === 'block' ? 'none' : 'block';
+            toggleFormBtn.innerHTML = addForm.style.display === 'block' 
+                ? '<i class="fas fa-times"></i> Cancel Adding' 
+                : '<i class="fas fa-plus-circle"></i> Add New Staff Member';
+        });
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            addForm.style.display = 'none';
+            toggleFormBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Add New Staff Member';
+            teacherForm.reset();
+        });
+    }
+
+    // Form submission
+    if (teacherForm) {
+        teacherForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newTeacher = {
+                id: teachers.length + 1,
+                name: document.getElementById('input-name').value,
+                role: document.getElementById('input-role').value,
+                department: document.getElementById('input-department').value,
+                departmentName: document.getElementById('input-department').selectedOptions[0].text,
+                email: document.getElementById('input-email').value,
+                phone: document.getElementById('input-phone').value,
+                room: document.getElementById('input-room').value,
+                subjects: document.getElementById('input-subjects').value,
+                photo: document.getElementById('input-photo').value || `https://ui-avatars.com/api/?name=${encodeURIComponent(document.getElementById('input-name').value)}&background=3498db&color=fff&size=200`
+            };
+            
+            teachers.push(newTeacher);
+            renderTeacherGrid(teachers);
+            teacherForm.reset();
+            addForm.style.display = 'none';
+            toggleFormBtn.innerHTML = '<i class="fas fa-plus-circle"></i> Add New Staff Member';
+            
+            const newCard = document.querySelector(`[data-id="${newTeacher.id}"]`);
+            if (newCard) {
+                newCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                newCard.style.animation = 'highlight 1.5s ease';
+            }
+            
+            alert(`Added ${newTeacher.name} to the directory!`);
+        });
+    }
+
+    // Render teacher cards
+    function renderTeacherGrid(teacherList) {
+        if (!teacherGrid) return;
+        teacherGrid.innerHTML = '';
+        
+        if (teacherList.length === 0) {
+            teacherGrid.innerHTML = `
+                <div class="no-results" style="grid-column: 1/-1; text-align: center; padding: 40px; color: #7f8c8d;">
+                    <i class="fas fa-user-slash fa-3x" style="margin-bottom: 20px;"></i>
+                    <h3>No staff members found</h3>
+                    <p>Try adjusting your search or filters</p>
+                </div>
+            `;
+            return;
+        }
+        
+        teacherList.forEach(teacher => {
+            const card = document.createElement('div');
+            card.className = 'teacher-card';
+            card.dataset.id = teacher.id;
+            card.dataset.department = teacher.department;
+            card.dataset.role = teacher.role.toLowerCase().includes('professor') || teacher.role.toLowerCase().includes('teacher') ? 'teacher' : 
+                              teacher.role.toLowerCase().includes('hod') || teacher.role.toLowerCase().includes('head') ? 'hod' :
+                              teacher.role.toLowerCase().includes('warden') ? 'warden' : 'staff';
+            
+            card.innerHTML = `
+                <div class="teacher-photo">
+                    ${teacher.photo ? 
+                        `<img src="${teacher.photo}" alt="${teacher.name}" loading="lazy">` : 
+                        `<i class="fas fa-user-graduate"></i>`
+                    }
+                </div>
+                <div class="teacher-info">
+                    <h3 class="teacher-name">${teacher.name}</h3>
+                    <div class="teacher-role">${teacher.role}</div>
+                    <span class="teacher-department">${teacher.departmentName}</span>
+                    
+                    <div class="teacher-contact">
+                        ${teacher.email ? `
+                            <div class="contact-item">
+                                <i class="fas fa-envelope"></i>
+                                <span>${teacher.email.replace(/\[AT\]/g, '@').replace(/\(dot\)/g, '.')}</span>
+                            </div>
+                        ` : ''}
+                        
+                        ${teacher.phone ? `
+                            <div class="contact-item">
+                                <i class="fas fa-phone"></i>
+                                <span>${teacher.phone}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+            teacherGrid.appendChild(card);
+        });
+    }
+
+    // Filter teachers based on search and filters
+    function filterTeachers() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedDept = deptFilter.value;
+        const selectedRole = roleFilter.value;
+        
+        const filtered = teachers.filter(teacher => {
+            const matchesSearch = !searchTerm || 
+                teacher.name.toLowerCase().includes(searchTerm) ||
+                teacher.role.toLowerCase().includes(searchTerm) ||
+                teacher.departmentName.toLowerCase().includes(searchTerm);
+            
+            const matchesDept = selectedDept === 'all' || teacher.department === selectedDept;
+            
+            const roleLower = teacher.role.toLowerCase();
+            let teacherRole = 'staff';
+            
+            if (roleLower.includes('head') || roleLower.includes('hod')) {
+                teacherRole = 'hod';
+            } else if (roleLower.includes('professor') && !roleLower.includes('associate') && !roleLower.includes('assistant')) {
+                teacherRole = 'professor';
+            } else if (roleLower.includes('associate professor')) {
+                teacherRole = 'associate';
+            } else if (roleLower.includes('assistant professor')) {
+                teacherRole = 'assistant';
+            } else if (roleLower.includes('warden')) {
+                teacherRole = 'warden';
+            }
+            
+            const matchesRole = selectedRole === 'all' || teacherRole === selectedRole;
+            
+            return matchesSearch && matchesDept && matchesRole;
+        });
+        
+        renderTeacherGrid(filtered);
+    }
+
+    // Add highlight animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes highlight {
+            0% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(52, 152, 219, 0); }
+            100% { box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+        }
+    `;
+    document.head.appendChild(style);
+});
+
+    // ============ FIXED AUTHENTICATION JAVASCRIPT ============
+    function checkAuth() {
+      const user = window.Auth ? window.Auth.getCurrentUser() : null;
+      
+      const welcomeMsg = document.getElementById('welcome-message');
+      const userName = document.getElementById('user-name');
+      const userRegno = document.getElementById('user-regno');
+      const loginBtn = document.getElementById('login-btn');
+      const logoutBtn = document.getElementById('logout-btn');
+      
+      if (user) {
+        if (welcomeMsg) welcomeMsg.style.display = 'flex';
+        if (userName) userName.textContent = user.name || 'User';
+        if (userRegno) userRegno.textContent = user.registrationNumber || '';
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (logoutBtn) logoutBtn.style.display = 'flex';
+        return user;
+      }
+      
+      if (welcomeMsg) welcomeMsg.style.display = 'none';
+      if (loginBtn) loginBtn.style.display = 'flex';
+      if (logoutBtn) logoutBtn.style.display = 'none';
+      return null;
+    }
+    
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      const loginBtn = document.getElementById('login-btn');
+      const logoutBtn = document.getElementById('logout-btn');
+      
+      if (loginBtn) {
+        loginBtn.addEventListener('click', () => {
+          window.location.href = 'login.html';
+        });
+      }
+      
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+          if (window.Auth) window.Auth.logout();
+        });
+      }
+    });
+    
+    // Check auth on page load - multiple attempts
+    checkAuth();
+    setTimeout(checkAuth, 50);
+    setTimeout(checkAuth, 100);
+    setTimeout(checkAuth, 200);
+    setTimeout(checkAuth, 500);
+    
+    // Listen for auth state changes
+    window.addEventListener('authStateChanged', checkAuth);
+    
+    // Chatbot functions
+    function toggleChat() {
+      const chat = document.getElementById('chatbot-box');
+      if (chat) {
+        chat.style.display = chat.style.display === 'flex' ? 'none' : 'flex';
+      }
+    }
+    
+    async function sendMessage() {
+      const input = document.getElementById('chat-input');
+      if (!input) return;
+      const msg = input.value.trim();
+      if (!msg) return;
+      
+      const messages = document.getElementById('chatbot-messages');
+      if (!messages) return;
+      
+      messages.innerHTML += `<div class="user-msg">${msg}</div>`;
+      input.value = '';
+      
+      const responses = {
+        'computer science': 'The Computer Science department has faculty specializing in AI, Machine Learning, and Data Structures.',
+        'electronics': 'Electronics department faculty work in Communication Systems, VLSI, and Signal Processing.',
+        'electrical': 'Electrical Engineering department covers Power Systems, Control Systems, and Renewable Energy.',
+        'hod': 'Heads of Departments can be filtered using the "HOD / Head" filter in the directory.',
+        'professor': 'Professors can be found using the role filter. Each department has multiple professors.',
+        'contact': 'Faculty contact information is available in their profile cards above.',
+        'help': 'Use the search box to find faculty by name, or use filters to search by department or role.'
+      };
+      
+      let reply = "I can help you find faculty information. Try searching by department or role using the filters above.";
+      
+      const lowerMsg = msg.toLowerCase();
+      for (const [key, response] of Object.entries(responses)) {
+        if (lowerMsg.includes(key)) {
+          reply = response;
+          break;
+        }
+      }
+      
+      setTimeout(() => {
+        messages.innerHTML += `<div class="bot-msg">${reply}</div>`;
+        messages.scrollTop = messages.scrollHeight;
+      }, 500);
+    }
+    
+    // Theme toggle
+    function toggleTheme() {
+      document.body.classList.toggle('light-theme');
+      localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
+    }
+    
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+      document.body.classList.add('light-theme');
+    }
+  </script>
+  
+  <script src="app.js"></script>
+</body>
+</html>

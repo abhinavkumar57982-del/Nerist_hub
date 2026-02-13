@@ -1,0 +1,29 @@
+{
+"type": "FeatureCollection",
+"name": "MECH ENTRY CONNECTOR",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "id": null, "room_no": "A.GIRI", "floor": 0 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.742846190426249, 27.131675661359917 ], [ 93.742842940672389, 27.131589178880986 ] ] ] } },
+{ "type": "Feature", "properties": { "id": null, "room_no": "BIO DIESEL LAB", "floor": 0 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.742901119191572, 27.131677072166518 ], [ 93.742852214359985, 27.131589178880979 ] ] ] } },
+{ "type": "Feature", "properties": { "id": null, "room_no": "ROBOTICS AND CONTROL ENGG LAB", "floor": 0 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.742746954042104, 27.13167086461733 ], [ 93.742727257363626, 27.131589181085374 ], [ 93.742727257363626, 27.131589181085374 ] ] ] } },
+{ "type": "Feature", "properties": { "id": null, "room_no": "CIM AND ROBOTICS LAB", "floor": 0 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.742775646990225, 27.131522377116116 ], [ 93.742727257363626, 27.131589181085374 ] ] ] } },
+{ "type": "Feature", "properties": { "id": null, "room_no": "FLUID POWER AND AUTOMATION LAB", "floor": 0 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.742567345698305, 27.131526327379991 ], [ 93.742590965859918, 27.131589178880979 ] ] ] } },
+{ "type": "Feature", "properties": { "id": null, "room_no": "COMPUTER LAB", "floor": 0 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.742480632755615, 27.131533240341426 ], [ 93.742590965859918, 27.131589178880979 ] ] ] } },
+{ "type": "Feature", "properties": { "id": null, "room_no": "GENT'S TOILET", "floor": 0 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.742641693724082, 27.131748600038126 ], [ 93.74259968471145, 27.131801117267795 ] ] ] } },
+{ "type": "Feature", "properties": { "id": null, "room_no": "HOD MECH DEPT", "floor": 0 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.742650571100256, 27.131806725217647 ], [ 93.74259968471145, 27.131801117267795 ] ] ] } },
+{ "type": "Feature", "properties": { "id": null, "room_no": "LADIE'S TOILET", "floor": 0 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.742649619952815, 27.13184030237068 ], [ 93.74259968471145, 27.131801117267795 ] ] ] } },
+{ "type": "Feature", "properties": { "id": null, "room_no": "FARM MACHINE LAB", "floor": 0 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.742509642752879, 27.132029561639236 ], [ 93.742607293891055, 27.131972671028088 ] ] ] } },
+{ "type": "Feature", "properties": { "id": null, "room_no": "FIST PROJECT LAB", "floor": 0 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.742758684860618, 27.131871904387861 ], [ 93.742769465001999, 27.131972691372766 ], [ 93.742769462825919, 27.131972671028088 ] ] ] } },
+{ "type": "Feature", "properties": { "id": null, "room_no": "LIQUID CRYSTAL RESEARCH LAB", "floor": 0 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.742844129606695, 27.131872891950749 ], [ 93.742845505594232, 27.131972768121262 ], [ 93.742845504256593, 27.131972671028088 ] ] ] } },
+{ "type": "Feature", "properties": { "id": null, "room_no": "COMPUTER LAB", "floor": 0 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.742855860425323, 27.132030690280949 ], [ 93.742845504256593, 27.131972671028088 ] ] ] } },
+{ "type": "Feature", "properties": { "id": null, "room_no": "DEPARTMENTAL LIBRARY", "floor": 1 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.742697089536378, 27.131878137211071 ], [ 93.742607293891055, 27.131972671028088 ] ] ] } },
+{ "type": "Feature", "properties": { "id": null, "room_no": "SEMINAR HAL", "floor": 1 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.742532029492722, 27.132045065161705 ], [ 93.742607293891055, 27.131972671028088 ] ] ] } },
+{ "type": "Feature", "properties": { "id": null, "room_no": "M.DABI", "floor": 1 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.742491325030556, 27.131977219532747 ], [ 93.742607293891055, 27.131972671028088 ] ] ] } },
+{ "type": "Feature", "properties": { "id": null, "room_no": "K.K MANDAL", "floor": 1 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.742489945218281, 27.131938998787003 ], [ 93.742607293891055, 27.131972671028088 ] ] ] } },
+{ "type": "Feature", "properties": { "id": null, "room_no": "S.S SINGH", "floor": 1 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.74249339474899, 27.131875297515041 ], [ 93.74260302514638, 27.131877024357252 ], [ 93.74260302514638, 27.131877024357252 ] ] ] } },
+{ "type": "Feature", "properties": { "id": null, "room_no": "AICTE CELL", "floor": 1 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.742492791081133, 27.131819578059456 ], [ 93.74259968471145, 27.131801117267795 ] ] ] } },
+{ "type": "Feature", "properties": { "id": null, "room_no": "S.S GAUTAM", "floor": 1 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.742492359889795, 27.131761479368894 ], [ 93.74259968471145, 27.131801117267795 ] ] ] } },
+{ "type": "Feature", "properties": { "id": null, "room_no": "N.TAGI", "floor": 1 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.742500293810409, 27.131677669843992 ], [ 93.742594875630175, 27.131677516346674 ], [ 93.742594599957243, 27.131677516794063 ], [ 93.742594875630161, 27.131677516346674 ] ] ] } },
+{ "type": "Feature", "properties": { "id": null, "room_no": "UBA NERIST CELL", "floor": 1 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ 93.74249908647468, 27.131604144586344 ], [ 93.742590965859918, 27.131589178880979 ] ] ] } }
+]
+}

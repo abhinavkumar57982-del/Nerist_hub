@@ -1,0 +1,440 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="description" content="NERIST Campus Hub - Navigation, Marketplace, Lost & Found, Study Resources">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+<title>NERIST Campus Hub</title>
+
+  <link rel="icon" href="feviconicon.png">
+  <!-- Notification Styles -->
+<link rel="stylesheet" href="notifications.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- NAVBAR WITH AUTHENTICATION -->
+ <!-- Updated NAVBAR section -->
+<nav class="navbar">
+  <div class="nav-left">
+    <a href="/index.html" class="logo">
+      <span class="logo-icon">🧑‍🎓</span>
+      <span>NERIST Hub</span>
+    </a>
+    
+    <div class="menu">
+      <span><i class="fas fa-search"></i> Lost & Found ▾</span>
+      <div class="dropdown">
+        <a href="/lost.html"><i class="fas fa-question-circle"></i> Lost Items</a>
+        <a href="/found.html"><i class="fas fa-check-circle"></i> Found Items</a>
+      </div>
+    </div>
+
+    <div class="menu">
+      <span><i class="fas fa-store"></i> Marketplace ▾</span>
+      <div class="dropdown">
+        <a href="/marketplace.html"><i class="fas fa-tag"></i> Sell Items</a>
+        <a href="/buy-requests.html"><i class="fas fa-shopping-cart"></i> Buy Requests</a>
+      </div>
+    </div>
+
+    <div class="menu">
+      <span><i class="fas fa-file-alt"></i> Study ▾</span>
+      <div class="dropdown">
+        <a href="/questionpaper.html"><i class="fas fa-book"></i> Question Papers</a>
+        <a href="/upload-paper.html"><i class="fas fa-upload"></i> Upload Papers</a>
+        <a href="/timetable.html"><i class="fas fa-calendar-alt"></i> TimeTable</a>
+      </div>
+    </div>
+    
+    <!-- NEW: Teacher Directory Menu -->
+    <div class="menu">
+      <span><i class="fas fa-chalkboard-teacher"></i> Faculty ▾</span>
+      <div class="dropdown">
+        <a href="/teachers.html"><i class="fas fa-users"></i> Teacher Directory</a>
+        <a href="/teachers.html#staff-directory"><i class="fas fa-search"></i> Search Faculty</a>
+      </div>
+    </div>
+    
+    <div class="menu">
+      <span><i class="fa-solid fa-briefcase"></i></i> Services ▾</span>
+      <div class="dropdown">
+        <a href="/rentals.html"><i class="fa-solid fa-briefcase"></i> Services</a>
+      </div>
+    </div>
+    
+    <div class="menu">
+      <span><i class="fas fa-map"></i> Navigation ▾</span>
+      <div class="dropdown">
+        <a href="/map.html"><i class="fas fa-location-dot"></i> Campus Map</a>
+      </div>
+    </div>
+  </div>
+  
+  <!-- AUTH SECTION IN NAVBAR -->
+  <!-- AUTH SECTION IN NAVBAR -->
+<div class="nav-right">
+    <div id="user-info" class="user-info">
+        <span id="welcome-message" class="welcome-message" style="display: none;">
+            <i class="fas fa-user-circle"></i>
+            <span id="user-name"></span> (<span id="user-regno"></span>)
+        </span>
+        <button id="login-btn" class="auth-btn login-btn">
+            <i class="fas fa-sign-in-alt"></i>
+            <span>Login / Register</span>
+        </button>
+        <button id="logout-btn" class="auth-btn logout-btn" style="display: none;">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </button>
+    </div>
+    
+    <!-- Notification Bell -->
+    <div class="notification-bell-container">
+        <div class="notification-bell" onclick="toggleNotifications()">
+            <i class="fas fa-bell"></i>
+            <span id="notification-badge" class="notification-badge" style="display: none;">0</span>
+            
+            <!-- Notification Dropdown -->
+            <div id="notification-dropdown" class="notification-dropdown">
+                <div class="notification-header">
+                    <h3>Notifications</h3>
+                    <button class="mark-read-btn" onclick="event.stopPropagation(); markAllAsRead()">
+                        Mark all as read
+                    </button>
+                </div>
+                <div id="notifications-list" class="notifications-list">
+                    <!-- Notifications will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <i class="fas fa-moon"></i>
+        <span>Theme</span>
+    </button>
+</div>
+</nav>
+
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <h1>Welcome to NERIST Campus Hub</h1>
+        <p>Your all-in-one platform for campus services - Lost & Found, Marketplace, Study Materials, Rentals & Navigation</p>
+        
+        <div class="hero-stats">
+          <div class="stat">
+            <span class="stat-number">500+</span>
+            <span class="stat-label">Items Found</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number">200+</span>
+            <span class="stat-label">Items Sold</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number">1000+</span>
+            <span class="stat-label">Papers Shared</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number">50+</span>
+            <span class="stat-label">Bikes Rented</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUICK ACTIONS -->
+  <div class="container">
+    <!-- Update this section in index.html -->
+<div class="quick-actions">
+    <a href="/lost.html" class="quick-action">
+        <i class="fas fa-search"></i>
+        <h3>Lost Something?</h3>
+        <p>Report lost items or check found items</p>
+    </a>
+    
+    <a href="/marketplace.html" class="quick-action">
+        <i class="fas fa-store"></i>
+        <h3>Buy/Sell</h3>
+        <p>Second-hand items at student-friendly prices</p>
+    </a>
+    
+    <a href="/questionpaper.html" class="quick-action">
+        <i class="fas fa-book"></i>
+        <h3>Study Materials</h3>
+        <p>Access previous year question papers</p>
+    </a>
+    
+    <a href="/rentals.html" class="quick-action">
+        <i class="fa-solid fa-briefcase"></i>
+        <h3>Services</h3>
+        <p>Get different services</p>
+    </a>
+
+    <!-- Add this new quick action for timetable -->
+    <a href="timetable.html" class="quick-action">
+        <i class="fas fa-calendar-alt"></i>
+        <h3>View Timetable</h3>
+        <p>Check your class schedule and timetable</p>
+    </a>
+
+    <a href="/manual.html" class="quick-action">
+        <i class="fa-solid fa-briefcase"></i>
+        <h3>User Guide</h3>
+        <p>Know More About Nerist Hub</p>
+    </a>
+</div>
+  </div>
+
+  <!-- FEATURES -->
+  <section class="features">
+    <div class="container">
+      <h2 class="section-title">Our Services</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-search"></i>
+          </div>
+          <h3>Lost & Found</h3>
+          <p>Connect lost items with their owners through our efficient reporting system</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-shopping-cart"></i>
+          </div>
+          <h3>Campus Marketplace</h3>
+          <p>Buy and sell second-hand items within campus safely and conveniently</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-graduation-cap"></i>
+          </div>
+          <h3>Study Resources</h3>
+          <p>Access previous year question papers and study materials shared by seniors</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">
+            <i class="fas fa-map-marked-alt"></i>
+          </div>
+          <h3>Campus Navigation</h3>
+          <p>Interactive map to find labs, classrooms, and other facilities easily</p>
+        </div>
+
+        <div class="feature-card">
+  <div class="feature-icon">
+    <i class="fas fa-calendar-alt"></i>
+  </div>
+  <h3>View Timetable</h3>
+  <p>Check your class schedule and timetable</p>
+</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHATBOT -->
+  <div id="chatbot-btn" onclick="toggleChat()">
+    <i class="fas fa-robot"></i>
+  </div>
+
+  <div id="chatbot-box">
+    <div id="chatbot-header">
+      NERIST Assistant 🤖
+      <span onclick="toggleChat()"><i class="fas fa-times"></i></span>
+    </div>
+
+    <div id="chatbot-messages">
+      <div class="bot-msg">
+        👋 Hi! I'm your NERIST assistant. 🚧 Working on it... This feature will be available soon.
+      </div>
+    </div>
+
+    <div id="chatbot-input">
+      <input id="chat-input" placeholder="Ask about NERIST..." />
+      <button onclick="sendMessage()">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+ <footer class="footer">
+  <div class="container">
+    <div class="footer-content">
+      <!-- Brand Section -->
+      <div class="footer-section">
+        <h3>NERIST Campus Hub</h3>
+        <div class="developer-credit">
+          <p>Unofficial student platform for NERIST campus services and resources.</p>
+          <div class="developer-name">
+            <i class="fas fa-code"></i>
+            Developed by Abhinav Kumar
+            <span style="font-size: 12px; color: var(--text-secondary);">(BTech 1st Year CSE)</span>
+          </div>
+        </div>
+        <div class="social-links">
+          <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+          <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+          <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+          <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+      
+      <!-- Quick Links Section -->
+      <div class="footer-section">
+        <h3>Quick Links</h3>
+        <ul class="footer-links">
+          <li><a href="/lost.html"><i class="fas fa-arrow-right"></i> Lost & Found</a></li>
+          <li><a href="/marketplace.html"><i class="fas fa-arrow-right"></i> Marketplace</a></li>
+          <li><a href="/questionpaper.html"><i class="fas fa-arrow-right"></i> Question Papers</a></li>
+          <li><a href="/rentals.html"><i class="fas fa-arrow-right"></i> Services</a></li>
+          <li><a href="/map.html"><i class="fas fa-arrow-right"></i> Campus Map</a></li>
+          <li><a href="/timetable.html"><i class="fas fa-arrow-right"></i> Timetable</a></li>
+        </ul>
+      </div>
+      
+      <!-- Contact & Feedback Section -->
+      <div class="footer-section">
+        <h3>Get in Touch</h3>
+        <div class="contact-info">
+          <div class="contact-item">
+            <i class="fas fa-envelope"></i>
+            <span>abhinavkumar53210@gmail.com</span>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-phone-alt"></i>
+            <span>Email</span>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>NERIST, Nirjuli - 791109</span>
+          </div>
+        </div>
+        
+        <!-- Feedback Form Link - Styled as Button -->
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSe1XYRtRNLUKZoS1a44XJWvRnq5Amk0UD036FmEJMXb974_VA/viewform?usp=header" class="feedback-link">
+          <i class="fas fa-comment-dots"></i>
+          Give Feedback
+        </a>
+      </div>
+    </div>
+    
+    <!-- Footer Bottom -->
+    <div class="footer-bottom">
+      <p>
+        © 2026 NERIST Campus Hub. 
+        Made with <span class="heart"><i class="fas fa-heart"></i></span> 
+        for students.
+      </p>
+      <div class="footer-bottom-links">
+        <a href="/privacy.html"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+        <a href="/terms.html"><i class="fas fa-file-alt"></i> Terms of Use</a>
+        <a href="/contact.html"><i class="fas fa-headset"></i> Contact Us</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Back to Top Button -->
+<button class="back-to-top" id="backToTop">
+  <i class="fas fa-arrow-up"></i>
+</button>
+
+  <script src="app.js"></script>
+  <script>
+    // Authentication JavaScript
+ 
+  // Authentication JavaScript
+  function checkAuth() {
+      const user = Auth.getCurrentUser();
+      
+      if (user) {
+          document.getElementById('welcome-message').style.display = 'flex';
+          document.getElementById('user-name').textContent = user.name;
+          document.getElementById('user-regno').textContent = user.registrationNumber;
+          document.getElementById('login-btn').style.display = 'none';
+          document.getElementById('logout-btn').style.display = 'flex';
+          
+          return user;
+      }
+      
+      document.getElementById('login-btn').style.display = 'flex';
+      document.getElementById('logout-btn').style.display = 'none';
+      document.getElementById('welcome-message').style.display = 'none';
+      return null;
+  }
+  
+  // Event listeners
+  document.getElementById('login-btn').addEventListener('click', () => {
+      window.location.href = 'login.html';
+  });
+  
+  document.getElementById('logout-btn').addEventListener('click', () => {
+      Auth.logout();
+  });
+  
+  // Check auth on page load
+  document.addEventListener('DOMContentLoaded', checkAuth);
+  
+  // Rest of your existing code...
+
+    
+    // Check auth on page load
+    document.addEventListener('DOMContentLoaded', checkAuth);
+    
+    // Chatbot functions
+    function toggleChat() {
+      const chat = document.getElementById('chatbot-box');
+      chat.style.display = chat.style.display === 'flex' ? 'none' : 'flex';
+    }
+    
+    async function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const msg = input.value.trim();
+      if (!msg) return;
+      
+      const messages = document.getElementById('chatbot-messages');
+      messages.innerHTML += `<div class="user-msg">${msg}</div>`;
+      input.value = '';
+      
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg })
+        });
+        
+        const data = await res.json();
+        messages.innerHTML += `<div class="bot-msg">${data.reply}</div>`;
+        messages.scrollTop = messages.scrollHeight;
+      } catch (error) {
+        messages.innerHTML += `<div class="bot-msg">Sorry, I'm having trouble connecting.</div>`;
+      }
+    }
+    
+    // Theme toggle
+    function toggleTheme() {
+      document.body.classList.toggle('light-theme');
+      localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
+    }
+    
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+      document.body.classList.add('light-theme');
+    }
+  </script>
+  <script src="auth.js"></script>
+  <script src="app.js"></script>
+
+  <!-- Socket.io and Notifications -->
+<script src="/socket.io/socket.io.js"></script>
+<script src="notifications.js"></script>
+</body>
+</html>

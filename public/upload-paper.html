@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="description" content="NERIST Campus Hub - Navigation, Marketplace, Lost & Found, Study Resources">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>NERIST Campus Hub</title>
+  <link rel="icon" href="feviconicon.png">
+  <title>Upload Paper | NERIST Hub</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <a href="/index.html" class="logo">
+        <span class="logo-icon">🧑‍🎓</span>
+        <span>NERIST Hub</span>
+      </a>
+      
+      <div class="menu">
+        <span><i class="fas fa-search"></i> Lost & Found ▾</span>
+        <div class="dropdown">
+          <a href="/lost.html"><i class="fas fa-question-circle"></i> Lost Items</a>
+          <a href="/found.html"><i class="fas fa-check-circle"></i> Found Items</a>
+        </div>
+      </div>
+
+      <div class="menu">
+        <span><i class="fas fa-store"></i> Marketplace ▾</span>
+        <div class="dropdown">
+          <a href="/marketplace.html"><i class="fas fa-tag"></i> Sell Items</a>
+          <a href="/buy-requests.html"><i class="fas fa-shopping-cart"></i> Buy Requests</a>
+        </div>
+      </div>
+
+      <div class="menu">
+        <span><i class="fas fa-file-alt"></i> Study ▾</span>
+        <div class="dropdown">
+          <a href="/questionpaper.html"><i class="fas fa-book"></i> Question Papers</a>
+          <a href="/upload-paper.html"><i class="fas fa-upload"></i> Upload Papers</a>
+          <a href="/timetable.html"><i class="fas fa-calendar-alt"></i> TimeTable</a>
+        </div>
+      </div>
+      
+      <!-- Teacher Directory Menu -->
+      <div class="menu">
+        <span><i class="fas fa-chalkboard-teacher"></i> Faculty ▾</span>
+        <div class="dropdown">
+          <a href="/teachers.html"><i class="fas fa-users"></i> Teacher Directory</a>
+          <a href="/teachers.html#staff-directory"><i class="fas fa-search"></i> Search Faculty</a>
+        </div>
+      </div>
+      
+      <div class="menu">
+        <span><i class="fa-solid fa-briefcase"></i> Services ▾</span>
+        <div class="dropdown">
+          <a href="/rentals.html"><i class="fa-solid fa-briefcase"></i> Services</a>
+        </div>
+      </div>
+      
+      <div class="menu">
+        <span><i class="fas fa-map"></i> Navigation ▾</span>
+        <div class="dropdown">
+          <a href="/map.html"><i class="fas fa-location-dot"></i> Campus Map</a>
+        </div>
+      </div>
+    </div>
+    
+    <!-- AUTH SECTION IN NAVBAR -->
+    <div class="nav-right">
+      <div id="user-info" class="user-info">
+        <span id="welcome-message" class="welcome-message" style="display: none;">
+          <i class="fas fa-user-circle"></i>
+          <span id="user-name"></span> (<span id="user-regno"></span>)
+        </span>
+        <button id="login-btn" class="auth-btn login-btn">
+          <i class="fas fa-sign-in-alt"></i>
+          <span>Login / Register</span>
+        </button>
+        <button id="logout-btn" class="auth-btn logout-btn" style="display: none;">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+      
+      <button class="theme-toggle" onclick="toggleTheme()">
+        <i class="fas fa-moon"></i>
+        <span>Theme</span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h2><i class="fas fa-upload"></i> Upload Question Paper</h2>
+    
+    <div id="auth-message" class="alert alert-error" style="display: none;">
+      <i class="fas fa-exclamation-circle"></i>
+      <span>Please login to upload question papers.</span>
+    </div>
+
+    <form id="uploadForm" enctype="multipart/form-data" class="form-container" style="display: none;">
+      <div class="form-group">
+        <input name="year" type="number" placeholder="Year (e.g., 2023)" required />
+      </div>
+      
+      <div class="form-group">
+        <input name="semester" type="number" placeholder="Semester" required />
+      </div>
+
+      <div class="form-group">
+        <select name="branch" required>
+          <option value="">Select Branch</option>
+          <option value="CSE">CSE</option>
+          <option value="ECE">ECE</option>
+          <option value="ME">ME</option>
+          <option value="EE">EE</option>
+          <option value="AE">AE</option>
+          <option value="CE">CE</option>
+          <option value="FORESTRY">FORESTRY</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <input name="subject" placeholder="Subject Name" required />
+      </div>
+      
+      <div class="form-group">
+        <input name="subjectCode" placeholder="Subject Code" required />
+      </div>
+
+      <div class="form-group">
+        <label>Select PDF File</label>
+        <input type="file" name="pdf" accept="application/pdf" required />
+        <small>Only PDF files are allowed (Max 10MB)</small>
+      </div>
+      
+      <button type="submit" id="submitBtn">
+        <i class="fas fa-upload"></i> Upload Question Paper
+      </button>
+    </form>
+    
+    <div id="login-prompt" class="empty-state" style="display: none;">
+      <i class="fas fa-sign-in-alt"></i>
+      <h3>Login Required</h3>
+      <p>Please login to upload question papers.</p>
+      <a href="login.html" class="btn" style="margin-top: 20px;">
+        <i class="fas fa-sign-in-alt"></i> Login Now
+      </a>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+ <footer class="footer">
+  <div class="container">
+    <div class="footer-content">
+      <!-- Brand Section -->
+      <div class="footer-section">
+        <h3>NERIST Campus Hub</h3>
+        <div class="developer-credit">
+          <p>Unofficial student platform for NERIST campus services and resources.</p>
+          <div class="developer-name">
+            <i class="fas fa-code"></i>
+            Developed by Abhinav Kumar
+            <span style="font-size: 12px; color: var(--text-secondary);">(BTech 1st Year CSE)</span>
+          </div>
+        </div>
+        <div class="social-links">
+          <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+          <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+          <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+          <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+      
+      <!-- Quick Links Section -->
+      <div class="footer-section">
+        <h3>Quick Links</h3>
+        <ul class="footer-links">
+          <li><a href="/lost.html"><i class="fas fa-arrow-right"></i> Lost & Found</a></li>
+          <li><a href="/marketplace.html"><i class="fas fa-arrow-right"></i> Marketplace</a></li>
+          <li><a href="/questionpaper.html"><i class="fas fa-arrow-right"></i> Question Papers</a></li>
+          <li><a href="/rentals.html"><i class="fas fa-arrow-right"></i> Services</a></li>
+          <li><a href="/map.html"><i class="fas fa-arrow-right"></i> Campus Map</a></li>
+          <li><a href="/timetable.html"><i class="fas fa-arrow-right"></i> Timetable</a></li>
+        </ul>
+      </div>
+      
+      <!-- Contact & Feedback Section -->
+      <div class="footer-section">
+        <h3>Get in Touch</h3>
+        <div class="contact-info">
+          <div class="contact-item">
+            <i class="fas fa-envelope"></i>
+            <span>abhinavkumar53210@gmail.com</span>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-phone-alt"></i>
+            <span>Campus Help Desk</span>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>NERIST, Nirjuli - 791109</span>
+          </div>
+        </div>
+        
+        <!-- Feedback Form Link - Styled as Button -->
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSe1XYRtRNLUKZoS1a44XJWvRnq5Amk0UD036FmEJMXb974_VA/viewform?usp=header" class="feedback-link">
+          <i class="fas fa-comment-dots"></i>
+          Give Feedback
+        </a>
+      </div>
+    </div>
+    
+    <!-- Footer Bottom -->
+    <div class="footer-bottom">
+      <p>
+        © 2026 NERIST Campus Hub. 
+        Made with <span class="heart"><i class="fas fa-heart"></i></span> 
+        for students.
+      </p>
+      <div class="footer-bottom-links">
+        <a href="/privacy.html"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+        <a href="/terms.html"><i class="fas fa-file-alt"></i> Terms of Use</a>
+        <a href="/contact.html"><i class="fas fa-headset"></i> Contact Us</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+  <script src="auth.js"></script>
+  <script src="app.js"></script>
+  
+  <!-- AUTH UI FIX FOR UPLOAD PAPER PAGE -->
+  <script>
+    (function() {
+      // Function to update auth UI
+      function updateAuthUI() {
+        const user = window.Auth ? window.Auth.getCurrentUser() : null;
+        const welcomeMessage = document.getElementById('welcome-message');
+        const userName = document.getElementById('user-name');
+        const userRegno = document.getElementById('user-regno');
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        
+        if (user) {
+          if (welcomeMessage) {
+            welcomeMessage.style.display = 'flex';
+            if (userName) userName.textContent = user.name || 'User';
+            if (userRegno) userRegno.textContent = user.registrationNumber || '';
+          }
+          if (loginBtn) loginBtn.style.display = 'none';
+          if (logoutBtn) logoutBtn.style.display = 'flex';
+        } else {
+          if (welcomeMessage) welcomeMessage.style.display = 'none';
+          if (loginBtn) loginBtn.style.display = 'flex';
+          if (logoutBtn) logoutBtn.style.display = 'none';
+        }
+      }
+      
+      // Set up event listeners for auth buttons
+      function setupAuthListeners() {
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        
+        if (loginBtn) {
+          loginBtn.replaceWith(loginBtn.cloneNode(true));
+          const newLoginBtn = document.getElementById('login-btn');
+          if (newLoginBtn) {
+            newLoginBtn.addEventListener('click', function() {
+              window.location.href = 'login.html';
+            });
+          }
+        }
+        
+        if (logoutBtn) {
+          logoutBtn.replaceWith(logoutBtn.cloneNode(true));
+          const newLogoutBtn = document.getElementById('logout-btn');
+          if (newLogoutBtn) {
+            newLogoutBtn.addEventListener('click', function() {
+              if (window.Auth) {
+                window.Auth.logout();
+              }
+            });
+          }
+        }
+      }
+      
+      // Function to check login status and update form visibility
+      function checkLoginStatus() {
+        if (window.Auth && window.Auth.isLoggedIn()) {
+          const user = window.Auth.getCurrentUser();
+          if (user) {
+            const form = document.getElementById('uploadForm');
+            const loginPrompt = document.getElementById('login-prompt');
+            const authMessage = document.getElementById('auth-message');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (form) form.style.display = 'block';
+            if (loginPrompt) loginPrompt.style.display = 'none';
+            if (authMessage) authMessage.style.display = 'none';
+            if (submitBtn) submitBtn.disabled = false;
+            console.log('User authenticated:', user);
+          }
+        } else {
+          const form = document.getElementById('uploadForm');
+          const loginPrompt = document.getElementById('login-prompt');
+          const authMessage = document.getElementById('auth-message');
+          const submitBtn = document.getElementById('submitBtn');
+          
+          if (form) form.style.display = 'none';
+          if (loginPrompt) loginPrompt.style.display = 'block';
+          if (authMessage) authMessage.style.display = 'block';
+          if (submitBtn) submitBtn.disabled = true;
+          console.log('User not authenticated');
+        }
+      }
+      
+      // Run immediately
+      updateAuthUI();
+      setupAuthListeners();
+      checkLoginStatus();
+      
+      // Run after various delays to ensure scripts are loaded
+      setTimeout(updateAuthUI, 50);
+      setTimeout(setupAuthListeners, 50);
+      setTimeout(checkLoginStatus, 50);
+      setTimeout(updateAuthUI, 100);
+      setTimeout(setupAuthListeners, 100);
+      setTimeout(checkLoginStatus, 100);
+      setTimeout(updateAuthUI, 200);
+      setTimeout(checkLoginStatus, 200);
+      setTimeout(updateAuthUI, 300);
+      setTimeout(checkLoginStatus, 300);
+      setTimeout(updateAuthUI, 500);
+      setTimeout(checkLoginStatus, 500);
+      setTimeout(updateAuthUI, 1000);
+      setTimeout(checkLoginStatus, 1000);
+      
+      // Listen for auth state changes
+      window.addEventListener('authStateChanged', function() {
+        updateAuthUI();
+        setupAuthListeners();
+        checkLoginStatus();
+      });
+      
+      // Also run on load
+      window.addEventListener('load', function() {
+        updateAuthUI();
+        setupAuthListeners();
+        checkLoginStatus();
+      });
+    })();
+  </script>
+  
+  <script>
+    // Form submission handler
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('uploadForm');
+      const submitBtn = document.getElementById('submitBtn');
+      
+      if (form) {
+        form.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          console.log('Form submission started');
+          
+          if (!window.Auth || !window.Auth.isLoggedIn()) {
+            window.showAlert ? window.showAlert("Please login to upload question papers", 'error') : alert("Please login to upload question papers");
+            setTimeout(() => {
+              window.location.href = 'login.html';
+            }, 1500);
+            return;
+          }
+
+          const formData = new FormData(form);
+          const originalText = submitBtn.innerHTML;
+          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+          submitBtn.disabled = true;
+
+          try {
+            console.log('Sending request to /api/question-papers/upload');
+            
+            const response = await fetch("/api/question-papers/upload", {
+              method: "POST",
+              headers: window.Auth.getAuthHeadersFormData(),
+              body: formData
+            });
+
+            console.log('Response status:', response.status);
+            const data = await response.json();
+            console.log('Response data:', data);
+
+            if (response.ok) {
+              if (window.showAlert) {
+                window.showAlert("✅ Question paper uploaded successfully!", 'success');
+              } else {
+                alert("✅ Question paper uploaded successfully!");
+              }
+              form.reset();
+            } else {
+              if (window.showAlert) {
+                window.showAlert("❌ Upload failed: " + (data.error || 'Unknown error'), 'error');
+              } else {
+                alert("❌ Upload failed: " + (data.error || 'Unknown error'));
+              }
+            }
+          } catch (error) {
+            console.error("Upload error:", error);
+            if (window.showAlert) {
+              window.showAlert("❌ Network error. Please try again.", 'error');
+            } else {
+              alert("❌ Network error. Please try again.");
+            }
+          } finally {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+          }
+        });
+      }
+    });
+
+    // Theme initialization
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedTheme = localStorage.getItem('nerist-theme') || localStorage.getItem('theme');
+      if (savedTheme === 'light') {
+        document.body.classList.add('light-theme');
+      }
+    });
+
+    // Alert function (fallback)
+    window.showAlert = window.showAlert || function(message, type = 'success') {
+      const alert = document.createElement('div');
+      alert.className = `alert alert-${type}`;
+      alert.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+        ${message}
+      `;
+      document.body.insertBefore(alert, document.body.firstChild);
+      setTimeout(() => alert.remove(), 3000);
+    };
+
+    // Theme toggle
+    window.toggleTheme = function() {
+      document.body.classList.toggle('light-theme');
+      const isLight = document.body.classList.contains('light-theme');
+      localStorage.setItem('nerist-theme', isLight ? 'light' : 'dark');
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+      
+      const toggleBtn = document.querySelector('.theme-toggle');
+      if (toggleBtn) {
+        const icon = toggleBtn.querySelector('i');
+        const text = toggleBtn.querySelector('span');
+        if (icon) icon.className = isLight ? 'fas fa-sun' : 'fas fa-moon';
+        if (text) text.textContent = isLight ? 'Light' : 'Dark';
+      }
+    };
+    
+    // Load saved theme
+    const savedTheme = localStorage.getItem('nerist-theme') || localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+      document.body.classList.add('light-theme');
+      const toggleBtn = document.querySelector('.theme-toggle');
+      if (toggleBtn) {
+        const icon = toggleBtn.querySelector('i');
+        const text = toggleBtn.querySelector('span');
+        if (icon) icon.className = 'fas fa-sun';
+        if (text) text.textContent = 'Light';
+      }
+    }
+  </script>
+</body>
+</html>
