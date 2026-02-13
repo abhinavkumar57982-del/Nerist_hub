@@ -9,19 +9,19 @@ const socketIo = require("socket.io");
 const crypto = require("crypto");
 const fs = require("fs");
 
-// Models - WITH CORRECT PATHS
-const User = require("./User");
-const LostItem = require("./LostItem");
-const MarketplaceItem = require("./MarketplaceItem");
-const BuyRequest = require("./BuyRequest");
-const QuestionPaper = require("./QuestionPaper");
-const BikeRental = require("./BikeRental");
-const Building = require("./Building");
-const Notification = require("./Notification");
+// Models - WITH CORRECT PATHS (FIXED)
+const User = require("./server/User");
+const LostItem = require("./server/LostItem");
+const MarketplaceItem = require("./server/MarketplaceItem");
+const BuyRequest = require("./server/BuyRequest");
+const QuestionPaper = require("./server/QuestionPaper");
+const BikeRental = require("./server/BikeRental");
+const Building = require("./server/Building");
+const Notification = require("./server/Notification");
 
-// Utilities
-const getLocalAnswer = require("./chatbot");
-const registrationValidator = require("./RegistrationValidator");
+// Utilities (FIXED)
+const getLocalAnswer = require("./server/chatbot");
+const registrationValidator = require("./server/RegistrationValidator");
 
 const app = express();
 const server = http.createServer(app);
@@ -37,9 +37,9 @@ const PORT = process.env.PORT || 5000;
 /* ---------------- MIDDLEWARE ---------------- */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "../public")));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-app.use("/geojson", express.static(path.join(__dirname, "../GEOJSON MAP")));
+app.use(express.static(path.join(__dirname, "public")));
+app.use("/uploads", express.static(path.join(__dirname, "server/uploads")));
+app.use("/geojson", express.static(path.join(__dirname, "GEOJSON MAP")));
 
 /* ---------------- CORS ---------------- */
 app.use((req, res, next) => {
@@ -53,7 +53,6 @@ app.use((req, res, next) => {
 });
 
 /* ---------------- MONGODB ---------------- */
-// UPDATE THIS SECTION ONLY ⬇️
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => console.log("✅ MongoDB Atlas connected"))
@@ -61,7 +60,6 @@ mongoose
     console.error("❌ MongoDB connection error:", err);
     process.exit(1);
   });
-// UPDATED SECTION ABOVE ⬆️
 
 /* ---------------- SOCKET.IO ---------------- */
 const onlineUsers = new Map();
@@ -244,7 +242,7 @@ const optionalAuth = async (req, res, next) => {
 const makeStorage = folder =>
   multer.diskStorage({
     destination: (req, file, cb) => {
-      const dir = path.join(__dirname, `uploads/${folder}`);
+      const dir = path.join(__dirname, `server/uploads/${folder}`);
       fs.mkdirSync(dir, { recursive: true });
       cb(null, dir);
     },
@@ -1491,7 +1489,7 @@ app.get("/api/debug/tokens", (req, res) => {
 /* ============ CATCH-ALL ROUTE ============ */
 
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/index.html"));
+  res.sendFile(path.join(__dirname, "public/index.html"));
 });
 
 /* ============ START SERVER ============ */
