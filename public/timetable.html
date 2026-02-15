@@ -2,17 +2,16 @@
 <html lang="en">
 <head>
     <meta name="description" content="NERIST Campus Hub - Navigation, Marketplace, Lost & Found, Study Resources">
-<title>NERIST Campus Hub</title>
-<link rel="icon" href="feviconicon.png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>NERIST Timetable Viewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes, viewport-fit=cover">
+    <title>NERIST Timetable Viewer - NERIST Campus Hub</title>
+    <link rel="icon" href="feviconicon.png">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Include PDF.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <style>
-        /* Additional styles for timetable page */
+        /* ===== TIMETABLE PAGE SPECIFIC STYLES ===== */
         .timetable-container {
             max-width: 1400px;
             margin: 0 auto;
@@ -37,6 +36,7 @@
             align-items: center;
             justify-content: center;
             gap: 15px;
+            flex-wrap: wrap;
         }
 
         .branch-tags {
@@ -56,6 +56,13 @@
             font-size: 0.9rem;
             font-weight: 600;
             border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: var(--transition);
+        }
+
+        .branch-tag:hover {
+            background: var(--accent-primary);
+            color: white;
+            transform: translateY(-2px);
         }
 
         .timetable-content {
@@ -77,6 +84,10 @@
             padding: 25px;
             box-shadow: var(--shadow-md);
             border: 1px solid var(--border-color);
+            height: fit-content;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .viewer-card {
@@ -88,21 +99,25 @@
             border: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .filter-group {
             margin-bottom: 20px;
+            width: 100%;
         }
 
         .filter-group label {
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 8px;
             margin-bottom: 8px;
             font-weight: 600;
             color: var(--text-primary);
             font-size: 0.95rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
         .filter-group select {
@@ -115,6 +130,8 @@
             color: var(--text-primary);
             transition: var(--transition);
             cursor: pointer;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .filter-group select:focus {
@@ -123,10 +140,16 @@
             outline: none;
         }
 
+        .filter-group select:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .program-tabs {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            width: 100%;
         }
 
         .program-tab {
@@ -167,7 +190,8 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            margin-top: 10px;
+            margin-top: 20px;
+            box-sizing: border-box;
         }
 
         .view-button:hover:not(:disabled) {
@@ -208,16 +232,22 @@
             border-radius: var(--radius-sm);
             width: 100%;
             text-align: center;
+            word-wrap: break-word;
+            box-sizing: border-box;
         }
 
         .page-display {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 15px;
             margin-top: 20px;
             padding: 15px;
             background: var(--bg-secondary);
             border-radius: var(--radius-sm);
+            flex-wrap: wrap;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .page-display button {
@@ -228,10 +258,14 @@
             border-radius: var(--radius-sm);
             cursor: pointer;
             transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .page-display button:hover:not(:disabled) {
             background: var(--accent-secondary);
+            transform: translateY(-2px);
         }
 
         .page-display button:disabled {
@@ -242,17 +276,31 @@
         .page-display span {
             font-weight: 600;
             color: var(--text-primary);
+            min-width: 120px;
+            text-align: center;
         }
 
         .error-message {
             background: rgba(239, 68, 68, 0.1);
             border: 2px solid var(--accent-danger);
             color: var(--accent-danger);
-            padding: 15px;
+            padding: 20px;
             border-radius: var(--radius-sm);
             margin: 15px 0;
             text-align: center;
             display: none;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .error-message i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .error-message h3 {
+            color: var(--accent-danger);
+            margin-bottom: 10px;
         }
 
         .loading-overlay {
@@ -261,7 +309,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(var(--bg-primary-rgb), 0.95);
+            background: rgba(var(--bg-card-rgb), 0.95);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -269,11 +317,15 @@
             z-index: 100;
             border-radius: var(--radius-lg);
             display: none;
+            backdrop-filter: blur(4px);
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
         }
 
         .spinner {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border: 4px solid var(--border-color);
             border-top: 4px solid var(--accent-primary);
             border-radius: 50%;
@@ -286,23 +338,59 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* ===== FIXED TIMETABLE PREVIEW STYLES - LEFT ALIGNED ===== */
         .timetable-preview {
             width: 100%;
             height: 100%;
+            min-height: 500px;
+            max-height: 600px;
             background: var(--bg-secondary);
             border-radius: var(--radius-sm);
             display: flex;
-            align-items: center;
-            justify-content: center;
+            align-items: flex-start; /* Align to top */
+            justify-content: flex-start; /* Align to left */
             overflow: auto;
             position: relative;
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            /* Enable smooth scrolling on iOS */
+            -webkit-overflow-scrolling: touch;
+            /* Show scrollbars when needed */
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-primary) var(--bg-secondary);
+        }
+
+        /* Custom scrollbar styling */
+        .timetable-preview::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .timetable-preview::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 4px;
+        }
+
+        .timetable-preview::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 4px;
+        }
+
+        .timetable-preview::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-secondary);
         }
 
         .timetable-canvas {
-            max-width: 100%;
-            max-height: 100%;
+            display: block;
+            height: auto;
+            width: auto;
+            max-width: none; /* Allow canvas to be larger than container */
+            max-height: none; /* Allow canvas to be taller than container */
             box-shadow: var(--shadow-md);
             border-radius: var(--radius-sm);
+            /* Ensure canvas starts from left */
+            margin: 0;
+            flex-shrink: 0;
         }
 
         .download-section {
@@ -311,6 +399,9 @@
             background: var(--bg-secondary);
             border-radius: var(--radius-sm);
             text-align: center;
+            border: 1px solid var(--border-color);
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .download-btn {
@@ -334,12 +425,13 @@
         .zoom-controls {
             display: flex;
             gap: 10px;
-            margin-top: 15px;
+            margin: 20px 0;
             flex-wrap: wrap;
+            width: 100%;
         }
 
         .zoom-btn {
-            padding: 8px 15px;
+            padding: 10px 15px;
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-sm);
@@ -349,7 +441,8 @@
             transition: var(--transition);
             flex: 1;
             text-align: center;
-            min-width: 80px;
+            min-width: 70px;
+            box-sizing: border-box;
         }
 
         .zoom-btn:hover {
@@ -363,123 +456,265 @@
             border-color: var(--accent-primary);
         }
 
-        .view-options {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
+        /* ===== MOBILE RESPONSIVE FIXES ===== */
+        @media (max-width: 768px) {
+            .timetable-container {
+                padding: 10px;
+                width: 100%;
+                overflow-x: hidden;
+            }
+
+            .timetable-header {
+                padding: 20px 15px;
+            }
+
+            .timetable-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .timetable-content {
+                gap: 15px;
+                width: 100%;
+            }
+
+            .filters-card,
+            .viewer-card {
+                padding: 15px;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .viewer-card {
+                min-height: 500px;
+            }
+
+            /* Fix for filters card on mobile */
+            .filters-card {
+                padding: 16px;
+            }
+
+            .filters-card .section-title {
+                font-size: 1.5rem;
+                margin-bottom: 20px;
+            }
+
+            .filters-card .program-tabs {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .filters-card .program-tab {
+                width: 100%;
+                padding: 12px;
+            }
+
+            .filters-card .filter-group select {
+                font-size: 16px; /* Prevents zoom on iOS */
+                padding: 12px;
+            }
+
+            /* Fix for timetable preview on mobile - left aligned */
+            .timetable-preview {
+                min-height: 350px;
+                max-height: 450px;
+                padding: 5px;
+                justify-content: flex-start;
+            }
+
+            .timetable-canvas {
+                max-width: none; /* Allow horizontal scrolling */
+                height: auto;
+            }
+
+            .zoom-controls {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+
+            .zoom-btn {
+                padding: 12px 5px;
+                font-size: 13px;
+                min-width: auto;
+            }
+
+            .page-display {
+                flex-direction: column;
+            }
+
+            .page-display button {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .page-display span {
+                order: -1;
+                width: 100%;
+            }
+
+            /* Fix for division group */
+            #divisionGroup {
+                width: 100%;
+            }
+
+            #divisionGroup select {
+                width: 100%;
+            }
         }
 
-        .view-option-btn {
-            padding: 8px 15px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 0.9rem;
-            transition: var(--transition);
-            flex: 1;
-            text-align: center;
+        @media (max-width: 480px) {
+            .timetable-preview {
+                min-height: 300px;
+                max-height: 400px;
+            }
+
+            .zoom-controls {
+                grid-template-columns: 1fr; /* Stack zoom buttons on very small screens */
+            }
+
+            .filters-card {
+                padding: 12px;
+            }
+
+            .zoom-btn {
+                padding: 10px;
+                font-size: 12px;
+            }
         }
 
-        .view-option-btn.active {
-            background: var(--accent-primary);
-            color: white;
-            border-color: var(--accent-primary);
+        /* Landscape Mode */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .timetable-preview {
+                min-height: 250px;
+                max-height: 300px;
+            }
+
+            .zoom-controls {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
 
-        .view-option-btn:hover:not(.active) {
-            background: var(--border-color);
+        /* Fix for iOS Safari */
+        @supports (-webkit-touch-callout: none) {
+            .timetable-preview {
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            .navbar,
+            .footer,
+            .filters-card,
+            .download-section,
+            .page-display,
+            .zoom-controls,
+            .back-to-top {
+                display: none !important;
+            }
+
+            .timetable-content {
+                grid-template-columns: 1fr;
+            }
+
+            .viewer-card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+
+            .timetable-canvas {
+                max-width: 100%;
+                box-shadow: none;
+            }
         }
     </style>
 </head>
 <body>
     <!-- NAVBAR -->
     <nav class="navbar">
-  <div class="nav-left">
-    <a href="/index.html" class="logo">
-      <span class="logo-icon">🧑‍🎓</span>
-      <span>NERIST Hub</span>
-    </a>
-    
-    <div class="menu">
-      <span><i class="fas fa-search"></i> Lost & Found ▾</span>
-      <div class="dropdown">
-        <a href="/lost.html"><i class="fas fa-question-circle"></i> Lost Items</a>
-        <a href="/found.html"><i class="fas fa-check-circle"></i> Found Items</a>
-      </div>
-    </div>
+        <div class="nav-left">
+            <a href="/index.html" class="logo">
+                <span class="logo-icon">🧑‍🎓</span>
+                <span>NERIST Hub</span>
+            </a>
+            
+            <div class="menu">
+                <span><i class="fas fa-search"></i> Lost & Found ▾</span>
+                <div class="dropdown">
+                    <a href="/lost.html"><i class="fas fa-question-circle"></i> Lost Items</a>
+                    <a href="/found.html"><i class="fas fa-check-circle"></i> Found Items</a>
+                </div>
+            </div>
 
-    <div class="menu">
-      <span><i class="fas fa-store"></i> Marketplace ▾</span>
-      <div class="dropdown">
-        <a href="/marketplace.html"><i class="fas fa-tag"></i> Sell Items</a>
-        <a href="/buy-requests.html"><i class="fas fa-shopping-cart"></i> Buy Requests</a>
-      </div>
-    </div>
+            <div class="menu">
+                <span><i class="fas fa-store"></i> Marketplace ▾</span>
+                <div class="dropdown">
+                    <a href="/marketplace.html"><i class="fas fa-tag"></i> Sell Items</a>
+                    <a href="/buy-requests.html"><i class="fas fa-shopping-cart"></i> Buy Requests</a>
+                </div>
+            </div>
 
-    <div class="menu">
-      <span><i class="fas fa-file-alt"></i> Study ▾</span>
-      <div class="dropdown">
-        <a href="/questionpaper.html"><i class="fas fa-book"></i> Question Papers</a>
-        <a href="/upload-paper.html"><i class="fas fa-upload"></i> Upload Papers</a>
-        <a href="/timetable.html"><i class="fas fa-calendar-alt"></i> TimeTable</a>
-      </div>
-    </div>
-    
-    <!-- NEW: Teacher Directory Menu -->
-    <div class="menu">
-      <span><i class="fas fa-chalkboard-teacher"></i> Faculty ▾</span>
-      <div class="dropdown">
-        <a href="/teachers.html"><i class="fas fa-users"></i> Teacher Directory</a>
-        <a href="/teachers.html#staff-directory"><i class="fas fa-search"></i> Search Faculty</a>
-      </div>
-    </div>
-    
-    <div class="menu">
-      <span><i class="fa-solid fa-briefcase"></i></i> Services ▾</span>
-      <div class="dropdown">
-        <a href="/rentals.html"><i class="fa-solid fa-briefcase"></i> Services</a>
-      </div>
-    </div>
-    
-    <div class="menu">
-      <span><i class="fas fa-map"></i> Navigation ▾</span>
-      <div class="dropdown">
-        <a href="/map.html"><i class="fas fa-location-dot"></i> Campus Map</a>
-      </div>
-    </div>
-  </div>
-  
-  <!-- AUTH SECTION IN NAVBAR -->
-  <div class="nav-right">
-    <div id="user-info" class="user-info">
-      <span id="welcome-message" class="welcome-message" style="display: none;">
-        <i class="fas fa-user-circle"></i>
-        <span id="user-name"></span> (<span id="user-regno"></span>)
-      </span>
-      <button id="login-btn" class="auth-btn login-btn">
-        <i class="fas fa-sign-in-alt"></i>
-        <span>Login / Register</span>
-      </button>
-      <button id="logout-btn" class="auth-btn logout-btn" style="display: none;">
-        <i class="fas fa-sign-out-alt"></i>
-        <span>Logout</span>
-      </button>
-    </div>
-    
-    <button class="theme-toggle" onclick="toggleTheme()">
-      <i class="fas fa-moon"></i>
-      <span>Theme</span>
-    </button>
-  </div>
-</nav>
+            <div class="menu">
+                <span><i class="fas fa-file-alt"></i> Study ▾</span>
+                <div class="dropdown">
+                    <a href="/questionpaper.html"><i class="fas fa-book"></i> Question Papers</a>
+                    <a href="/upload-paper.html"><i class="fas fa-upload"></i> Upload Papers</a>
+                    <a href="/timetable.html"><i class="fas fa-calendar-alt"></i> TimeTable</a>
+                </div>
+            </div>
+            
+            <div class="menu">
+                <span><i class="fas fa-chalkboard-teacher"></i> Faculty ▾</span>
+                <div class="dropdown">
+                    <a href="/teachers.html"><i class="fas fa-users"></i> Teacher Directory</a>
+                    <a href="/teachers.html#staff-directory"><i class="fas fa-search"></i> Search Faculty</a>
+                </div>
+            </div>
+            
+            <div class="menu">
+                <span><i class="fa-solid fa-briefcase"></i> Services ▾</span>
+                <div class="dropdown">
+                    <a href="/rentals.html"><i class="fa-solid fa-briefcase"></i> Services</a>
+                </div>
+            </div>
+            
+            <div class="menu">
+                <span><i class="fas fa-map"></i> Navigation ▾</span>
+                <div class="dropdown">
+                    <a href="/map.html"><i class="fas fa-location-dot"></i> Campus Map</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- AUTH SECTION IN NAVBAR -->
+        <div class="nav-right">
+            <div id="user-info" class="user-info">
+                <span id="welcome-message" class="welcome-message" style="display: none;">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="user-name"></span> (<span id="user-regno"></span>)
+                </span>
+                <button id="login-btn" class="auth-btn login-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>Login / Register</span>
+                </button>
+                <button id="logout-btn" class="auth-btn logout-btn" style="display: none;">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+            
+            <button class="theme-toggle" onclick="toggleTheme()">
+                <i class="fas fa-moon"></i>
+                <span>Theme</span>
+            </button>
+        </div>
+    </nav>
 
     <!-- TIMETABLE VIEWER -->
     <div class="timetable-container">
         <div class="timetable-header">
             <h1><i class="fas fa-calendar-alt"></i> NERIST Timetable Viewer</h1>
-            <p>Select your program, year, branch, and semester to view your timetable (Currently only Available for Base and Btech)</p>
+            <p>Select your program, year, branch, and semester to view your timetable</p>
             <div class="branch-tags">
                 <span class="branch-tag">Base (1st & 2nd Year)</span>
                 <span class="branch-tag">B.Tech</span>
@@ -532,10 +767,11 @@
                 </div>
                 
                 <div class="zoom-controls">
-                    <div class="zoom-btn active" data-zoom="1.0">100%</div>
+                    <div class="zoom-btn active" data-zoom="0.5">50%</div>
+                    <div class="zoom-btn" data-zoom="0.75">75%</div>
+                    <div class="zoom-btn" data-zoom="1.0">100%</div>
                     <div class="zoom-btn" data-zoom="1.25">125%</div>
-                    <div class="zoom-btn" data-zoom="1.5">150%</div>
-                    <div class="zoom-btn" data-zoom="fit">Fit Width</div>
+                    <div class="zoom-btn" data-zoom="fit">Fit</div>
                 </div>
                 
                 <button id="viewButton" class="view-button" disabled>
@@ -574,11 +810,6 @@
                     <i class="fas fa-search"></i>
                     <h3>Select Your Timetable</h3>
                     <p>Choose your program, year, branch, and semester from the filters to view your timetable.</p>
-                    <div style="margin-top: 20px; text-align: left; max-width: 500px; color: var(--text-secondary); font-size: 0.9rem;">
-                        <p><i class="fas fa-check-circle" style="color: var(--accent-success);"></i> Supports Base (1st-2nd Year) and B.Tech programs</p>
-                        <p><i class="fas fa-check-circle" style="color: var(--accent-success);"></i> Multiple branch systems</p>
-                        <p><i class="fas fa-check-circle" style="color: var(--accent-success);"></i> Shows only the selected timetable page</p>
-                    </div>
                 </div>
                 
                 <div id="timetableView" class="timetable-preview" style="display: none;">
@@ -600,88 +831,93 @@
 
     <!-- FOOTER -->
     <footer class="footer">
-  <div class="container">
-    <div class="footer-content">
-      <!-- Brand Section -->
-      <div class="footer-section">
-        <h3>NERIST Campus Hub</h3>
-        <div class="developer-credit">
-          <p>Unofficial student platform for NERIST campus services and resources.</p>
-          <div class="developer-name">
-            <i class="fas fa-code"></i>
-            Developed by Abhinav Kumar
-            <span style="font-size: 12px; color: var(--text-secondary);">(BTech 1st Year CSE)</span>
-          </div>
+        <div class="container">
+            <div class="footer-content">
+                <!-- Brand Section -->
+                <div class="footer-section">
+                    <h3>NERIST Campus Hub</h3>
+                    <div class="developer-credit">
+                        <p>Unofficial student platform for NERIST campus services and resources.</p>
+                        <div class="developer-name">
+                            <i class="fas fa-code"></i>
+                            Developed by Abhinav Kumar
+                            <span style="font-size: 12px; color: var(--text-secondary);">(BTech 1st Year CSE)</span>
+                        </div>
+                    </div>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                
+                <!-- Quick Links Section -->
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="/lost.html"><i class="fas fa-arrow-right"></i> Lost & Found</a></li>
+                        <li><a href="/marketplace.html"><i class="fas fa-arrow-right"></i> Marketplace</a></li>
+                        <li><a href="/questionpaper.html"><i class="fas fa-arrow-right"></i> Question Papers</a></li>
+                        <li><a href="/rentals.html"><i class="fas fa-arrow-right"></i> Services</a></li>
+                        <li><a href="/map.html"><i class="fas fa-arrow-right"></i> Campus Map</a></li>
+                        <li><a href="/timetable.html"><i class="fas fa-arrow-right"></i> Timetable</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Contact & Feedback Section -->
+                <div class="footer-section">
+                    <h3>Get in Touch</h3>
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>abhinavkumar53210@gmail.com</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-phone-alt"></i>
+                            <span>Campus Help Desk</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>NERIST, Nirjuli - 791109</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Feedback Form Link - Styled as Button -->
+                    <a href="https://docs.google.com/forms/d/e/1FAIpQLSe1XYRtRNLUKZoS1a44XJWvRnq5Amk0UD036FmEJMXb974_VA/viewform?usp=header" class="feedback-link" target="_blank">
+                        <i class="fas fa-comment-dots"></i>
+                        Give Feedback
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <p>
+                    © 2026 NERIST Campus Hub. 
+                    Made with <span class="heart"><i class="fas fa-heart"></i></span> 
+                    for students.
+                </p>
+                <div class="footer-bottom-links">
+                    <a href="/privacy.html"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+                    <a href="/terms.html"><i class="fas fa-file-alt"></i> Terms of Use</a>
+                    <a href="/contact.html"><i class="fas fa-headset"></i> Contact Us</a>
+                </div>
+            </div>
         </div>
-        <div class="social-links">
-          <a href="#" class="social-link"><i class="fab fa-github"></i></a>
-          <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
-          <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
-          <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
-        </div>
-      </div>
-      
-      <!-- Quick Links Section -->
-      <div class="footer-section">
-        <h3>Quick Links</h3>
-        <ul class="footer-links">
-          <li><a href="/lost.html"><i class="fas fa-arrow-right"></i> Lost & Found</a></li>
-          <li><a href="/marketplace.html"><i class="fas fa-arrow-right"></i> Marketplace</a></li>
-          <li><a href="/questionpaper.html"><i class="fas fa-arrow-right"></i> Question Papers</a></li>
-          <li><a href="/rentals.html"><i class="fas fa-arrow-right"></i> Services</a></li>
-          <li><a href="/map.html"><i class="fas fa-arrow-right"></i> Campus Map</a></li>
-          <li><a href="/timetable.html"><i class="fas fa-arrow-right"></i> Timetable</a></li>
-        </ul>
-      </div>
-      
-      <!-- Contact & Feedback Section -->
-      <div class="footer-section">
-        <h3>Get in Touch</h3>
-        <div class="contact-info">
-          <div class="contact-item">
-            <i class="fas fa-envelope"></i>
-            <span>abhinavkumar53210@gmail.com</span>
-          </div>
-          <div class="contact-item">
-            <i class="fas fa-phone-alt"></i>
-            <span>Campus Help Desk</span>
-          </div>
-          <div class="contact-item">
-            <i class="fas fa-map-marker-alt"></i>
-            <span>NERIST, Nirjuli - 791109</span>
-          </div>
-        </div>
-        
-        <!-- Feedback Form Link - Styled as Button -->
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSe1XYRtRNLUKZoS1a44XJWvRnq5Amk0UD036FmEJMXb974_VA/viewform?usp=header" class="feedback-link">
-          <i class="fas fa-comment-dots"></i>
-          Give Feedback
-        </a>
-      </div>
-    </div>
-    
-    <!-- Footer Bottom -->
-    <div class="footer-bottom">
-      <p>
-        © 2026 NERIST Campus Hub. 
-        Made with <span class="heart"><i class="fas fa-heart"></i></span> 
-        for students.
-      </p>
-      <div class="footer-bottom-links">
-        <a href="/privacy.html"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
-        <a href="/terms.html"><i class="fas fa-file-alt"></i> Terms of Use</a>
-        <a href="/contact.html"><i class="fas fa-headset"></i> Contact Us</a>
-      </div>
-    </div>
-  </div>
-</footer>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+        <i class="fas fa-arrow-up"></i>
+    </button>
 
     <script>
         // PDF Configuration
         const PDF_FILENAME = 'timetable_odd_2026.pdf';
         const TOTAL_PAGES = 114;
 
-        // Timetable data structure with Agriculture Engineering (AE)
+        // Timetable data structure (keep your existing data)
         const timetableData = {
             "Base": {
                 "AE": {
@@ -1120,6 +1356,7 @@
             updateYearOptions();
             setupZoomControls();
             checkAuth();
+            initBackToTop();
         });
 
         // Setup program tabs
@@ -1147,7 +1384,7 @@
                     
                     // Update PDF viewer if currently showing
                     if (timetableView.style.display !== 'none') {
-                        showTimetablePage();
+                        renderPDFPage();
                     }
                 });
             });
@@ -1277,7 +1514,7 @@
                     const option = document.createElement('option');
                     option.value = branch;
                     
-                    // Show full branch names (changed AE to Agriculture Engineering)
+                    // Show full branch names
                     let branchName = branch;
                     if (branch === 'AE') branchName = 'Agriculture Engineering';
                     else if (branch === 'CE') branchName = 'Civil Engineering';
@@ -1494,15 +1731,17 @@
                 const page = await pdfDocument.getPage(currentPage);
                 
                 // Calculate scale based on zoom setting
-                let scale = 1.5; // Default scale
+                let scale = 1.5;
                 const viewport = page.getViewport({ scale: 1 });
                 
                 if (currentZoom === 'fit') {
-                    // Fit to container width
-                    const containerWidth = timetableView.clientWidth - 40; // Account for padding
-                    scale = containerWidth / viewport.width;
+                    // Fit to container width, but limit to 100% of container
+                    const containerWidth = timetableView.clientWidth - 40;
+                    scale = Math.min(containerWidth / viewport.width, 2.0);
                 } else {
-                    scale = currentZoom * 1.5; // Base scale of 1.5 for 100%
+                    scale = currentZoom * 1.5;
+                    // Limit scale to prevent extremely large canvas
+                    scale = Math.min(scale, 3.0);
                 }
                 
                 // Create canvas
@@ -1526,6 +1765,10 @@
                 // Clear and add canvas to view
                 timetableView.innerHTML = '';
                 timetableView.appendChild(canvas);
+                
+                // Scroll to left after rendering
+                timetableView.scrollLeft = 0;
+                timetableView.scrollTop = 0;
                 
                 // Update page controls
                 pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
@@ -1553,45 +1796,100 @@
 
         // Authentication functions
         function checkAuth() {
-            const user = Auth ? Auth.getCurrentUser() : null;
+            const user = window.Auth ? window.Auth.getCurrentUser() : null;
+            
+            const welcomeMessage = document.getElementById('welcome-message');
+            const userName = document.getElementById('user-name');
+            const userRegno = document.getElementById('user-regno');
+            const loginBtn = document.getElementById('login-btn');
+            const logoutBtn = document.getElementById('logout-btn');
             
             if (user) {
-                document.getElementById('welcome-message').style.display = 'flex';
-                document.getElementById('user-name').textContent = user.name || 'User';
-                document.getElementById('user-regno').textContent = user.registrationNumber || '';
-                document.getElementById('login-btn').style.display = 'none';
-                document.getElementById('logout-btn').style.display = 'flex';
+                if (welcomeMessage) {
+                    welcomeMessage.style.display = 'flex';
+                    if (userName) userName.textContent = user.name || 'User';
+                    if (userRegno) userRegno.textContent = user.registrationNumber || '';
+                }
+                if (loginBtn) loginBtn.style.display = 'none';
+                if (logoutBtn) logoutBtn.style.display = 'flex';
             } else {
-                document.getElementById('login-btn').style.display = 'flex';
-                document.getElementById('logout-btn').style.display = 'none';
-                document.getElementById('welcome-message').style.display = 'none';
+                if (welcomeMessage) welcomeMessage.style.display = 'none';
+                if (loginBtn) loginBtn.style.display = 'flex';
+                if (logoutBtn) logoutBtn.style.display = 'none';
             }
             
             // Setup auth button events
-            document.getElementById('login-btn').addEventListener('click', () => {
-                window.location.href = 'login.html';
-            });
+            const loginButton = document.getElementById('login-btn');
+            const logoutButton = document.getElementById('logout-btn');
             
-            document.getElementById('logout-btn').addEventListener('click', () => {
-                if (Auth && Auth.logout) {
-                    Auth.logout();
-                }
-                checkAuth();
-            });
+            if (loginButton) {
+                loginButton.addEventListener('click', () => {
+                    window.location.href = 'login.html';
+                });
+            }
+            
+            if (logoutButton) {
+                logoutButton.addEventListener('click', () => {
+                    if (window.Auth && window.Auth.logout) {
+                        window.Auth.logout();
+                        checkAuth();
+                        window.location.reload();
+                    }
+                });
+            }
         }
 
         // Theme toggle
         function toggleTheme() {
             document.body.classList.toggle('light-theme');
             localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
+            
+            // Update theme toggle icon
+            const themeToggle = document.querySelector('.theme-toggle');
+            if (themeToggle) {
+                const icon = themeToggle.querySelector('i');
+                const text = themeToggle.querySelector('span');
+                if (document.body.classList.contains('light-theme')) {
+                    icon.className = 'fas fa-sun';
+                    text.textContent = 'Light';
+                } else {
+                    icon.className = 'fas fa-moon';
+                    text.textContent = 'Dark';
+                }
+            }
+        }
+
+        // Back to top functionality
+        function initBackToTop() {
+            const backToTop = document.getElementById('backToTop');
+            if (!backToTop) return;
+            
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 300) {
+                    backToTop.classList.add('visible');
+                } else {
+                    backToTop.classList.remove('visible');
+                }
+            });
         }
 
         // Load saved theme
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'light') {
             document.body.classList.add('light-theme');
+            const themeToggle = document.querySelector('.theme-toggle');
+            if (themeToggle) {
+                const icon = themeToggle.querySelector('i');
+                const text = themeToggle.querySelector('span');
+                icon.className = 'fas fa-sun';
+                text.textContent = 'Light';
+            }
         }
+
+        // Make functions global
+        window.toggleTheme = toggleTheme;
     </script>
     <script src="auth.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
