@@ -45,14 +45,15 @@ cloudinary.config({
 });
 
 /* ---------------- MIDDLEWARE ---------------- */
+/* ---------------- MIDDLEWARE ---------------- */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from the public folder
 app.use(express.static(path.join(__dirname, "public")));
 
-// Serve geojson files from the GEOJSON MAP folder with debugging
-const geojsonPath = path.join(__dirname, "../GEOJSON MAP");
+// Serve geojson files from the GEOJSON MAP folder (in the src directory)
+const geojsonPath = path.join(__dirname, "GEOJSON MAP");
 console.log("=" .repeat(50));
 console.log("📁 Serving GeoJSON from:", geojsonPath);
 console.log("📁 GeoJSON directory exists:", fs.existsSync(geojsonPath));
@@ -65,17 +66,6 @@ if (fs.existsSync(geojsonPath)) {
   }
 } else {
   console.log("❌ GeoJSON directory does not exist!");
-  // Try alternative paths
-  const altPaths = [
-    path.join(__dirname, "GEOJSON MAP"),
-    path.join(__dirname, "../public/GEOJSON MAP"),
-    path.join(__dirname, "../geojson"),
-    path.join(__dirname, "geojson")
-  ];
-  
-  altPaths.forEach((altPath, index) => {
-    console.log(`📁 Alternative path ${index + 1}: ${altPath} - exists: ${fs.existsSync(altPath)}`);
-  });
 }
 console.log("=" .repeat(50));
 
