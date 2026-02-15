@@ -1239,3 +1239,30 @@
     }, 250);
   });
 })();
+
+
+function showComingSoon(platform) {
+  const popup = document.getElementById('comingSoonPopup');
+  const platformElement = document.getElementById('popupPlatform');
+  platformElement.textContent = platform;
+  popup.classList.add('show');
+  
+  // Close when clicking outside
+  popup.onclick = function(e) {
+    if (e.target === popup) {
+      closePopup();
+    }
+  };
+}
+
+function closePopup() {
+  const popup = document.getElementById('comingSoonPopup');
+  popup.classList.remove('show');
+}
+
+// Close with Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closePopup();
+  }
+});
