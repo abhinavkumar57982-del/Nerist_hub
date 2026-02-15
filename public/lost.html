@@ -306,12 +306,24 @@
             <span style="font-size: 12px; color: var(--text-secondary);">(BTech 1st Year CSE)</span>
           </div>
         </div>
-        <div class="social-links">
-          <a href="#" class="social-link"><i class="fab fa-github"></i></a>
-          <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
-          <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
-          <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
-        </div>
+        <!-- Social Links -->
+<div class="social-links">
+  <a href="javascript:void(0);" class="social-link" onclick="showComingSoon('GitHub')"><i class="fab fa-github"></i></a>
+  <a href="javascript:void(0);" class="social-link" onclick="showComingSoon('LinkedIn')"><i class="fab fa-linkedin-in"></i></a>
+  <a href="javascript:void(0);" class="social-link" onclick="showComingSoon('Twitter')"><i class="fab fa-twitter"></i></a>
+  <a href="javascript:void(0);" class="social-link" onclick="showComingSoon('Instagram')"><i class="fab fa-instagram"></i></a>
+</div>
+
+<!-- Coming Soon Popup -->
+<div id="comingSoonPopup" class="coming-soon-popup">
+  <div class="popup-content">
+    <i class="fas fa-rocket"></i>
+    <h3 id="popupPlatform"></h3>
+    <p>is coming soon! 🚀</p>
+    <p style="font-size: 14px; margin-top: 10px;">We're working on it.</p>
+    <button class="popup-close" onclick="closePopup()">Close</button>
+  </div>
+</div>
       </div>
       
       <!-- Quick Links Section -->
