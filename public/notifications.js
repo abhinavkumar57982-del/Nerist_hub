@@ -66,7 +66,7 @@ const NotificationManager = {
         const badge = document.getElementById('notification-badge');
         if (badge) {
             badge.textContent = this.unreadCount;
-            badge.style.display = this.unreadCount > 0 ? 'block' : 'none';
+            badge.style.display = this.unreadCount > 0 ? 'flex' : 'none';
         }
     },
     
@@ -80,15 +80,13 @@ const NotificationManager = {
     
     // Show toast notification
     showToast(notification) {
-        const container = document.getElementById('notification-container');
+        let container = document.getElementById('notification-container');
         if (!container) {
             // Create container if it doesn't exist
-            const newContainer = document.createElement('div');
-            newContainer.id = 'notification-container';
-            document.body.appendChild(newContainer);
+            container = document.createElement('div');
+            container.id = 'notification-container';
+            document.body.appendChild(container);
         }
-        
-        const toastContainer = document.getElementById('notification-container');
         
         const toast = document.createElement('div');
         toast.className = `notification-toast ${notification.type || 'info'}`;
@@ -99,12 +97,12 @@ const NotificationManager = {
             <div class="notification-content">
                 <h4>${notification.title || 'Notification'}</h4>
                 <p>${notification.message || ''}</p>
-                <small>${notification.createdAt ? new Date(notification.createdAt).toLocaleTimeString() : new Date().toLocaleTimeString()}</small>
+                <small class="notification-time">${notification.createdAt ? new Date(notification.createdAt).toLocaleTimeString() : new Date().toLocaleTimeString()}</small>
             </div>
             <button onclick="this.parentElement.remove()" class="toast-close">×</button>
         `;
         
-        toastContainer.appendChild(toast);
+        container.appendChild(toast);
         
         setTimeout(() => {
             if (toast.parentElement) {
@@ -157,7 +155,8 @@ const NotificationManager = {
             container.innerHTML = `
                 <div class="empty-notifications">
                     <i class="fas fa-bell-slash"></i>
-                    <p>No notifications yet</p>
+                    <h4>No notifications yet</h4>
+                    <p>You're all caught up!</p>
                 </div>
             `;
             return;
@@ -174,17 +173,27 @@ const NotificationManager = {
             
             return `
                 <div class="notification-item ${isRead ? 'read' : 'unread'}" 
-                     data-id="${notificationId}"
-                     onclick="NotificationManager.markAsRead('${notificationId}')">
+                     data-id="${notificationId}">
                     <div class="notification-icon ${type}">
                         <i class="fas ${this.getIconForType(type)}"></i>
                     </div>
                     <div class="notification-details">
-                        <h5>${title}</h5>
-                        <p>${message}</p>
-                        <small>${new Date(createdAt).toLocaleString()}</small>
+                        <h5>
+                            ${title}
+                            <div class="notification-actions">
+                                <button class="notification-delete-btn" 
+                                        onclick="event.stopPropagation(); NotificationManager.deleteNotification('${notificationId}', event)"
+                                        title="Delete notification">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </h5>
+                        <p onclick="NotificationManager.markAsRead('${notificationId}')">${message}</p>
+                        <span class="notification-time-small" onclick="NotificationManager.markAsRead('${notificationId}')">
+                            <i class="fas fa-clock"></i> ${new Date(createdAt).toLocaleString()}
+                        </span>
                     </div>
-                    ${!isRead ? '<span class="unread-dot"></span>' : ''}
+                    ${!isRead ? '<span class="unread-dot" onclick="NotificationManager.markAsRead(\'' + notificationId + '\')"></span>' : ''}
                 </div>
             `;
         }).join('');
@@ -219,23 +228,42 @@ const NotificationManager = {
         const message = notification.message || '';
         const createdAt = notification.createdAt || new Date().toISOString();
         
-        const html = `
+        // Create a temporary div to hold the new notification
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = `
             <div class="notification-item unread" 
-                 data-id="${notificationId}"
-                 onclick="NotificationManager.markAsRead('${notificationId}')">
+                 data-id="${notificationId}">
                 <div class="notification-icon ${type}">
                     <i class="fas ${this.getIconForType(type)}"></i>
                 </div>
                 <div class="notification-details">
-                    <h5>${title}</h5>
-                    <p>${message}</p>
-                    <small>${new Date(createdAt).toLocaleString()}</small>
+                    <h5>
+                        ${title}
+                        <div class="notification-actions">
+                            <button class="notification-delete-btn" 
+                                    onclick="event.stopPropagation(); NotificationManager.deleteNotification('${notificationId}', event)"
+                                    title="Delete notification">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </h5>
+                    <p onclick="NotificationManager.markAsRead('${notificationId}')">${message}</p>
+                    <span class="notification-time-small" onclick="NotificationManager.markAsRead('${notificationId}')">
+                        <i class="fas fa-clock"></i> ${new Date(createdAt).toLocaleString()}
+                    </span>
                 </div>
-                <span class="unread-dot"></span>
+                <span class="unread-dot" onclick="NotificationManager.markAsRead('${notificationId}')"></span>
             </div>
         `;
         
-        container.insertAdjacentHTML('afterbegin', html);
+        const newNotification = tempDiv.firstElementChild;
+        
+        // Insert at the beginning
+        if (container.firstChild) {
+            container.insertBefore(newNotification, container.firstChild);
+        } else {
+            container.appendChild(newNotification);
+        }
     },
     
     // Mark notification as read
@@ -244,6 +272,15 @@ const NotificationManager = {
         if (!notificationId || notificationId === 'undefined' || notificationId === 'null') {
             console.error('Invalid notification ID:', notificationId);
             return;
+        }
+        
+        // Prevent marking as read if clicking on delete button
+        if (window.event) {
+            const target = window.event.target;
+            if (target.classList.contains('notification-delete-btn') || 
+                target.closest('.notification-delete-btn')) {
+                return;
+            }
         }
         
         try {
@@ -255,7 +292,7 @@ const NotificationManager = {
             });
             
             if (response.ok) {
-                const element = document.querySelector(`[data-id="${notificationId}"]`);
+                const element = document.querySelector(`.notification-item[data-id="${notificationId}"]`);
                 if (element) {
                     element.classList.remove('unread');
                     element.classList.add('read');
@@ -274,6 +311,133 @@ const NotificationManager = {
             }
         } catch (error) {
             console.error('Error marking notification as read:', error);
+        }
+    },
+    
+    // Delete single notification
+    async deleteNotification(notificationId, event) {
+        // Stop event propagation to prevent triggering the parent click
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        // Check if notificationId is valid
+        if (!notificationId || notificationId === 'undefined' || notificationId === 'null') {
+            console.error('Invalid notification ID:', notificationId);
+            alert('Invalid notification ID');
+            return;
+        }
+        
+        try {
+            if (!window.Auth || !window.Auth.isLoggedIn()) {
+                alert('You must be logged in to delete notifications');
+                return;
+            }
+            
+            // Show confirmation
+            if (!confirm('Delete this notification?')) {
+                return;
+            }
+            
+            console.log('Deleting notification:', notificationId);
+            
+            const response = await fetch(`/api/notifications/${notificationId}`, {
+                method: 'DELETE',
+                headers: window.Auth.getAuthHeaders()
+            });
+            
+            if (response.ok) {
+                // Remove from DOM
+                const element = document.querySelector(`.notification-item[data-id="${notificationId}"]`);
+                if (element) {
+                    // Check if this was an unread notification
+                    const wasUnread = element.classList.contains('unread');
+                    
+                    element.remove();
+                    
+                    // Update unread count if needed
+                    if (wasUnread) {
+                        this.unreadCount = Math.max(0, this.unreadCount - 1);
+                        this.updateBadge();
+                    }
+                }
+                
+                // Remove from in-memory notifications
+                const index = this.notifications.findIndex(n => n._id === notificationId);
+                if (index !== -1) {
+                    this.notifications.splice(index, 1);
+                }
+                
+                // Check if notifications list is empty and show empty state
+                const container = document.getElementById('notifications-list');
+                if (container && container.children.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-notifications">
+                            <i class="fas fa-bell-slash"></i>
+                            <h4>No notifications yet</h4>
+                            <p>You're all caught up!</p>
+                        </div>
+                    `;
+                }
+                
+                console.log('Notification deleted successfully');
+            } else {
+                const errorData = await response.json();
+                console.error('Failed to delete notification:', errorData);
+                alert('Failed to delete notification: ' + (errorData.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error deleting notification:', error);
+            alert('Error deleting notification. Please check console for details.');
+        }
+    },
+    
+    // Delete all notifications
+    async deleteAllNotifications() {
+        try {
+            if (!window.Auth || !window.Auth.isLoggedIn()) {
+                alert('You must be logged in to delete notifications');
+                return;
+            }
+            
+            // Show confirmation
+            if (!confirm('Delete all notifications? This action cannot be undone.')) {
+                return;
+            }
+            
+            const response = await fetch('/api/notifications', {
+                method: 'DELETE',
+                headers: window.Auth.getAuthHeaders()
+            });
+            
+            if (response.ok) {
+                // Clear the list
+                const container = document.getElementById('notifications-list');
+                if (container) {
+                    container.innerHTML = `
+                        <div class="empty-notifications">
+                            <i class="fas fa-bell-slash"></i>
+                            <h4>No notifications yet</h4>
+                            <p>All notifications deleted</p>
+                        </div>
+                    `;
+                }
+                
+                // Clear in-memory notifications
+                this.notifications = [];
+                this.unreadCount = 0;
+                this.updateBadge();
+                
+                console.log('All notifications deleted successfully');
+            } else {
+                const errorData = await response.json();
+                console.error('Failed to delete all notifications:', errorData);
+                alert('Failed to delete notifications: ' + (errorData.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error deleting all notifications:', error);
+            alert('Error deleting notifications. Please check console for details.');
         }
     },
     
@@ -307,19 +471,107 @@ const NotificationManager = {
     },
     
     // Toggle notifications dropdown
-    toggleDropdown() {
+    toggleDropdown(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        
+        const dropdown = document.getElementById('notification-dropdown');
+        if (!dropdown) return;
+        
+        // Toggle the dropdown
+        dropdown.classList.toggle('show');
+        
+        if (dropdown.classList.contains('show')) {
+            this.loadNotifications();
+            
+            // Close when clicking outside (with slight delay to avoid immediate closing)
+            setTimeout(() => {
+                document.addEventListener('click', this.handleOutsideClick);
+            }, 100);
+        } else {
+            document.removeEventListener('click', this.handleOutsideClick);
+        }
+    },
+    
+    // Handle outside click to close dropdown
+    handleOutsideClick(event) {
+        const dropdown = document.getElementById('notification-dropdown');
+        const bell = document.getElementById('notificationBell');
+        
+        // Don't close if clicking on delete button
+        if (event.target.closest('.notification-delete-btn')) {
+            return;
+        }
+        
+        if (dropdown && bell && !bell.contains(event.target) && !dropdown.contains(event.target)) {
+            dropdown.classList.remove('show');
+            document.removeEventListener('click', NotificationManager.handleOutsideClick);
+        }
+    },
+    
+    // Close dropdown
+    closeDropdown() {
         const dropdown = document.getElementById('notification-dropdown');
         if (dropdown) {
-            dropdown.classList.toggle('show');
-            if (dropdown.classList.contains('show')) {
-                this.loadNotifications();
-            }
+            dropdown.classList.remove('show');
         }
+        document.removeEventListener('click', this.handleOutsideClick);
     }
 };
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+    // Set up notification bell click handler
+    const notificationBell = document.getElementById('notificationBell');
+    if (notificationBell) {
+        // Remove any existing event listeners
+        notificationBell.removeEventListener('click', NotificationManager.toggleDropdown.bind(NotificationManager));
+        // Add click event listener
+        notificationBell.addEventListener('click', (event) => {
+            NotificationManager.toggleDropdown(event);
+        });
+        
+        // Add touch event for mobile devices
+        notificationBell.addEventListener('touchstart', (event) => {
+            event.preventDefault();
+            NotificationManager.toggleDropdown(event);
+        }, { passive: false });
+    }
+    
+    // Set up mark all as read button
+    const markAllReadBtn = document.getElementById('markAllReadBtn');
+    if (markAllReadBtn) {
+        markAllReadBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            NotificationManager.markAllAsRead();
+        });
+        
+        markAllReadBtn.addEventListener('touchstart', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            NotificationManager.markAllAsRead();
+        }, { passive: false });
+    }
+    
+    // Set up delete all button
+    const deleteAllBtn = document.getElementById('deleteAllBtn');
+    if (deleteAllBtn) {
+        deleteAllBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            NotificationManager.deleteAllNotifications();
+        });
+        
+        deleteAllBtn.addEventListener('touchstart', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            NotificationManager.deleteAllNotifications();
+        }, { passive: false });
+    }
+    
     // Check if we're on a page with socket.io
     if (typeof io !== 'undefined') {
         // Wait for Auth to be ready
@@ -341,26 +593,16 @@ document.addEventListener('DOMContentLoaded', () => {
 // Make NotificationManager globally available
 window.NotificationManager = NotificationManager;
 
-// Toggle notifications dropdown
-function toggleNotifications() {
+// Global toggle function for backward compatibility
+function toggleNotifications(event) {
     if (window.NotificationManager) {
-        window.NotificationManager.toggleDropdown();
+        window.NotificationManager.toggleDropdown(event);
     }
 }
 
-// Mark all as read
+// Global mark all as read function for backward compatibility
 function markAllAsRead() {
     if (window.NotificationManager) {
         window.NotificationManager.markAllAsRead();
     }
 }
-
-// Also add click outside to close dropdown
-document.addEventListener('click', function(event) {
-    const dropdown = document.getElementById('notification-dropdown');
-    const bell = document.querySelector('.notification-bell');
-    
-    if (dropdown && bell && !bell.contains(event.target) && dropdown.classList.contains('show')) {
-        dropdown.classList.remove('show');
-    }
-});
