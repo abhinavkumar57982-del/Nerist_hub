@@ -131,20 +131,20 @@
         
         <div class="hero-stats">
           <div class="stat">
-            <span class="stat-number">500+</span>
-            <span class="stat-label">Items Found</span>
+            <span class="stat-number">Lost & Found</span>
+            <span class="stat-label">Reconnect with belongings</span>
           </div>
           <div class="stat">
-            <span class="stat-number">200+</span>
-            <span class="stat-label">Items Sold</span>
+            <span class="stat-number">Buy & Sell</span>
+            <span class="stat-label">Student marketplace</span>
           </div>
           <div class="stat">
-            <span class="stat-number">1000+</span>
-            <span class="stat-label">Papers Shared</span>
+            <span class="stat-number">Interactive Campus Map</span>
+            <span class="stat-label">Find departments and rooms easily</span>
           </div>
           <div class="stat">
-            <span class="stat-number">50+</span>
-            <span class="stat-label">Bikes Rented</span>
+            <span class="stat-number">Question Papers</span>
+            <span class="stat-label">Exam-ready resources</span>
           </div>
         </div>
       </div>
@@ -196,51 +196,67 @@
 
   <!-- FEATURES -->
   <section class="features">
-    <div class="container">
-      <h2 class="section-title">Our Services</h2>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">
-            <i class="fas fa-search"></i>
-          </div>
-          <h3>Lost & Found</h3>
-          <p>Connect lost items with their owners through our efficient reporting system</p>
+  <div class="container">
+    <h2 class="section-title">Our Services</h2>
+    <p class="section-subtitle">Click on any service below to explore</p>
+    <div class="features-grid">
+      <div class="feature-card" onclick="window.location.href='/lost.html'">
+        <div class="feature-icon">
+          <i class="fas fa-search"></i>
         </div>
-        
-        <div class="feature-card">
-          <div class="feature-icon">
-            <i class="fas fa-shopping-cart"></i>
-          </div>
-          <h3>Campus Marketplace</h3>
-          <p>Buy and sell second-hand items within campus safely and conveniently</p>
+        <h3>Lost & Found</h3>
+        <p>Connect lost items with their owners through our efficient reporting system</p>
+        <span class="feature-link-hint">
+          <i class="fas fa-arrow-right"></i> Explore
+        </span>
+      </div>
+      
+      <div class="feature-card" onclick="window.location.href='/marketplace.html'">
+        <div class="feature-icon">
+          <i class="fas fa-shopping-cart"></i>
         </div>
-        
-        <div class="feature-card">
-          <div class="feature-icon">
-            <i class="fas fa-graduation-cap"></i>
-          </div>
-          <h3>Study Resources</h3>
-          <p>Access previous year question papers and study materials shared by seniors</p>
+        <h3>Campus Marketplace</h3>
+        <p>Buy and sell second-hand items within campus safely and conveniently</p>
+        <span class="feature-link-hint">
+          <i class="fas fa-arrow-right"></i> Explore
+        </span>
+      </div>
+      
+      <div class="feature-card" onclick="window.location.href='/questionpaper.html'">
+        <div class="feature-icon">
+          <i class="fas fa-graduation-cap"></i>
         </div>
-        
-        <div class="feature-card">
-          <div class="feature-icon">
-            <i class="fas fa-map-marked-alt"></i>
-          </div>
-          <h3>Campus Navigation</h3>
-          <p>Interactive map to find labs, classrooms, and other facilities easily</p>
+        <h3>Study Resources</h3>
+        <p>Access previous year question papers and study materials shared by seniors</p>
+        <span class="feature-link-hint">
+          <i class="fas fa-arrow-right"></i> Explore
+        </span>
+      </div>
+      
+      <div class="feature-card" onclick="window.location.href='/map.html'">
+        <div class="feature-icon">
+          <i class="fas fa-map-marked-alt"></i>
         </div>
+        <h3>Campus Navigation</h3>
+        <p>Interactive map to find labs, classrooms, and other facilities easily</p>
+        <span class="feature-link-hint">
+          <i class="fas fa-arrow-right"></i> Explore
+        </span>
+      </div>
 
-        <div class="feature-card">
-  <div class="feature-icon">
-    <i class="fas fa-calendar-alt"></i>
-  </div>
-  <h3>View Timetable</h3>
-  <p>Check your class schedule and timetable</p>
-</div>
+      <div class="feature-card" onclick="window.location.href='/timetable.html'">
+        <div class="feature-icon">
+          <i class="fas fa-calendar-alt"></i>
+        </div>
+        <h3>View Timetable</h3>
+        <p>Check your class schedule and timetable</p>
+        <span class="feature-link-hint">
+          <i class="fas fa-arrow-right"></i> Explore
+        </span>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
   <!-- CHATBOT -->
   <div id="chatbot-btn" onclick="toggleChat()">
