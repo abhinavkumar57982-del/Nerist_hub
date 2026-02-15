@@ -4590,3 +4590,123 @@ body.dark-theme .uploader-info {
     color: var(--text-secondary, #a4b0be);
     border-top-color: var(--border-color, #57606f);
 }
+
+/* Coming Soon Popup */
+.coming-soon-popup {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.coming-soon-popup.show {
+  display: flex;
+}
+
+.popup-content {
+  background: var(--bg-card, #ffffff);
+  padding: 30px 40px;
+  border-radius: 20px;
+  text-align: center;
+  max-width: 400px;
+  box-shadow: var(--shadow-lg, 0 20px 40px rgba(0,0,0,0.2));
+  animation: slideUp 0.3s ease;
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.popup-content i {
+  font-size: 48px;
+  color: var(--accent-primary, #1e90ff);
+  margin-bottom: 15px;
+}
+
+.popup-content h3 {
+  font-size: 24px;
+  color: var(--text-primary, #2f3542);
+  margin-bottom: 5px;
+}
+
+.popup-content p {
+  font-size: 16px;
+  color: var(--text-secondary, #747d8c);
+  margin: 0;
+}
+
+.popup-close {
+  background: var(--accent-primary, #1e90ff);
+  color: white;
+  border: none;
+  padding: 10px 30px;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: all 0.3s ease;
+}
+
+.popup-close:hover {
+  background: var(--accent-primary-dark, #0a6bff);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(var(--accent-primary-rgb, 30,144,255), 0.3);
+}
+
+/* Dark theme support */
+.dark-theme .popup-content,
+body.dark-theme .popup-content {
+  background: var(--bg-card, #1e1e1e);
+  border-color: var(--border-color, #2d2d2d);
+}
+
+.dark-theme .popup-content h3,
+body.dark-theme .popup-content h3 {
+  color: var(--text-primary, #ffffff);
+}
+
+.dark-theme .popup-content p,
+body.dark-theme .popup-content p {
+  color: var(--text-secondary, #a4b0be);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .popup-content {
+    padding: 25px 30px;
+    margin: 0 20px;
+  }
+  
+  .popup-content i {
+    font-size: 40px;
+  }
+  
+  .popup-content h3 {
+    font-size: 20px;
+  }
+  
+  .popup-content p {
+    font-size: 14px;
+  }
+}
