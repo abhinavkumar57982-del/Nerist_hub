@@ -438,6 +438,47 @@ body.dark-theme .notification-header h3 i {
     box-shadow: 0 6px 12px rgba(var(--accent-primary-rgb, 30,144,255), 0.3);
 }
 
+/* Delete All Button */
+.delete-all-btn {
+    background: rgba(255, 71, 87, 0.1);
+    border: 1px solid rgba(255, 71, 87, 0.3);
+    color: #ff4757;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 30px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 8px;
+}
+
+.delete-all-btn i {
+    font-size: 12px;
+}
+
+.delete-all-btn:hover {
+    background: #ff4757;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(255, 71, 87, 0.3);
+}
+
+.dark-theme .delete-all-btn,
+body.dark-theme .delete-all-btn {
+    background: rgba(255, 71, 87, 0.2);
+    border-color: rgba(255, 71, 87, 0.4);
+    color: #ff6b81;
+}
+
+.dark-theme .delete-all-btn:hover,
+body.dark-theme .delete-all-btn:hover {
+    background: #ff4757;
+    color: white;
+}
+
 /* Notifications List */
 .notifications-list {
     list-style: none;
@@ -482,11 +523,13 @@ body.dark-theme .notifications-list::-webkit-scrollbar-track {
     cursor: pointer;
     transition: all 0.3s ease;
     position: relative;
+    background: var(--bg-card, #ffffff);
 }
 
 .dark-theme .notification-item,
 body.dark-theme .notification-item {
     border-color: var(--border-color, #57606f);
+    background: var(--bg-card, #2f3542);
 }
 
 .notification-item:hover {
@@ -599,11 +642,64 @@ body.dark-theme .notification-time-small i {
     animation: pulse 2s infinite;
 }
 
+/* ===== NOTIFICATION DELETE BUTTON ===== */
+.notification-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.notification-delete-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary, #a4b0be);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.notification-delete-btn:hover {
+    background: rgba(var(--accent-danger-rgb, 255,71,87), 0.1);
+    color: var(--accent-danger, #ff4757);
+    transform: scale(1.1);
+}
+
+.notification-delete-btn i {
+    font-size: 14px;
+    pointer-events: none;
+}
+
+/* Dark theme support */
+.dark-theme .notification-delete-btn,
+body.dark-theme .notification-delete-btn {
+    color: var(--text-secondary, #a4b0be);
+}
+
+.dark-theme .notification-delete-btn:hover,
+body.dark-theme .notification-delete-btn:hover {
+    background: rgba(255,71,87,0.2);
+    color: #ff6b81;
+}
+
 /* Empty State - Theme Compatible */
 .empty-notifications {
     padding: 60px 30px;
     text-align: center;
     color: var(--text-secondary, #747d8c);
+    background: var(--bg-card, #ffffff);
+}
+
+.dark-theme .empty-notifications,
+body.dark-theme .empty-notifications {
+    background: var(--bg-card, #2f3542);
 }
 
 .empty-notifications i {
@@ -640,6 +736,12 @@ body.dark-theme .empty-notifications h4 {
     padding: 40px 30px;
     text-align: center;
     color: var(--text-secondary, #747d8c);
+    background: var(--bg-card, #ffffff);
+}
+
+.dark-theme .notification-loading,
+body.dark-theme .notification-loading {
+    background: var(--bg-card, #2f3542);
 }
 
 .notification-loading i {
@@ -698,7 +800,7 @@ body.dark-theme .skeleton-line {
     width: 60%;
 }
 
-/* ===== MOBILE RESPONSIVE STYLES - COMPLETELY FIXED ===== */
+/* ===== FIXED MOBILE RESPONSIVE STYLES ===== */
 @media (max-width: 768px) {
     /* Notification Container - Full Width Mobile */
     #notification-container {
@@ -774,7 +876,7 @@ body.dark-theme .skeleton-line {
         right: -2px;
     }
     
-    /* Notification Dropdown - Full Screen Mobile */
+    /* ===== FIXED NOTIFICATION DROPDOWN FOR MOBILE ===== */
     .notification-dropdown {
         position: fixed;
         top: 70px;
@@ -782,9 +884,18 @@ body.dark-theme .skeleton-line {
         right: 16px;
         width: auto;
         max-width: none;
-        max-height: calc(100vh - 90px);
+        max-height: calc(100vh - 100px);
         border-radius: 20px;
         box-shadow: var(--shadow-lg, 0 10px 40px rgba(0,0,0,0.2));
+        display: none;
+        background: var(--bg-card, #ffffff);
+        border: 1px solid var(--border-color, #e2e8f0);
+        z-index: 1002;
+        overflow: hidden;
+    }
+    
+    .notification-dropdown.show {
+        display: block !important;
     }
     
     .notification-dropdown::before {
@@ -794,10 +905,13 @@ body.dark-theme .skeleton-line {
     
     .notification-header {
         padding: 16px 20px;
+        background: var(--bg-nav, #ffffff);
+        border-bottom: 1px solid var(--border-color, #e2e8f0);
     }
     
     .notification-header h3 {
         font-size: 16px;
+        color: var(--text-primary, #1e293b);
     }
     
     .notification-header h3 i {
@@ -807,49 +921,142 @@ body.dark-theme .skeleton-line {
     .mark-read-btn {
         padding: 6px 14px;
         font-size: 12px;
+        background: var(--accent-primary, #4f46e5);
+        color: white;
+        border: none;
     }
     
     .mark-read-btn i {
         font-size: 11px;
     }
     
+    .delete-all-btn {
+        padding: 6px 14px;
+        font-size: 12px;
+        margin-left: 6px;
+    }
+    
     .notifications-list {
-        max-height: calc(100vh - 160px);
+        max-height: calc(100vh - 180px);
+        background: var(--bg-card, #ffffff);
     }
     
     .notification-item {
         padding: 16px 20px;
         gap: 14px;
+        background: var(--bg-card, #ffffff);
+        border-bottom: 1px solid var(--border-color, #e2e8f0);
+    }
+    
+    .dark-theme .notification-item,
+    body.dark-theme .notification-item {
+        background: var(--bg-card, #1e1e1e);
+        border-color: var(--border-color, #2d2d2d);
+    }
+    
+    .notification-item.unread {
+        background: rgba(var(--accent-primary-rgb, 79,70,229), 0.05);
+        border-left: 4px solid var(--accent-primary, #4f46e5);
+    }
+    
+    .dark-theme .notification-item.unread,
+    body.dark-theme .notification-item.unread {
+        background: rgba(var(--accent-primary-rgb, 99,102,241), 0.15);
     }
     
     .notification-details h5 {
         font-size: 14px;
+        color: var(--text-primary, #1e293b);
+    }
+    
+    .dark-theme .notification-details h5,
+    body.dark-theme .notification-details h5 {
+        color: var(--text-primary, #ffffff);
     }
     
     .notification-details p {
         font-size: 12px;
         -webkit-line-clamp: 2;
+        color: var(--text-secondary, #64748b);
+    }
+    
+    .dark-theme .notification-details p,
+    body.dark-theme .notification-details p {
+        color: var(--text-secondary, #a0a0a0);
     }
     
     .notification-time-small {
         font-size: 10px;
         padding: 3px 8px;
+        background: rgba(var(--accent-primary-rgb, 79,70,229), 0.1);
+        color: var(--accent-primary, #4f46e5);
+    }
+    
+    .dark-theme .notification-time-small,
+    body.dark-theme .notification-time-small {
+        background: rgba(var(--accent-primary-rgb, 99,102,241), 0.2);
+        color: var(--accent-primary, #6366f1);
+    }
+    
+    .notification-delete-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 13px;
+        padding: 4px;
+    }
+    
+    .notification-delete-btn i {
+        font-size: 13px;
     }
     
     .empty-notifications {
         padding: 40px 20px;
+        background: var(--bg-card, #ffffff);
+    }
+    
+    .dark-theme .empty-notifications,
+    body.dark-theme .empty-notifications {
+        background: var(--bg-card, #1e1e1e);
     }
     
     .empty-notifications i {
         font-size: 48px;
+        color: var(--border-color, #e2e8f0);
+    }
+    
+    .dark-theme .empty-notifications i,
+    body.dark-theme .empty-notifications i {
+        color: var(--border-color, #2d2d2d);
     }
     
     .empty-notifications h4 {
         font-size: 16px;
+        color: var(--text-primary, #1e293b);
+    }
+    
+    .dark-theme .empty-notifications h4,
+    body.dark-theme .empty-notifications h4 {
+        color: var(--text-primary, #ffffff);
     }
     
     .empty-notifications p {
         font-size: 13px;
+        color: var(--text-secondary, #64748b);
+    }
+    
+    .dark-theme .empty-notifications p,
+    body.dark-theme .empty-notifications p {
+        color: var(--text-secondary, #a0a0a0);
+    }
+    
+    .notification-loading {
+        padding: 40px 20px;
+        background: var(--bg-card, #ffffff);
+    }
+    
+    .dark-theme .notification-loading,
+    body.dark-theme .notification-loading {
+        background: var(--bg-card, #1e1e1e);
     }
 }
 
@@ -892,7 +1099,7 @@ body.dark-theme .skeleton-line {
         top: 65px;
         left: 12px;
         right: 12px;
-        max-height: calc(100vh - 80px);
+        max-height: calc(100vh - 85px);
         border-radius: 16px;
     }
     
@@ -914,6 +1121,12 @@ body.dark-theme .skeleton-line {
         font-size: 11px;
     }
     
+    .delete-all-btn {
+        padding: 5px 12px;
+        font-size: 11px;
+        margin-left: 4px;
+    }
+    
     .notification-item {
         padding: 14px 16px;
         gap: 12px;
@@ -930,6 +1143,11 @@ body.dark-theme .skeleton-line {
     .notification-time-small {
         font-size: 9px;
         padding: 2px 6px;
+    }
+    
+    .notification-delete-btn {
+        width: 26px;
+        height: 26px;
     }
     
     .unread-dot {
@@ -1041,5 +1259,24 @@ body.dark-theme .skeleton-line {
     #notification-container,
     .notification-dropdown {
         display: none !important;
+    }
+}
+
+/* Ensure dropdown is clickable on mobile */
+@media (max-width: 768px) {
+    .notification-dropdown {
+        display: none;
+        position: fixed;
+        z-index: 10000;
+    }
+    
+    .notification-dropdown.show {
+        display: block !important;
+    }
+    
+    /* Make sure the bell is clickable */
+    .notification-bell {
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
     }
 }
