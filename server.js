@@ -48,9 +48,9 @@ cloudinary.config({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// FIXED FOR HOSTING: Serve static files from the root directory (where HTML files are)
-app.use(express.static(__dirname));
-// FIXED: Serve geojson files from the GEOJSON MAP folder (one level up)
+// FIXED FOR HOSTING: Serve static files from the public folder
+app.use(express.static(path.join(__dirname, "public")));
+// FIXED: Serve geojson files from the GEOJSON MAP folder
 app.use("/geojson", express.static(path.join(__dirname, "../GEOJSON MAP")));
 
 /* ---------------- CORS ---------------- */
@@ -1666,31 +1666,36 @@ app.use('/api/*', (req, res) => {
   res.status(404).json({ error: 'API endpoint not found' });
 });
 
-// FIXED FOR HOSTING: Catch-all route for frontend - serves files from root directory
+// FIXED FOR HOSTING: Catch-all route for frontend - serves files from public folder
 app.get("*", (req, res) => {
   // Skip API routes
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ error: 'API endpoint not found' });
   }
   
-  // Check if the file exists in the root directory
-  const filePath = path.join(__dirname, req.path);
+  // Check if the file exists in the public folder
+  const filePath = path.join(__dirname, "public", req.path);
   if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
     return res.sendFile(filePath);
   }
   
-  // Otherwise serve index.html from root directory
-  const indexPath = path.join(__dirname, "index.html");
+  // Otherwise serve index.html from public folder
+  const indexPath = path.join(__dirname, "public", "index.html");
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
     console.error("index.html not found at:", indexPath);
-    // List files in directory to help debug
+    // List files in public directory to help debug
     try {
-      const files = fs.readdirSync(__dirname);
-      console.log("Files in root directory:", files);
+      const publicPath = path.join(__dirname, "public");
+      if (fs.existsSync(publicPath)) {
+        const publicFiles = fs.readdirSync(publicPath);
+        console.log("Files in public directory:", publicFiles);
+      } else {
+        console.log("public directory does not exist at:", publicPath);
+      }
     } catch (e) {
-      console.error("Could not read directory:", e);
+      console.error("Could not read public directory:", e);
     }
     
     res.status(404).send(`
@@ -1699,7 +1704,7 @@ app.get("*", (req, res) => {
           <h1>404 - Page Not Found</h1>
           <p>The requested page could not be found.</p>
           <p>Looking for index.html at: ${indexPath}</p>
-          <p>Please check that index.html exists in the root directory.</p>
+          <p>Please check that index.html exists in the public folder.</p>
         </body>
       </html>
     `);
