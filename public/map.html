@@ -388,7 +388,7 @@
       pointer-events: auto;
     }
     
-    /* ===== MOBILE RESPONSIVE STYLES ===== */
+    /* ===== FIXED MOBILE RESPONSIVE STYLES ===== */
     @media (max-width: 768px) {
       .map-page-container {
         flex-direction: column;
@@ -407,11 +407,13 @@
         border-right: none;
         padding: 20px 16px;
         margin: 0;
+        order: 2; /* Sidebar below map */
       }
       
       .map-content {
         width: 100%;
         padding: 0 16px 20px;
+        order: 1; /* Map on top */
       }
       
       #map-container {
@@ -419,6 +421,7 @@
         min-height: 400px;
         margin: 0;
         border-radius: 16px;
+        width: 100%;
       }
       
       .button-group {
@@ -921,11 +924,16 @@
       // Store map globally for app.js to access
       window.campusMap = map;
       
-      // Force map to recalculate size on mobile
+      // Force map to recalculate size on mobile - multiple times for reliability
       setTimeout(() => {
         map.invalidateSize();
         console.log('Map size invalidated on init');
       }, 300);
+      
+      setTimeout(() => {
+        map.invalidateSize();
+        console.log('Map size invalidated again');
+      }, 1000);
       
       // Initialize all map features
       initializeMapFeatures(map);
@@ -961,9 +969,25 @@
       return icons[type] || 'fas fa-map-marker-alt';
     }
     
+    // FIXED: Updated to handle AGRI and FORESTRY department labels
     function extractNameFromProperties(properties, filename, type) {
       if (!properties) {
         return filename.replace('.geojson', '').replace(/_/g, ' ');
+      }
+      
+      // Special case for AGRI.geojson - show "AGRI & HUMANITY"
+      if (filename === 'AGRI.geojson') {
+        return "AGRICULTURE AND HUMANITY DEPT";
+      }
+      
+      // Special case for DEPT OF FORESTRY.geojson
+      if (filename === 'DEPT OF FORESTRY.geojson') {
+        return "PHYSICS, CHEMISTRY & FORESTRY";
+      }
+      
+      // Special case for CSE DEPT.geojson - show all three departments
+      if (filename === 'CSE DEPT.geojson') {
+        return "CSE, EE, ECE";
       }
       
       const propNames = ['ROOM NO.', 'ROOM_NO', 'ROOM NO', 'ROOM', 'NAME', 'name', 'LABEL', 'label', 'NUMBER', 'number'];
@@ -1836,7 +1860,7 @@
       });
     };
 
-    // Load saved theme
+    // Load saved theme - PRESERVED
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'light') {
       document.body.classList.add('light-theme');
