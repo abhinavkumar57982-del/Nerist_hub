@@ -1,30 +1,61 @@
 const mongoose = require("mongoose");
 
-const marketplaceSchema = new mongoose.Schema({
-  title: String,
-  description: String,
-  price: Number,
-  category: String,
-  condition: String,
-  contact: String,
-  image: String,
-  postedBy: {
-    type: String,
-    default: "Anonymous"
+const MarketplaceItemSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true
+    },
+    description: {
+      type: String,
+      required: true
+    },
+    price: {
+      type: Number,
+      required: true
+    },
+    category: {
+      type: String,
+      required: true
+    },
+    condition: {
+      type: String,
+      enum: ["new", "like-new", "good", "fair", "poor"],
+      default: "good"
+    },
+    contact: {
+      type: String,
+      required: true
+    },
+    image: {
+      type: String,
+      default: ""
+    },
+    // Cloudinary public ID field
+    imagePublicId: {
+      type: String,
+      default: ""
+    },
+    postedBy: {
+      type: String,
+      default: "Anonymous"
+    },
+    postedByRegistration: {
+      type: String,
+      default: ""
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    status: {
+      type: String,
+      enum: ["available", "sold"],
+      default: "available"
+    }
   },
-  postedByRegistration: String,
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  status: {
-    type: String,
-    default: "available"
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
-});
+  { timestamps: true }
+);
 
-module.exports = mongoose.model("MarketplaceItem", marketplaceSchema);
+module.exports = mongoose.model("MarketplaceItem", MarketplaceItemSchema);
