@@ -13,18 +13,18 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 // Models - WITH CORRECT PATHS (FIXED)
-const User = require("./User");
-const LostItem = require("./LostItem");
-const MarketplaceItem = require("./MarketplaceItem");
-const BuyRequest = require("./BuyRequest");
-const QuestionPaper = require("./QuestionPaper");
-const BikeRental = require("./BikeRental");
-const Building = require("./Building");
-const Notification = require("./Notification");
+const User = require("./server/User");
+const LostItem = require("./server/LostItem");
+const MarketplaceItem = require("./server/MarketplaceItem");
+const BuyRequest = require("./server/BuyRequest");
+const QuestionPaper = require("./server/QuestionPaper");
+const BikeRental = require("./server/BikeRental");
+const Building = require("./server/Building");
+const Notification = require("./server/Notification");
 
 // Utilities (FIXED)
-const getLocalAnswer = require("./chatbot");
-const registrationValidator = require("./RegistrationValidator");
+const getLocalAnswer = require("./server/chatbot");
+const registrationValidator = require("./server/RegistrationValidator");
 
 const app = express();
 const server = http.createServer(app);
