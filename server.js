@@ -8,20 +8,23 @@ const http = require("http");
 const socketIo = require("socket.io");
 const crypto = require("crypto");
 const fs = require("fs");
+// Cloudinary imports
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 // Models - WITH CORRECT PATHS (FIXED)
-const User = require("./server/User");
-const LostItem = require("./server/LostItem");
-const MarketplaceItem = require("./server/MarketplaceItem");
-const BuyRequest = require("./server/BuyRequest");
-const QuestionPaper = require("./server/QuestionPaper");
-const BikeRental = require("./server/BikeRental");
-const Building = require("./server/Building");
-const Notification = require("./server/Notification");
+const User = require("./User");
+const LostItem = require("./LostItem");
+const MarketplaceItem = require("./MarketplaceItem");
+const BuyRequest = require("./BuyRequest");
+const QuestionPaper = require("./QuestionPaper");
+const BikeRental = require("./BikeRental");
+const Building = require("./Building");
+const Notification = require("./Notification");
 
 // Utilities (FIXED)
-const getLocalAnswer = require("./server/chatbot");
-const registrationValidator = require("./server/RegistrationValidator");
+const getLocalAnswer = require("./chatbot");
+const registrationValidator = require("./RegistrationValidator");
 
 const app = express();
 const server = http.createServer(app);
@@ -34,12 +37,21 @@ const io = socketIo(server, {
 
 const PORT = process.env.PORT || 5000;
 
+/* ---------------- CLOUDINARY CONFIGURATION ---------------- */
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
 /* ---------------- MIDDLEWARE ---------------- */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public")));
-app.use("/uploads", express.static(path.join(__dirname, "server/uploads")));
-app.use("/geojson", express.static(path.join(__dirname, "GEOJSON MAP")));
+
+// FIXED: Serve static files from the public folder (one level up)
+app.use(express.static(path.join(__dirname, "../public")));
+// FIXED: Serve geojson files from the GEOJSON MAP folder (one level up)
+app.use("/geojson", express.static(path.join(__dirname, "../GEOJSON MAP")));
 
 /* ---------------- CORS ---------------- */
 app.use((req, res, next) => {
@@ -238,28 +250,66 @@ const optionalAuth = async (req, res, next) => {
   }
 };
 
-/* ---------------- MULTER SETUP ---------------- */
-const makeStorage = folder =>
-  multer.diskStorage({
-    destination: (req, file, cb) => {
-      const dir = path.join(__dirname, `server/uploads/${folder}`);
-      fs.mkdirSync(dir, { recursive: true });
-      cb(null, dir);
-    },
-    filename: (_, file, cb) =>
-      cb(null, Date.now() + "-" + file.originalname.replace(/\s+/g, '-'))
+/* ---------------- CLOUDINARY STORAGE SETUP ---------------- */
+const createCloudinaryStorage = (folder) => {
+  return new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+      folder: `nerist-hub/${folder}`,
+      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'pdf'],
+      public_id: (req, file) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const fileName = file.originalname.replace(/\.[^/.]+$/, "").replace(/\s+/g, '-');
+        return `${fileName}-${uniqueSuffix}`;
+      },
+      resource_type: 'auto'
+    }
   });
+};
 
-const lostUpload = multer({ storage: makeStorage("lost-found") });
-const marketUpload = multer({ storage: makeStorage("marketplace") });
-const paperUpload = multer({
-  storage: makeStorage("question-papers"),
-  fileFilter: (_, file, cb) =>
-    file.mimetype === "application/pdf"
-      ? cb(null, true)
-      : cb(new Error("Only PDFs allowed"))
+// Create different storage instances for different upload types
+const lostStorage = createCloudinaryStorage('lost-found');
+const marketStorage = createCloudinaryStorage('marketplace');
+const paperStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'nerist-hub/question-papers',
+    allowed_formats: ['pdf'],
+    public_id: (req, file) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const fileName = file.originalname.replace(/\.[^/.]+$/, "").replace(/\s+/g, '-');
+      return `${fileName}-${uniqueSuffix}`;
+    },
+    resource_type: 'raw' // For PDF files
+  }
 });
-const rentalUpload = multer({ storage: makeStorage("rentals") });
+const rentalStorage = createCloudinaryStorage('rentals');
+
+// Create multer instances with Cloudinary storage
+const lostUpload = multer({ storage: lostStorage });
+const marketUpload = multer({ storage: marketStorage });
+const paperUpload = multer({ 
+  storage: paperStorage,
+  fileFilter: (_, file, cb) => {
+    if (file.mimetype === "application/pdf") {
+      cb(null, true);
+    } else {
+      cb(new Error("Only PDFs allowed"));
+    }
+  }
+});
+const rentalUpload = multer({ storage: rentalStorage });
+
+// Helper function to delete image from Cloudinary
+async function deleteFromCloudinary(publicId, resourceType = 'image') {
+  try {
+    if (!publicId) return;
+    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+    console.log(`Deleted from Cloudinary: ${publicId}`);
+  } catch (error) {
+    console.error('Error deleting from Cloudinary:', error);
+  }
+}
 
 /* ============ AUTHENTICATION ROUTES ============ */
 
@@ -810,6 +860,14 @@ app.post(
     try {
       console.log("Creating lost item with user:", req.user);
       
+      // Get Cloudinary URL and public_id if file was uploaded
+      let imageUrl = "";
+      let imagePublicId = "";
+      if (req.file) {
+        imageUrl = req.file.path; // Cloudinary URL
+        imagePublicId = req.file.filename; // Cloudinary public_id
+      }
+      
       const item = await LostItem.create({
         title: req.body.title,
         description: req.body.description,
@@ -817,7 +875,8 @@ app.post(
         date: req.body.date,
         contact: req.body.contact,
         status: req.body.status === "found" ? "found" : "lost",
-        image: req.file ? req.file.filename : "",
+        image: imageUrl,
+        imagePublicId: imagePublicId, // Store public_id for future deletion
         postedBy: req.user.name,
         postedByRegistration: req.user.registrationNumber,
         userId: req.user.id
@@ -851,6 +910,14 @@ app.post(
     try {
       console.log("Creating found item with user:", req.user);
       
+      // Get Cloudinary URL and public_id if file was uploaded
+      let imageUrl = "";
+      let imagePublicId = "";
+      if (req.file) {
+        imageUrl = req.file.path; // Cloudinary URL
+        imagePublicId = req.file.filename; // Cloudinary public_id
+      }
+      
       const item = await LostItem.create({
         title: req.body.title,
         description: req.body.description,
@@ -858,7 +925,8 @@ app.post(
         date: req.body.date,
         contact: req.body.contact,
         status: "found",
-        image: req.file ? req.file.filename : "",
+        image: imageUrl,
+        imagePublicId: imagePublicId, // Store public_id for future deletion
         postedBy: req.user.name,
         postedByRegistration: req.user.registrationNumber,
         userId: req.user.id
@@ -919,7 +987,7 @@ app.put("/api/items/:id/found", authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE ITEM - PROTECTED
+// DELETE ITEM - PROTECTED (with Cloudinary cleanup)
 app.delete("/api/items/:id", authenticateToken, async (req, res) => {
   try {
     const item = await LostItem.findById(req.params.id);
@@ -931,6 +999,11 @@ app.delete("/api/items/:id", authenticateToken, async (req, res) => {
       return res.status(403).json({ error: "You can only delete your own items" });
     }
     
+    // Delete image from Cloudinary if it exists
+    if (item.imagePublicId) {
+      await deleteFromCloudinary(item.imagePublicId);
+    }
+    
     await LostItem.findByIdAndDelete(req.params.id);
     res.json({ success: true });
   } catch (error) {
@@ -938,6 +1011,8 @@ app.delete("/api/items/:id", authenticateToken, async (req, res) => {
     res.status(500).json({ error: "Failed to delete item" });
   }
 });
+
+/* ============ QUESTION PAPERS ROUTES ============ */
 
 /* ============ QUESTION PAPERS ROUTES ============ */
 
@@ -951,6 +1026,14 @@ app.post(
     try {
       console.log("Uploading paper with user:", req.user);
       
+      // Get Cloudinary URL and public_id for the PDF
+      let pdfUrl = "";
+      let pdfPublicId = "";
+      if (req.file) {
+        pdfUrl = req.file.path; // Cloudinary URL
+        pdfPublicId = req.file.filename; // Cloudinary public_id
+      }
+      
       const paper = await QuestionPaper.create({
         year: req.body.year,
         semester: req.body.semester,
@@ -960,7 +1043,8 @@ app.post(
         uploadedBy: req.user.name,
         uploadedByRegistration: req.user.registrationNumber,
         userId: req.user.id,
-        pdf: req.file.filename
+        pdf: pdfUrl,
+        pdfPublicId: pdfPublicId // Store public_id for future deletion
       });
       
       console.log("Paper uploaded:", paper);
@@ -1002,6 +1086,39 @@ app.get("/api/question-papers", optionalAuth, async (req, res) => {
   res.json(papers);
 });
 
+// DELETE QUESTION PAPER - PROTECTED (with Cloudinary cleanup)
+app.delete("/api/question-papers/:id", authenticateToken, async (req, res) => {
+  try {
+    const paper = await QuestionPaper.findById(req.params.id);
+    if (!paper) {
+      return res.status(404).json({ error: "Question paper not found" });
+    }
+    
+    // Check if user owns this paper
+    if (paper.userId && paper.userId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ error: "You can only delete your own question papers" });
+    }
+    
+    // Delete PDF from Cloudinary if it exists
+    if (paper.pdfPublicId) {
+      try {
+        await cloudinary.uploader.destroy(paper.pdfPublicId, { resource_type: 'raw' });
+        console.log(`Deleted from Cloudinary: ${paper.pdfPublicId}`);
+      } catch (cloudinaryError) {
+        console.error('Error deleting from Cloudinary:', cloudinaryError);
+        // Continue with deletion even if Cloudinary delete fails
+      }
+    }
+    
+    await QuestionPaper.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Question paper deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting question paper:", error);
+    res.status(500).json({ error: "Failed to delete question paper" });
+  }
+});
+
+
 /* ============ MARKETPLACE ROUTES ============ */
 
 // SELL ITEM - PROTECTED
@@ -1014,6 +1131,14 @@ app.post(
     try {
       console.log("Creating marketplace item with user:", req.user);
       
+      // Get Cloudinary URL and public_id if file was uploaded
+      let imageUrl = "";
+      let imagePublicId = "";
+      if (req.file) {
+        imageUrl = req.file.path; // Cloudinary URL
+        imagePublicId = req.file.filename; // Cloudinary public_id
+      }
+      
       const item = await MarketplaceItem.create({
         title: req.body.title,
         description: req.body.description,
@@ -1025,7 +1150,8 @@ app.post(
         postedByRegistration: req.user.registrationNumber,
         userId: req.user.id,
         status: "available",
-        image: req.file ? req.file.filename : ""
+        image: imageUrl,
+        imagePublicId: imagePublicId // Store public_id for future deletion
       });
 
       await notifyAllUsers(
@@ -1084,7 +1210,7 @@ app.put("/api/marketplace/:id/sold", authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE SELL ITEM - PROTECTED
+// DELETE SELL ITEM - PROTECTED (with Cloudinary cleanup)
 app.delete("/api/marketplace/:id", authenticateToken, async (req, res) => {
   try {
     const item = await MarketplaceItem.findById(req.params.id);
@@ -1094,6 +1220,11 @@ app.delete("/api/marketplace/:id", authenticateToken, async (req, res) => {
     
     if (item.userId && item.userId.toString() !== req.user.id.toString()) {
       return res.status(403).json({ error: "You can only delete your own items" });
+    }
+    
+    // Delete image from Cloudinary if it exists
+    if (item.imagePublicId) {
+      await deleteFromCloudinary(item.imagePublicId);
     }
     
     await MarketplaceItem.findByIdAndDelete(req.params.id);
@@ -1212,22 +1343,36 @@ app.post(
       console.log("Creating rental with user:", req.user);
       console.log("Rental data:", req.body);
       
+      // Get Cloudinary URL and public_id if file was uploaded
+      let imageUrl = "";
+      let imagePublicId = "";
+      if (req.file) {
+        imageUrl = req.file.path; // Cloudinary URL
+        imagePublicId = req.file.filename; // Cloudinary public_id
+        console.log("Cloudinary URL:", imageUrl);
+      }
+      
+      // Prepare rental data with proper field mapping
       const rentalData = {
         serviceType: req.body.serviceType,
-        otherServiceType: req.body.otherServiceType,
-        vehicleType: req.body.vehicleType,
-        brand: req.body.brand,
-        title: req.body.title,
-        description: req.body.description,
+        otherServiceType: req.body.otherServiceType || "",
+        vehicleType: req.body.vehicleType || "",
+        brand: req.body.brand || "",
+        title: req.body.title || "",
+        description: req.body.description || "",
         rentPerDay: req.body.price || req.body.rentPerDay,
         location: req.body.location,
         contact: req.body.contact,
-        image: req.file ? req.file.filename : "",
+        image: imageUrl,
+        imagePublicId: imagePublicId,
         postedBy: req.user.name,
         postedByRegistration: req.user.registrationNumber,
-        userId: req.user.id
+        userId: req.user.id,
+        availability: "available"
       };
 
+      console.log("Processed rental data:", rentalData);
+      
       const rental = await BikeRental.create(rentalData);
 
       await notifyAllUsers(
@@ -1238,11 +1383,16 @@ app.post(
         'BikeRental'
       );
       
-      console.log("Rental created:", rental);
-      res.json(rental);
+      console.log("✅ Rental created successfully:", rental);
+      res.status(201).json(rental);
     } catch (err) {
-      console.error("Rental creation error:", err);
-      res.status(500).json({ error: "Rental service upload failed" });
+      console.error("❌ Rental creation error:", err);
+      console.error("Error details:", err.errors);
+      res.status(500).json({ 
+        error: "Rental service upload failed", 
+        details: err.message,
+        validationErrors: err.errors 
+      });
     }
   }
 );
@@ -1250,6 +1400,8 @@ app.post(
 // GET ALL RENTALS - PUBLIC
 app.get("/api/rentals", optionalAuth, async (req, res) => {
   try {
+    console.log("📋 Fetching rentals...");
+    
     const { serviceType, availability } = req.query;
     const filter = {};
     
@@ -1257,10 +1409,26 @@ app.get("/api/rentals", optionalAuth, async (req, res) => {
     if (availability) filter.availability = availability;
     
     const rentals = await BikeRental.find(filter).sort({ createdAt: -1 });
+    
+    console.log(`✅ Found ${rentals.length} rentals`);
+    
+    // Log sample to verify data structure
+    if (rentals.length > 0) {
+      console.log("Sample rental:", {
+        id: rentals[0]._id,
+        serviceType: rentals[0].serviceType,
+        title: rentals[0].title,
+        hasImage: !!rentals[0].image
+      });
+    }
+    
     res.json(rentals);
   } catch (error) {
-    console.error("Rental fetch error:", error);
-    res.status(500).json({ error: "Failed to fetch rentals" });
+    console.error("❌ Rental fetch error:", error);
+    res.status(500).json({ 
+      error: "Failed to fetch rentals",
+      details: error.message 
+    });
   }
 });
 
@@ -1296,7 +1464,7 @@ app.put("/api/rentals/:id/rented", authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE - PROTECTED
+// DELETE - PROTECTED (with Cloudinary cleanup)
 app.delete("/api/rentals/:id", authenticateToken, async (req, res) => {
   try {
     const rental = await BikeRental.findById(req.params.id);
@@ -1306,6 +1474,11 @@ app.delete("/api/rentals/:id", authenticateToken, async (req, res) => {
     
     if (rental.userId && rental.userId.toString() !== req.user.id.toString()) {
       return res.status(403).json({ error: "You can only delete your own rentals" });
+    }
+    
+    // Delete image from Cloudinary if it exists
+    if (rental.imagePublicId) {
+      await deleteFromCloudinary(rental.imagePublicId);
     }
     
     await BikeRental.findByIdAndDelete(req.params.id);
@@ -1488,8 +1661,40 @@ app.get("/api/debug/tokens", (req, res) => {
 
 /* ============ CATCH-ALL ROUTE ============ */
 
+// API 404 handler
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: 'API endpoint not found' });
+});
+
+// FIXED: Catch-all route for frontend - serves from public folder one level up
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public/index.html"));
+  // Skip API routes
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+  
+  // Check if the file exists in the public folder
+  const filePath = path.join(__dirname, "../public", req.path);
+  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+    return res.sendFile(filePath);
+  }
+  
+  // Otherwise serve index.html for SPA routing
+  const indexPath = path.join(__dirname, "../public/index.html");
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    console.error("index.html not found at:", indexPath);
+    res.status(404).send(`
+      <html>
+        <body>
+          <h1>404 - Page Not Found</h1>
+          <p>The requested page could not be found.</p>
+          <p>Please check that index.html exists in the public folder.</p>
+        </body>
+      </html>
+    `);
+  }
 });
 
 /* ============ START SERVER ============ */
