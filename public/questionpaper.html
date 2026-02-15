@@ -8,6 +8,72 @@
   <title>Question Papers | NERIST Hub</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Additional styles for My Papers button */
+    .filter-btn {
+      background: rgba(var(--accent-primary-rgb, 30,144,255), 0.1);
+      border: 1px solid rgba(var(--accent-primary-rgb, 30,144,255), 0.3);
+      color: var(--accent-primary, #1e90ff);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 30px;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-btn i {
+      font-size: 14px;
+    }
+
+    .filter-btn:hover {
+      background: var(--accent-primary, #1e90ff);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(var(--accent-primary-rgb, 30,144,255), 0.3);
+    }
+
+    .filter-btn.active {
+      background: var(--accent-primary, #1e90ff);
+      color: white;
+    }
+
+    .dark-theme .filter-btn {
+      background: rgba(30,144,255,0.2);
+      border-color: rgba(30,144,255,0.4);
+      color: #70a1ff;
+    }
+
+    .dark-theme .filter-btn:hover,
+    .dark-theme .filter-btn.active {
+      background: #1e90ff;
+      color: white;
+    }
+
+    .filter-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .filter-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .filter-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+    }
+  </style>
 </head>
 <body>
   <!-- NAVBAR -->
@@ -125,7 +191,20 @@
       </button>
     </div>
 
-    <div id="list" class="card-grid"></div>
+    <!-- Filter Buttons -->
+    <div class="filter-buttons">
+      <button onclick="showAllPapers()" class="filter-btn" id="showAllBtn">
+        <i class="fas fa-list"></i> All Papers
+      </button>
+      <button onclick="loadMyPapers()" class="filter-btn" id="myPapersBtn">
+        <i class="fas fa-user"></i> My Papers
+      </button>
+    </div>
+
+    <!-- Question Papers Grid -->
+    <div id="list" class="card-grid">
+      <!-- Question papers will be loaded here dynamically -->
+    </div>
   </div>
 
   <!-- FOOTER -->
@@ -326,6 +405,44 @@
         if (text) text.textContent = 'Light';
       }
     }
+
+    // Active button state management
+    function setActiveFilter(activeId) {
+      document.getElementById('showAllBtn').classList.remove('active');
+      document.getElementById('myPapersBtn').classList.remove('active');
+      document.getElementById(activeId).classList.add('active');
+    }
+
+    // Override loadPapers to reset active state
+    const originalLoadPapers = window.loadPapers;
+    window.loadPapers = function() {
+      setActiveFilter('showAllBtn');
+      if (originalLoadPapers) originalLoadPapers();
+    };
+
+    // Override loadMyPapers to set active state
+    window.loadMyPapers = function() {
+      if (!window.Auth || !window.Auth.isLoggedIn()) {
+        alert('Please login to view your papers');
+        return;
+      }
+      setActiveFilter('myPapersBtn');
+      if (window.originalLoadMyPapers) {
+        window.originalLoadMyPapers();
+      } else if (window.loadMyPapersFromJS) {
+        window.loadMyPapersFromJS();
+      }
+    };
+
+    // Show all papers function
+    window.showAllPapers = function() {
+      setActiveFilter('showAllBtn');
+      if (window.showAllPapersFromJS) {
+        window.showAllPapersFromJS();
+      } else {
+        loadPapers();
+      }
+    };
   </script>
 </body>
 </html>
