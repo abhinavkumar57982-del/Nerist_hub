@@ -37,7 +37,7 @@
   // Initialize theme on page load
   initTheme();
 
-  // ============ MOBILE NAVIGATION SYSTEM ============
+  // ============ FIXED MOBILE NAVIGATION SYSTEM ============
   function initMobileNavigation() {
     // Always check if we're on mobile
     if (window.innerWidth > 768) {
@@ -52,7 +52,7 @@
       return;
     }
     
-    console.log('Initializing mobile navigation...'); // Debug log
+    console.log('Initializing mobile navigation...');
     
     // Add hamburger button if not exists
     if (!document.querySelector('.mobile-menu-btn')) {
@@ -60,10 +60,11 @@
       if (navLeft) {
         const hamburger = document.createElement('button');
         hamburger.className = 'mobile-menu-btn';
+        hamburger.id = 'mobile-menu-btn';
         hamburger.setAttribute('aria-label', 'Menu');
         hamburger.innerHTML = '<i class="fas fa-bars"></i>';
-        navLeft.appendChild(hamburger);
-        console.log('Hamburger button added'); // Debug log
+        navLeft.insertBefore(hamburger, navLeft.firstChild);
+        console.log('Hamburger button added');
       }
     }
     
@@ -71,17 +72,19 @@
     if (!document.querySelector('.mobile-menu-overlay')) {
       const overlay = document.createElement('div');
       overlay.className = 'mobile-menu-overlay';
+      overlay.id = 'mobile-menu-overlay';
       document.body.appendChild(overlay);
-      console.log('Overlay added'); // Debug log
+      console.log('Overlay added');
     }
     
     // Create mobile menu if not exists
     if (!document.querySelector('.mobile-menu')) {
       const mobileMenu = document.createElement('div');
       mobileMenu.className = 'mobile-menu';
+      mobileMenu.id = 'mobile-menu';
       document.body.appendChild(mobileMenu);
       buildMobileMenuContent(mobileMenu);
-      console.log('Mobile menu added'); // Debug log
+      console.log('Mobile menu added');
     }
     
     setupMobileMenuEvents();
@@ -235,79 +238,101 @@
   }
 
   function setupMobileMenuEvents() {
-    const hamburger = document.querySelector('.mobile-menu-btn');
-    const overlay = document.querySelector('.mobile-menu-overlay');
-    const mobileMenu = document.querySelector('.mobile-menu');
+    const hamburger = document.getElementById('mobile-menu-btn') || document.querySelector('.mobile-menu-btn');
+    const overlay = document.getElementById('mobile-menu-overlay') || document.querySelector('.mobile-menu-overlay');
+    const mobileMenu = document.getElementById('mobile-menu') || document.querySelector('.mobile-menu');
     
-    if (!hamburger) {
-      console.log('Hamburger not found, retrying...'); // Debug log
+    if (!hamburger || !overlay || !mobileMenu) {
+      console.log('Mobile elements not found, retrying...');
       setTimeout(setupMobileMenuEvents, 100);
       return;
     }
     
-    console.log('Setting up mobile menu events'); // Debug log
+    console.log('Setting up mobile menu events');
     
-    // Remove any existing listeners by cloning and replacing
+    // Remove any existing listeners by creating fresh elements
     const newHamburger = hamburger.cloneNode(true);
     hamburger.parentNode.replaceChild(newHamburger, hamburger);
     
-    // Get fresh references
-    const freshHamburger = document.querySelector('.mobile-menu-btn');
-    const freshOverlay = document.querySelector('.mobile-menu-overlay');
-    const freshMobileMenu = document.querySelector('.mobile-menu');
+    const newOverlay = overlay.cloneNode(true);
+    overlay.parentNode.replaceChild(newOverlay, overlay);
     
-    // Toggle menu
+    const newMobileMenu = mobileMenu.cloneNode(true);
+    mobileMenu.parentNode.replaceChild(newMobileMenu, mobileMenu);
+    
+    // Get fresh references
+    const freshHamburger = document.getElementById('mobile-menu-btn') || document.querySelector('.mobile-menu-btn');
+    const freshOverlay = document.getElementById('mobile-menu-overlay') || document.querySelector('.mobile-menu-overlay');
+    const freshMobileMenu = document.getElementById('mobile-menu') || document.querySelector('.mobile-menu');
+    
+    // Toggle menu function
+    function toggleMobileMenu(open) {
+      if (open === undefined) {
+        // Toggle
+        const isOpen = freshMobileMenu.classList.contains('active');
+        if (isOpen) {
+          closeMobileMenu();
+        } else {
+          openMobileMenu();
+        }
+      } else if (open) {
+        openMobileMenu();
+      } else {
+        closeMobileMenu();
+      }
+    }
+    
+    function openMobileMenu() {
+      freshMobileMenu.classList.add('active');
+      freshOverlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      
+      const icon = freshHamburger.querySelector('i');
+      if (icon) icon.className = 'fas fa-times';
+    }
+    
+    function closeMobileMenu() {
+      freshMobileMenu.classList.remove('active');
+      freshOverlay.classList.remove('active');
+      document.body.style.overflow = '';
+      
+      const icon = freshHamburger.querySelector('i');
+      if (icon) icon.className = 'fas fa-bars';
+      
+      // Close all submenus
+      document.querySelectorAll('.mobile-submenu.active').forEach(sub => {
+        sub.classList.remove('active');
+      });
+      
+      // Reset all chevrons
+      document.querySelectorAll('.fa-chevron-right').forEach(chevron => {
+        chevron.style.transform = '';
+      });
+    }
+    
+    // Hamburger click
     freshHamburger.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      console.log('Hamburger clicked'); // Debug log
-      
-      freshMobileMenu.classList.toggle('active');
-      freshOverlay.classList.toggle('active');
-      document.body.style.overflow = freshMobileMenu.classList.contains('active') ? 'hidden' : '';
-      
-      const icon = this.querySelector('i');
-      if (freshMobileMenu.classList.contains('active')) {
-        icon.className = 'fas fa-times';
-      } else {
-        icon.className = 'fas fa-bars';
-      }
+      console.log('Hamburger clicked');
+      toggleMobileMenu();
     });
     
-    // Close on overlay click
+    // Overlay click
     freshOverlay.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
       closeMobileMenu();
     });
     
-    // Close on menu item click (except submenu toggles)
+    // Menu item clicks - FIXED
     freshMobileMenu.addEventListener('click', function(e) {
-      // Don't close if clicking on submenu toggle
-      if (e.target.closest('.has-submenu')) {
-        return;
-      }
-      // Don't close if clicking on auth buttons
-      if (e.target.closest('.mobile-auth-btn')) {
-        return;
-      }
-      // Close menu when clicking on regular menu items (links)
-      if (e.target.closest('.mobile-menu-item:not(.has-submenu)') || e.target.closest('.mobile-submenu-item')) {
-        setTimeout(() => {
-          closeMobileMenu();
-        }, 150);
-      }
+      // Don't close menu when clicking inside it (handled by specific cases)
+      e.stopPropagation();
     });
     
-    // Submenu toggles
-    document.querySelectorAll('.mobile-menu-item.has-submenu').forEach(item => {
-      // Remove existing listeners
-      const newItem = item.cloneNode(true);
-      item.parentNode.replaceChild(newItem, item);
-    });
-    
-    // Re-attach submenu listeners
-    document.querySelectorAll('.mobile-menu-item.has-submenu').forEach(item => {
+    // Handle submenu toggles
+    freshMobileMenu.querySelectorAll('.mobile-menu-item.has-submenu').forEach(item => {
       item.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -318,17 +343,38 @@
         
         if (submenu) {
           // Close other open submenus
-          document.querySelectorAll('.mobile-submenu.active').forEach(menu => {
+          freshMobileMenu.querySelectorAll('.mobile-submenu.active').forEach(menu => {
             if (menu.id !== `${targetId}-submenu`) {
               menu.classList.remove('active');
-              const parentChevron = document.querySelector(`[data-target="${menu.id.replace('-submenu', '')}"] .fa-chevron-right`);
+              const parentChevron = freshMobileMenu.querySelector(`[data-target="${menu.id.replace('-submenu', '')}"] .fa-chevron-right`);
               if (parentChevron) parentChevron.style.transform = '';
             }
           });
           
           submenu.classList.toggle('active');
-          chevron.style.transform = submenu.classList.contains('active') ? 'rotate(90deg)' : '';
+          if (chevron) {
+            chevron.style.transform = submenu.classList.contains('active') ? 'rotate(90deg)' : '';
+          }
         }
+      });
+    });
+    
+    // Handle submenu item clicks (links) - FIXED
+    freshMobileMenu.querySelectorAll('.mobile-submenu-item').forEach(link => {
+      link.addEventListener('click', function(e) {
+        // Let the link work normally
+        // Don't close immediately to allow navigation
+        setTimeout(() => {
+          closeMobileMenu();
+        }, 100);
+      });
+    });
+    
+    // Handle auth buttons
+    freshMobileMenu.querySelectorAll('.mobile-auth-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        // Don't close immediately - let the onclick handler work
       });
     });
     
@@ -338,48 +384,27 @@
         closeMobileMenu();
       }
     });
-  }
-
-  function closeMobileMenu() {
-    const hamburger = document.querySelector('.mobile-menu-btn');
-    const overlay = document.querySelector('.mobile-menu-overlay');
-    const mobileMenu = document.querySelector('.mobile-menu');
     
-    if (mobileMenu) mobileMenu.classList.remove('active');
-    if (overlay) overlay.classList.remove('active');
-    if (hamburger) {
-      const icon = hamburger.querySelector('i');
-      if (icon) icon.className = 'fas fa-bars';
-    }
-    document.body.style.overflow = '';
-    
-    // Close all submenus
-    document.querySelectorAll('.mobile-submenu.active').forEach(sub => {
-      sub.classList.remove('active');
-    });
-    
-    // Reset all chevrons
-    document.querySelectorAll('.fa-chevron-right').forEach(chevron => {
-      chevron.style.transform = '';
-    });
+    // Make close function globally available
+    window.closeMobileMenu = closeMobileMenu;
   }
 
   function handleMobileLogout() {
     if (window.Auth) {
       window.Auth.logout();
-      closeMobileMenu();
       // Rebuild menu without user info
       const mobileMenu = document.querySelector('.mobile-menu');
       if (mobileMenu) {
         buildMobileMenuContent(mobileMenu);
+        // Re-setup events after content change
+        setupMobileMenuEvents();
       }
-      updateAuthUI(); // Update UI after logout
+      updateAuthUI();
       window.location.reload();
     }
   }
 
   // Make mobile functions global
-  window.closeMobileMenu = closeMobileMenu;
   window.handleMobileLogout = handleMobileLogout;
   window.toggleTheme = toggleTheme;
 
@@ -481,16 +506,260 @@
   // Make showAlert global
   window.showAlert = showAlert;
 
+  // Image Preview Functions for Lost & Found pages
+  function openImagePreview(imageSrc, caption = '') {
+    // Check if modal exists, if not create it
+    let modal = document.getElementById('imagePreviewModal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'imagePreviewModal';
+      modal.className = 'image-preview-modal';
+      modal.innerHTML = `
+        <div class="preview-container">
+          <button class="close-preview" onclick="closeImagePreview(event)"><i class="fas fa-times"></i></button>
+          <img id="previewImage" class="preview-image" src="" alt="Preview">
+          <button class="download-preview" onclick="downloadPreviewImage()"><i class="fas fa-download"></i></button>
+          <div id="previewCaption" class="preview-caption"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      
+      // Add styles if not already present
+      if (!document.getElementById('preview-styles')) {
+        const style = document.createElement('style');
+        style.id = 'preview-styles';
+        style.textContent = `
+          .image-preview-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+          }
+          
+          .image-preview-modal.active {
+            display: flex;
+          }
+          
+          .preview-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+          }
+          
+          .preview-image {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            animation: zoomIn 0.2s ease-out;
+          }
+          
+          .close-preview {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 28px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(5px);
+            z-index: 10001;
+          }
+          
+          .close-preview:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+          }
+          
+          .download-preview {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(99, 102, 241, 0.9);
+            border: none;
+            color: white;
+            font-size: 20px;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(5px);
+            z-index: 10001;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+          }
+          
+          .download-preview:hover {
+            background: rgba(99, 102, 241, 1);
+            transform: translateY(-3px);
+          }
+          
+          .preview-caption {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 16px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+          }
+          
+          @keyframes zoomIn {
+            from {
+              opacity: 0;
+              transform: scale(0.9);
+            }
+            to {
+              opacity: 1;
+              transform: scale(1);
+            }
+          }
+          
+          .clickable-image {
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+          }
+          
+          .clickable-image:hover {
+            opacity: 0.9;
+          }
+          
+          @media (max-width: 768px) {
+            .close-preview {
+              top: 15px;
+              right: 15px;
+              width: 45px;
+              height: 45px;
+              font-size: 24px;
+            }
+            
+            .download-preview {
+              bottom: 20px;
+              right: 20px;
+              width: 50px;
+              height: 50px;
+              font-size: 18px;
+            }
+            
+            .preview-caption {
+              bottom: 20px;
+              left: 20px;
+              font-size: 14px;
+              padding: 8px 16px;
+            }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+    }
+    
+    const previewImage = document.getElementById('previewImage');
+    const previewCaption = document.getElementById('previewCaption');
+    
+    previewImage.src = imageSrc;
+    previewCaption.textContent = caption;
+    modal.classList.add('active');
+    
+    // Prevent body scrolling
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeImagePreview(event) {
+    // Don't close if clicking on the image or download button
+    if (event && (event.target.closest('.preview-image') || event.target.closest('.download-preview'))) {
+      return;
+    }
+    
+    const modal = document.getElementById('imagePreviewModal');
+    if (modal) {
+      modal.classList.remove('active');
+      // Restore body scrolling
+      document.body.style.overflow = '';
+    }
+  }
+
+  function downloadPreviewImage() {
+    const previewImage = document.getElementById('previewImage');
+    const link = document.createElement('a');
+    link.href = previewImage.src;
+    link.download = 'image.jpg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  // Make image preview functions global
+  window.openImagePreview = openImagePreview;
+  window.closeImagePreview = closeImagePreview;
+  window.downloadPreviewImage = downloadPreviewImage;
+
+  // Close modal with Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const modal = document.getElementById('imagePreviewModal');
+      if (modal && modal.classList.contains('active')) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    }
+  });
+
   // Lost & Found functionality - ONLY RUN ON LOST/FOUND PAGES
   const lostForm = document.getElementById("lostForm");
   const foundForm = document.getElementById("foundForm");
   const itemsDiv = document.getElementById("items");
 
+  // Show loading state for items
+  function showItemsLoading(show = true) {
+    if (!itemsDiv) return;
+    if (show) {
+      itemsDiv.innerHTML = `
+        <div class="loading-state">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Loading items...</p>
+        </div>
+      `;
+    }
+  }
+
   // Only run loadItems if we're on a lost/found page
   if (location.pathname.includes("lost.html") || location.pathname.includes("found.html")) {
     async function loadItems(status) {
+      showItemsLoading(true);
+      
       try {
         const res = await fetch(`/api/items?status=${status}`);
+        
+        if (!res.ok) {
+          throw new Error(`HTTP error ${res.status}`);
+        }
+        
         const items = await res.json();
 
         if (!itemsDiv) return;
@@ -501,7 +770,7 @@
           itemsDiv.innerHTML = `
             <div class="empty-state">
               <i class="fas fa-inbox"></i>
-              <h3>No items found</h3>
+              <h3>No ${status} items found</h3>
               <p>Be the first to report a ${status} item!</p>
             </div>
           `;
@@ -532,21 +801,25 @@
 
               ${
                 item.image
-                  ? `<img src="/uploads/lost-found/${item.image}" alt="${item.title}">`
+                  ? `<img src="${item.image}" alt="${item.title}" 
+                        class="clickable-image"
+                        onclick="openImagePreview('${item.image}', '${item.title} - ${item.location}')"
+                        style="max-width: 100%; max-height: 200px; object-fit: cover; border-radius: 4px; cursor: pointer;"
+                        onerror="this.style.display='none';">`
                   : ""
               }
 
               <div class="card-actions">
                 ${
                   item.status === "lost" && canEdit
-                    ? `<button class="success" onclick="markFound('${item._id}')">
+                    ? `<button class="success" onclick="markFound('${item._id}', this)">
                          <i class="fas fa-check"></i> Mark Found
                        </button>`
                     : ""
                 }
                 ${
                   canEdit
-                    ? `<button class="danger" onclick="deleteItem('${item._id}')">
+                    ? `<button class="danger" onclick="deleteItem('${item._id}', this)">
                          <i class="fas fa-trash"></i> Delete
                        </button>`
                     : ""
@@ -559,21 +832,29 @@
         console.error('Error loading items:', error);
         if (itemsDiv) {
           itemsDiv.innerHTML = `
-            <div class="empty-state">
+            <div class="error-state">
               <i class="fas fa-exclamation-triangle"></i>
               <h3>Error loading items</h3>
-              <p>Please try again later</p>
+              <p>${error.message}</p>
+              <button onclick="loadItems('${status}')" class="retry-btn">
+                <i class="fas fa-redo"></i> Try Again
+              </button>
             </div>
           `;
         }
       }
     }
 
-    async function markFound(id) {
+    async function markFound(id, button) {
       if (!checkAuth()) {
         showAlert('Please login to mark items as found', 'error');
         return;
       }
+      
+      // Disable button and show loading state
+      const originalText = button.innerHTML;
+      button.disabled = true;
+      button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
       
       try {
         const response = await fetch(`/api/items/${id}/found`, { 
@@ -587,20 +868,29 @@
         } else {
           const error = await response.json();
           showAlert(error.error || 'Failed to mark as found', 'error');
+          button.disabled = false;
+          button.innerHTML = originalText;
         }
       } catch (error) {
         console.error('Error marking found:', error);
         showAlert('Failed to mark as found', 'error');
+        button.disabled = false;
+        button.innerHTML = originalText;
       }
     }
 
-    async function deleteItem(id) {
+    async function deleteItem(id, button) {
       if (!checkAuth()) {
         showAlert('Please login to delete items', 'error');
         return;
       }
       
       if (!confirm('Are you sure you want to delete this item?')) return;
+      
+      // Disable button and show loading state
+      const originalText = button.innerHTML;
+      button.disabled = true;
+      button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
       
       try {
         const response = await fetch(`/api/items/${id}`, { 
@@ -615,10 +905,14 @@
         } else {
           const error = await response.json();
           showAlert(error.error || 'Failed to delete item', 'error');
+          button.disabled = false;
+          button.innerHTML = originalText;
         }
       } catch (error) {
         console.error('Error deleting item:', error);
         showAlert('Failed to delete item', 'error');
+        button.disabled = false;
+        button.innerHTML = originalText;
       }
     }
 
@@ -626,7 +920,7 @@
     window.markFound = markFound;
     window.deleteItem = deleteItem;
 
-    if (lostForm) {
+        if (lostForm) {
       lostForm.addEventListener("submit", async e => {
         e.preventDefault();
         
@@ -638,12 +932,18 @@
           return;
         }
         
+        // Disable submit button
+        const submitBtn = lostForm.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Reporting...';
+        
         const formData = new FormData(lostForm);
         
         try {
           const response = await fetch("/api/items", {
             method: "POST",
-            headers: window.Auth.getAuthHeadersFormData(),
+            headers: window.Auth.getAuthHeadersFormData ? window.Auth.getAuthHeadersFormData() : {},
             body: formData
           });
           
@@ -658,7 +958,11 @@
           }
         } catch (error) {
           console.error('Error reporting lost item:', error);
-          showAlert('Network error. Please try again.', 'error');
+          showAlert('Network error: ' + error.message, 'error');
+        } finally {
+          // Always re-enable the button
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
         }
       });
     }
@@ -675,12 +979,18 @@
           return;
         }
         
+        // Disable submit button
+        const submitBtn = foundForm.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Reporting...';
+        
         const formData = new FormData(foundForm);
         
         try {
           const response = await fetch("/api/items", {
             method: "POST",
-            headers: window.Auth.getAuthHeadersFormData(),
+            headers: window.Auth.getAuthHeadersFormData ? window.Auth.getAuthHeadersFormData() : {},
             body: formData
           });
           
@@ -695,11 +1005,15 @@
           }
         } catch (error) {
           console.error('Error reporting found item:', error);
-          showAlert('Network error. Please try again.', 'error');
+          showAlert('Network error: ' + error.message, 'error');
+        } finally {
+          // Always re-enable the button
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
         }
       });
     }
-
+    
     // Load items based on current page
     if (location.pathname.includes("lost.html")) loadItems("lost");
     if (location.pathname.includes("found.html")) loadItems("found");
@@ -852,6 +1166,8 @@
           const mobileMenu = document.querySelector('.mobile-menu');
           if (mobileMenu && window.innerWidth <= 768) {
             buildMobileMenuContent(mobileMenu);
+            // Re-setup events after content change
+            setupMobileMenuEvents();
           }
         }
       }).catch(err => {
@@ -872,15 +1188,17 @@
     const mobileMenu = document.querySelector('.mobile-menu');
     if (mobileMenu && window.innerWidth <= 768) {
       buildMobileMenuContent(mobileMenu);
+      // Re-setup events after content change
+      setupMobileMenuEvents();
     }
   });
 
   // Initialize everything when DOM is ready
   document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM Content Loaded'); // Debug log
+    console.log('DOM Content Loaded');
     setActiveMenu();
     initAuth();
-    updateAuthUI(); // Force immediate UI update
+    updateAuthUI();
     
     // Initialize mobile navigation immediately
     initMobileNavigation();
@@ -888,13 +1206,13 @@
     // Also initialize after a short delay to ensure DOM is fully ready
     setTimeout(() => {
       initMobileNavigation();
-      updateAuthUI(); // Update UI again after delay
+      updateAuthUI();
     }, 100);
     
     // Initialize on window load as well
     window.addEventListener('load', function() {
       initMobileNavigation();
-      updateAuthUI(); // Update UI on window load
+      updateAuthUI();
       
       // Fix map on mobile after page load
       if (window.location.pathname.includes('map.html')) {
@@ -904,10 +1222,7 @@
       }
     });
     
-    // Debug: Log auth status
     console.log('Page loaded - Auth status:', window.Auth ? window.Auth.isLoggedIn() : 'Auth not loaded');
-    console.log('Token:', localStorage.getItem('token'));
-    console.log('User:', localStorage.getItem('user'));
   });
 
   // Re-initialize on resize
