@@ -5266,3 +5266,47 @@ body.dark-theme .feature-card:hover .feature-link-hint {
     color: var(--text-primary);
     font-weight: 600;
 }
+
+
+/* Install PWA Button */
+.install-pwa-btn {
+  background: var(--accent-success);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  width: 40px;
+  height: 40px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-left: 8px;
+}
+
+.install-pwa-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.install-pwa-btn i {
+  font-size: 18px;
+}
+
+/* Online/Offline Status */
+#online-status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+#online-status.online {
+  background: rgba(83, 16, 185, 0.1);
+  color: var(--accent-success);
+}
+
+#online-status.offline {
+  background: rgba(117, 68, 239, 0.1);
+  color: var(--accent-danger);
+}
