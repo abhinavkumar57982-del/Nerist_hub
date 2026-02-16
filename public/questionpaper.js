@@ -155,7 +155,37 @@ async function loadPapers() {
     }
 }
 
-// Render papers function - UPDATED with View PDF button
+// Helper function to get Cloudinary download URL
+function getCloudinaryDownloadUrl(pdfUrl, fileName) {
+    if (!pdfUrl) return pdfUrl;
+    
+    // Check if it's a Cloudinary URL
+    if (pdfUrl.includes('cloudinary')) {
+        // Add fl_attachment flag to force download
+        let downloadUrl = pdfUrl;
+        
+        // Handle different Cloudinary URL formats
+        if (pdfUrl.includes('?')) {
+            // URL already has parameters
+            downloadUrl = pdfUrl + '&fl_attachment';
+        } else {
+            // URL has no parameters
+            downloadUrl = pdfUrl + '?fl_attachment';
+        }
+        
+        // Add filename if provided (optional)
+        if (fileName) {
+            downloadUrl += `&filename=${encodeURIComponent(fileName)}`;
+        }
+        
+        return downloadUrl;
+    }
+    
+    // Not a Cloudinary URL, return as is
+    return pdfUrl;
+}
+
+// Render papers function - UPDATED with Cloudinary download flag
 function renderPapers(papers) {
     const list = document.getElementById("list");
     if (!list) return;
@@ -197,9 +227,16 @@ function renderPapers(papers) {
         // Create header with title and delete button
         const header = document.createElement('div');
         header.className = 'card-header';
+        header.style.display = 'flex';
+        header.style.justifyContent = 'space-between';
+        header.style.alignItems = 'flex-start';
+        header.style.marginBottom = '10px';
         
         const title = document.createElement('h3');
         title.className = 'card-title';
+        title.style.margin = '0';
+        title.style.flex = '1';
+        title.style.paddingRight = '10px';
         title.innerHTML = `${p.subject} (${p.subjectCode})`;
         
         header.appendChild(title);
@@ -210,7 +247,35 @@ function renderPapers(papers) {
             deleteBtn.className = 'delete-paper-btn';
             deleteBtn.setAttribute('onclick', `deleteQuestionPaper('${p._id}', event)`);
             deleteBtn.setAttribute('title', 'Delete this question paper');
+            deleteBtn.style.background = 'rgba(239, 68, 68, 0.1)';
+            deleteBtn.style.color = 'var(--accent-danger)';
+            deleteBtn.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+            deleteBtn.style.borderRadius = '50%';
+            deleteBtn.style.width = '36px';
+            deleteBtn.style.height = '36px';
+            deleteBtn.style.display = 'flex';
+            deleteBtn.style.alignItems = 'center';
+            deleteBtn.style.justifyContent = 'center';
+            deleteBtn.style.cursor = 'pointer';
+            deleteBtn.style.transition = 'var(--transition)';
+            deleteBtn.style.fontSize = '16px';
+            deleteBtn.style.flexShrink = '0';
             deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+            
+            // Add hover effect
+            deleteBtn.addEventListener('mouseenter', function() {
+                this.style.background = 'var(--accent-danger)';
+                this.style.color = 'white';
+                this.style.transform = 'translateY(-2px)';
+                this.style.boxShadow = 'var(--shadow-sm)';
+            });
+            deleteBtn.addEventListener('mouseleave', function() {
+                this.style.background = 'rgba(239, 68, 68, 0.1)';
+                this.style.color = 'var(--accent-danger)';
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = 'none';
+            });
+            
             header.appendChild(deleteBtn);
         }
         
@@ -219,26 +284,36 @@ function renderPapers(papers) {
         // Add paper details
         const details = document.createElement('div');
         details.className = 'paper-details';
+        details.style.margin = '10px 0';
         details.innerHTML = `
-            <p><b>Year:</b> ${p.year}</p>
-            <p><b>Semester:</b> ${p.semester}</p>
-            <p><b>Branch:</b> ${p.branch}</p>
+            <p style="margin: 5px 0; font-size: 14px;"><b style="color: var(--text-primary);">Year:</b> ${p.year}</p>
+            <p style="margin: 5px 0; font-size: 14px;"><b style="color: var(--text-primary);">Semester:</b> ${p.semester}</p>
+            <p style="margin: 5px 0; font-size: 14px;"><b style="color: var(--text-primary);">Branch:</b> ${p.branch}</p>
         `;
         paperCard.appendChild(details);
         
         // Add uploader info
         const uploaderInfo = document.createElement('div');
         uploaderInfo.className = 'uploader-info';
+        uploaderInfo.style.display = 'flex';
+        uploaderInfo.style.flexWrap = 'wrap';
+        uploaderInfo.style.gap = '15px';
+        uploaderInfo.style.margin = '10px 0';
+        uploaderInfo.style.padding = '10px 0';
+        uploaderInfo.style.borderTop = '1px solid var(--border-color)';
+        uploaderInfo.style.borderBottom = '1px solid var(--border-color)';
+        uploaderInfo.style.fontSize = '13px';
+        uploaderInfo.style.color = 'var(--text-secondary)';
         
         let uploaderHtml = '';
         if (p.uploadedBy) {
-            uploaderHtml += `<span><i class="fas fa-user"></i> ${p.uploadedBy}</span>`;
+            uploaderHtml += `<span style="display: inline-flex; align-items: center; gap: 5px;"><i class="fas fa-user" style="color: var(--accent-primary); font-size: 12px;"></i> ${p.uploadedBy}</span>`;
         }
         if (p.uploadedByRegistration) {
-            uploaderHtml += `<span><i class="fas fa-id-card"></i> ${p.uploadedByRegistration}</span>`;
+            uploaderHtml += `<span style="display: inline-flex; align-items: center; gap: 5px;"><i class="fas fa-id-card" style="color: var(--accent-primary); font-size: 12px;"></i> ${p.uploadedByRegistration}</span>`;
         }
         if (p.uploadedAt) {
-            uploaderHtml += `<span><i class="fas fa-calendar"></i> ${new Date(p.uploadedAt).toLocaleDateString()}</span>`;
+            uploaderHtml += `<span style="display: inline-flex; align-items: center; gap: 5px;"><i class="fas fa-calendar" style="color: var(--accent-primary); font-size: 12px;"></i> ${new Date(p.uploadedAt).toLocaleDateString()}</span>`;
         }
         
         uploaderInfo.innerHTML = uploaderHtml;
@@ -247,12 +322,16 @@ function renderPapers(papers) {
         // Create filename for download
         const fileName = `${p.subject || 'Paper'}_${p.subjectCode || ''}_${p.year || ''}.pdf`.replace(/\s+/g, '_');
         
+        // Get Cloudinary download URL
+        const downloadUrl = getCloudinaryDownloadUrl(p.pdf, fileName);
+        
         // Add action buttons container
         const actionButtons = document.createElement('div');
         actionButtons.className = 'pdf-actions';
         actionButtons.style.display = 'flex';
         actionButtons.style.gap = '10px';
         actionButtons.style.marginTop = '15px';
+        actionButtons.style.flexWrap = 'wrap';
         
         // View button (opens in our PDF viewer)
         const viewBtn = document.createElement('a');
@@ -260,34 +339,65 @@ function renderPapers(papers) {
         viewBtn.className = 'btn';
         viewBtn.setAttribute('target', '_blank');
         viewBtn.style.flex = '1';
+        viewBtn.style.minWidth = '120px';
         viewBtn.style.background = 'var(--accent-primary)';
         viewBtn.style.color = 'white';
         viewBtn.style.textDecoration = 'none';
-        viewBtn.style.padding = '10px';
+        viewBtn.style.padding = '12px';
         viewBtn.style.borderRadius = 'var(--radius-sm)';
         viewBtn.style.display = 'inline-flex';
         viewBtn.style.alignItems = 'center';
         viewBtn.style.justifyContent = 'center';
         viewBtn.style.gap = '8px';
+        viewBtn.style.fontWeight = '600';
+        viewBtn.style.fontSize = '14px';
+        viewBtn.style.cursor = 'pointer';
+        viewBtn.style.transition = 'var(--transition)';
+        viewBtn.style.border = 'none';
         viewBtn.innerHTML = '<i class="fas fa-eye"></i> View PDF';
         
-        // Download button
+        // Download button - using Cloudinary download flag
         const downloadBtn = document.createElement('a');
-        downloadBtn.href = p.pdf;
+        downloadBtn.href = downloadUrl;
         downloadBtn.className = 'btn';
-        downloadBtn.setAttribute('download', fileName);
+        // Note: We don't use download attribute because Cloudinary handles it
         downloadBtn.setAttribute('target', '_blank');
         downloadBtn.style.flex = '1';
+        downloadBtn.style.minWidth = '120px';
         downloadBtn.style.background = 'var(--accent-success)';
         downloadBtn.style.color = 'white';
         downloadBtn.style.textDecoration = 'none';
-        downloadBtn.style.padding = '10px';
+        downloadBtn.style.padding = '12px';
         downloadBtn.style.borderRadius = 'var(--radius-sm)';
         downloadBtn.style.display = 'inline-flex';
         downloadBtn.style.alignItems = 'center';
         downloadBtn.style.justifyContent = 'center';
         downloadBtn.style.gap = '8px';
-        downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download';
+        downloadBtn.style.fontWeight = '600';
+        downloadBtn.style.fontSize = '14px';
+        downloadBtn.style.cursor = 'pointer';
+        downloadBtn.style.transition = 'var(--transition)';
+        downloadBtn.style.border = 'none';
+        downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download PDF';
+        
+        // Add hover effects
+        viewBtn.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = 'var(--shadow-md)';
+        });
+        viewBtn.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'none';
+        });
+        
+        downloadBtn.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = 'var(--shadow-md)';
+        });
+        downloadBtn.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'none';
+        });
         
         actionButtons.appendChild(viewBtn);
         actionButtons.appendChild(downloadBtn);
