@@ -12,7 +12,6 @@ function checkAuth() {
 }
 
 // Delete question paper function
-// Delete question paper function
 async function deleteQuestionPaper(paperId, event) {
     // Stop event propagation to prevent any parent handlers
     if (event) {
@@ -156,7 +155,7 @@ async function loadPapers() {
     }
 }
 
-// Render papers function
+// Render papers function - UPDATED with View PDF button
 function renderPapers(papers) {
     const list = document.getElementById("list");
     if (!list) return;
@@ -245,15 +244,54 @@ function renderPapers(papers) {
         uploaderInfo.innerHTML = uploaderHtml;
         paperCard.appendChild(uploaderInfo);
         
-        // Add download button
+        // Create filename for download
+        const fileName = `${p.subject || 'Paper'}_${p.subjectCode || ''}_${p.year || ''}.pdf`.replace(/\s+/g, '_');
+        
+        // Add action buttons container
+        const actionButtons = document.createElement('div');
+        actionButtons.className = 'pdf-actions';
+        actionButtons.style.display = 'flex';
+        actionButtons.style.gap = '10px';
+        actionButtons.style.marginTop = '15px';
+        
+        // View button (opens in our PDF viewer)
+        const viewBtn = document.createElement('a');
+        viewBtn.href = `/pdf-viewer.html?file=${encodeURIComponent(p.pdf)}&name=${encodeURIComponent(p.subject || 'Paper')}`;
+        viewBtn.className = 'btn';
+        viewBtn.setAttribute('target', '_blank');
+        viewBtn.style.flex = '1';
+        viewBtn.style.background = 'var(--accent-primary)';
+        viewBtn.style.color = 'white';
+        viewBtn.style.textDecoration = 'none';
+        viewBtn.style.padding = '10px';
+        viewBtn.style.borderRadius = 'var(--radius-sm)';
+        viewBtn.style.display = 'inline-flex';
+        viewBtn.style.alignItems = 'center';
+        viewBtn.style.justifyContent = 'center';
+        viewBtn.style.gap = '8px';
+        viewBtn.innerHTML = '<i class="fas fa-eye"></i> View PDF';
+        
+        // Download button
         const downloadBtn = document.createElement('a');
         downloadBtn.href = p.pdf;
         downloadBtn.className = 'btn';
-        downloadBtn.setAttribute('download', '');
+        downloadBtn.setAttribute('download', fileName);
         downloadBtn.setAttribute('target', '_blank');
-        downloadBtn.style.marginTop = '12px';
-        downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download PDF';
-        paperCard.appendChild(downloadBtn);
+        downloadBtn.style.flex = '1';
+        downloadBtn.style.background = 'var(--accent-success)';
+        downloadBtn.style.color = 'white';
+        downloadBtn.style.textDecoration = 'none';
+        downloadBtn.style.padding = '10px';
+        downloadBtn.style.borderRadius = 'var(--radius-sm)';
+        downloadBtn.style.display = 'inline-flex';
+        downloadBtn.style.alignItems = 'center';
+        downloadBtn.style.justifyContent = 'center';
+        downloadBtn.style.gap = '8px';
+        downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download';
+        
+        actionButtons.appendChild(viewBtn);
+        actionButtons.appendChild(downloadBtn);
+        paperCard.appendChild(actionButtons);
         
         list.appendChild(paperCard);
     });
