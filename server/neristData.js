@@ -5,7 +5,7 @@ const neristFAQ = [
   },
   {
     keywords: ["library", "timing"],
-    answer: "NERIST central library is open from 9 AM to 8 PM on working days."
+    answer: "NERIST central library is open from 9 AM to 12 AM on working days."
   },
   {
     keywords: ["hostel"],
