@@ -155,17 +155,20 @@ async function loadPapers() {
     }
 }
 
-// Helper function to get Cloudinary download URL
+// FIXED: Helper function to get Cloudinary download URL with proper flags
 function getCloudinaryDownloadUrl(pdfUrl, fileName) {
     if (!pdfUrl) return pdfUrl;
     
     // Check if it's a Cloudinary URL
     if (pdfUrl.includes('cloudinary')) {
-        // Add fl_attachment flag to force download
+        // Method 1: Using fl_attachment in the URL path (most reliable)
         let downloadUrl = pdfUrl;
         
         // Handle different Cloudinary URL formats
-        if (pdfUrl.includes('?')) {
+        if (pdfUrl.includes('/upload/')) {
+            // Insert fl_attachment after /upload/
+            downloadUrl = pdfUrl.replace('/upload/', '/upload/fl_attachment/');
+        } else if (pdfUrl.includes('?')) {
             // URL already has parameters
             downloadUrl = pdfUrl + '&fl_attachment';
         } else {
@@ -173,9 +176,13 @@ function getCloudinaryDownloadUrl(pdfUrl, fileName) {
             downloadUrl = pdfUrl + '?fl_attachment';
         }
         
-        // Add filename if provided (optional)
+        // Add filename as a query parameter
         if (fileName) {
-            downloadUrl += `&filename=${encodeURIComponent(fileName)}`;
+            if (downloadUrl.includes('?')) {
+                downloadUrl += `&filename=${encodeURIComponent(fileName)}`;
+            } else {
+                downloadUrl += `?filename=${encodeURIComponent(fileName)}`;
+            }
         }
         
         return downloadUrl;
@@ -185,7 +192,50 @@ function getCloudinaryDownloadUrl(pdfUrl, fileName) {
     return pdfUrl;
 }
 
-// Render papers function - UPDATED with Cloudinary download flag
+// FIXED: Force download function using fetch and blob
+async function forceDownload(pdfUrl, fileName) {
+    try {
+        // Show loading indicator
+        const downloadBtn = event?.target?.closest('a') || document.querySelector(`[data-url="${pdfUrl}"]`);
+        if (downloadBtn) {
+            const originalHtml = downloadBtn.innerHTML;
+            downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Downloading...';
+            downloadBtn.style.pointerEvents = 'none';
+            
+            // Fetch the PDF as blob
+            const response = await fetch(pdfUrl);
+            const blob = await response.blob();
+            
+            // Create blob URL and trigger download
+            const blobUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Clean up
+            window.URL.revokeObjectURL(blobUrl);
+            
+            // Restore button
+            downloadBtn.innerHTML = originalHtml;
+            downloadBtn.style.pointerEvents = 'auto';
+        }
+    } catch (error) {
+        console.error('Download failed:', error);
+        alert('Download failed. Please try again.');
+        
+        // Restore button
+        const downloadBtn = event?.target?.closest('a');
+        if (downloadBtn) {
+            downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download PDF';
+            downloadBtn.style.pointerEvents = 'auto';
+        }
+    }
+}
+
+// Render papers function - FIXED with working download
 function renderPapers(papers) {
     const list = document.getElementById("list");
     if (!list) return;
@@ -322,7 +372,7 @@ function renderPapers(papers) {
         // Create filename for download
         const fileName = `${p.subject || 'Paper'}_${p.subjectCode || ''}_${p.year || ''}.pdf`.replace(/\s+/g, '_');
         
-        // Get Cloudinary download URL
+        // FIXED: Get Cloudinary download URL
         const downloadUrl = getCloudinaryDownloadUrl(p.pdf, fileName);
         
         // Add action buttons container
@@ -356,12 +406,12 @@ function renderPapers(papers) {
         viewBtn.style.border = 'none';
         viewBtn.innerHTML = '<i class="fas fa-eye"></i> View PDF';
         
-        // Download button - using Cloudinary download flag
+        // FIXED: Download button with multiple fallback methods
         const downloadBtn = document.createElement('a');
         downloadBtn.href = downloadUrl;
         downloadBtn.className = 'btn';
-        // Note: We don't use download attribute because Cloudinary handles it
         downloadBtn.setAttribute('target', '_blank');
+        downloadBtn.setAttribute('download', fileName); // Add download attribute as fallback
         downloadBtn.style.flex = '1';
         downloadBtn.style.minWidth = '120px';
         downloadBtn.style.background = 'var(--accent-success)';
@@ -378,7 +428,22 @@ function renderPapers(papers) {
         downloadBtn.style.cursor = 'pointer';
         downloadBtn.style.transition = 'var(--transition)';
         downloadBtn.style.border = 'none';
+        downloadBtn.setAttribute('data-url', p.pdf);
+        downloadBtn.setAttribute('data-filename', fileName);
         downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download PDF';
+        
+        // Add click handler for fallback if normal download fails
+        downloadBtn.addEventListener('click', function(e) {
+            // For Cloudinary URLs, sometimes the download attribute doesn't work
+            // We'll use a more reliable method
+            e.preventDefault();
+            
+            // Method 1: Try to fetch and download
+            forceDownload(p.pdf, fileName).catch(() => {
+                // Method 2: Fallback to window.open
+                window.open(downloadUrl, '_blank');
+            });
+        });
         
         // Add hover effects
         viewBtn.addEventListener('mouseenter', function() {
