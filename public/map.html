@@ -20,12 +20,71 @@
       overflow: hidden;
       border: 1px solid var(--border-color);
       box-shadow: var(--shadow-md);
+      transition: all 0.3s ease;
     }
     
     #map {
       height: 100%;
       width: 100%;
       background: var(--bg-secondary);
+    }
+    
+    /* Fullscreen mode */
+    #map-container.fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 9999;
+      border-radius: 0;
+      border: none;
+    }
+    
+    /* Fullscreen button */
+    .fullscreen-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1001;
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 10px 15px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: var(--shadow-md);
+      transition: var(--transition);
+      backdrop-filter: blur(5px);
+    }
+    
+    .fullscreen-btn:hover {
+      background: white;
+      transform: scale(1.05);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .fullscreen-btn i {
+      color: var(--accent-primary);
+    }
+    
+    /* Exit fullscreen button (shown only in fullscreen) */
+    .fullscreen-btn.exit {
+      background: rgba(231, 76, 60, 0.9);
+      color: white;
+    }
+    
+    .fullscreen-btn.exit i {
+      color: white;
+    }
+    
+    .fullscreen-btn.exit:hover {
+      background: #e74c3c;
     }
     
     /* Control Panel - Desktop */
@@ -363,7 +422,7 @@
     .zoom-indicator {
       position: absolute;
       top: 10px;
-      right: 10px;
+      right: 60px;
       background: rgba(0, 0, 0, 0.7);
       color: white;
       padding: 6px 12px;
@@ -422,6 +481,12 @@
         margin: 0;
         border-radius: 16px;
         width: 100%;
+      }
+      
+      /* Fullscreen on mobile */
+      #map-container.fullscreen {
+        height: 100vh;
+        border-radius: 0;
       }
       
       .button-group {
@@ -484,6 +549,15 @@
       .leaflet-control-zoom {
         display: none !important;
       }
+      
+      .fullscreen-btn {
+        padding: 8px 12px;
+        font-size: 14px;
+      }
+      
+      .zoom-indicator {
+        right: 50px;
+      }
     }
     
     @media (max-width: 480px) {
@@ -511,6 +585,10 @@
     @supports (-webkit-touch-callout: none) {
       .map-page-container {
         min-height: -webkit-fill-available;
+      }
+      
+      #map-container.fullscreen {
+        height: -webkit-fill-available;
       }
     }
   </style>
@@ -722,8 +800,13 @@
         <p id="loadingStatus" style="color: white;">Initializing...</p>
       </div>
       
-      <!-- Map Container -->
+      <!-- Map Container with Fullscreen Button -->
       <div id="map-container">
+        <!-- Fullscreen Button -->
+        <button class="fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreen()">
+          <i class="fas fa-expand"></i>
+          <span>Fullscreen</span>
+        </button>
         <div id="map"></div>
       </div>
     </div>
@@ -900,6 +983,63 @@
   </script>
   
   <script>
+    // ============================================
+    // FULLSCREEN FUNCTION
+    // ============================================
+    function toggleFullscreen() {
+      const mapContainer = document.getElementById('map-container');
+      const fullscreenBtn = document.getElementById('fullscreenBtn');
+      const navbar = document.querySelector('.navbar');
+      const footer = document.querySelector('.footer');
+      const mapSidebar = document.querySelector('.map-sidebar');
+      
+      if (!mapContainer.classList.contains('fullscreen')) {
+        // Enter fullscreen
+        mapContainer.classList.add('fullscreen');
+        fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i> <span>Exit</span>';
+        fullscreenBtn.classList.add('exit');
+        
+        // Hide other elements
+        if (navbar) navbar.style.display = 'none';
+        if (footer) footer.style.display = 'none';
+        if (mapSidebar) mapSidebar.style.display = 'none';
+        
+        // Adjust map size
+        setTimeout(() => {
+          if (window.campusMap) {
+            window.campusMap.invalidateSize();
+          }
+        }, 100);
+      } else {
+        // Exit fullscreen
+        mapContainer.classList.remove('fullscreen');
+        fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i> <span>Fullscreen</span>';
+        fullscreenBtn.classList.remove('exit');
+        
+        // Show other elements
+        if (navbar) navbar.style.display = 'flex';
+        if (footer) footer.style.display = 'block';
+        if (mapSidebar) mapSidebar.style.display = 'block';
+        
+        // Adjust map size
+        setTimeout(() => {
+          if (window.campusMap) {
+            window.campusMap.invalidateSize();
+          }
+        }, 100);
+      }
+    }
+    
+    // Handle Escape key to exit fullscreen
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const mapContainer = document.getElementById('map-container');
+        if (mapContainer && mapContainer.classList.contains('fullscreen')) {
+          toggleFullscreen();
+        }
+      }
+    });
+
     // ============================================
     // GLOBAL VARIABLES
     // ============================================
