@@ -23,7 +23,7 @@ const QuestionPaper = require("./server/QuestionPaper");
 const BikeRental = require("./server/BikeRental");
 const Building = require("./server/Building");
 const Notification = require("./server/Notification");
-const PushSubscription = require("./server/PushSubscription"); // Add this model
+const PushSubscription = require("./server/PushSubscription");
 
 // Utilities
 const getLocalAnswer = require("./server/chatbot");
@@ -60,14 +60,101 @@ if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
   console.warn("⚠️ VAPID keys not configured. Push notifications will not work.");
 }
 
+/* ---------------- PATH CONFIGURATION FOR RENDER ---------------- */
+// Determine the correct public directory path
+const POSSIBLE_PATHS = [
+  path.join(__dirname, 'public'),                    // /opt/render/project/src/public
+  path.join(__dirname, '../public'),                  // /opt/render/project/public
+  path.join(__dirname, '../../public'),               // /opt/render/public
+  path.join(process.cwd(), 'public'),                 // Current working directory + public
+];
+
+console.log("📁 Current directory:", __dirname);
+console.log("📁 Current working directory:", process.cwd());
+console.log("📁 Checking possible public folder locations...");
+
+let PUBLIC_DIR = null;
+for (const testPath of POSSIBLE_PATHS) {
+  console.log(`   Checking: ${testPath}`);
+  if (fs.existsSync(testPath)) {
+    PUBLIC_DIR = testPath;
+    console.log(`✅ Found public folder at: ${PUBLIC_DIR}`);
+    break;
+  }
+}
+
+// If no public folder found, create one
+if (!PUBLIC_DIR) {
+  PUBLIC_DIR = path.join(__dirname, 'public');
+  console.log(`⚠️ No public folder found. Creating at: ${PUBLIC_DIR}`);
+  fs.mkdirSync(PUBLIC_DIR, { recursive: true });
+  
+  // Create a simple index.html as fallback
+  const fallbackHtml = `<!DOCTYPE html>
+<html>
+<head>
+    <title>NERIST Campus Hub</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 50px; background: #0f0f0f; color: white; margin: 0; }
+        .container { max-width: 600px; margin: 0 auto; }
+        h1 { color: #6366f1; font-size: 2.5rem; }
+        .card { background: #1e1e1e; border-radius: 12px; padding: 30px; margin-top: 30px; border: 1px solid #2d2d2d; }
+        .status { color: #10b981; font-weight: bold; }
+        .api-link { color: #6366f1; text-decoration: none; }
+        .api-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 NERIST Campus Hub</h1>
+        <div class="card">
+            <p class="status">✅ Server is running!</p>
+            <p>Your backend API is active at:</p>
+            <p><code>/api/*</code> endpoints</p>
+            <p>📁 Static files are served from: <code>${PUBLIC_DIR}</code></p>
+            <p>Please upload your frontend files to this location.</p>
+            <hr style="border-color: #2d2d2d; margin: 20px 0;">
+            <p>🔍 Check API health: <a href="/api/health" class="api-link" target="_blank">/api/health</a></p>
+        </div>
+    </div>
+</body>
+</html>`;
+  
+  fs.writeFileSync(path.join(PUBLIC_DIR, 'index.html'), fallbackHtml);
+  console.log("✅ Created fallback index.html");
+}
+
+console.log("📁 Serving static files from:", PUBLIC_DIR);
+
 /* ---------------- MIDDLEWARE ---------------- */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from the public folder
-app.use(express.static(path.join(__dirname, "../public")));
+app.use(express.static(PUBLIC_DIR));
+
 // Serve geojson files from the GEOJSON MAP folder
-app.use("/geojson", express.static(path.join(__dirname, "../GEOJSON MAP")));
+const GEOJSON_PATHS = [
+  path.join(__dirname, "../GEOJSON MAP"),
+  path.join(__dirname, "GEOJSON MAP"),
+  path.join(process.cwd(), "GEOJSON MAP")
+];
+
+let GEOJSON_DIR = null;
+for (const testPath of GEOJSON_PATHS) {
+  if (fs.existsSync(testPath)) {
+    GEOJSON_DIR = testPath;
+    console.log("📁 Serving GeoJSON from:", GEOJSON_DIR);
+    app.use("/geojson", express.static(GEOJSON_DIR));
+    break;
+  }
+}
+
+if (!GEOJSON_DIR) {
+  console.log("⚠️ GeoJSON folder not found");
+}
 
 /* ---------------- CORS ---------------- */
 app.use((req, res, next) => {
@@ -628,7 +715,6 @@ app.post("/api/push/subscribe", async (req, res) => {
     
     // Create new subscription (without userId for anonymous users)
     await PushSubscription.create({
-      // No userId field - this is for anonymous users
       subscription: subscription,
       endpoint: subscription.endpoint
     });
@@ -642,14 +728,22 @@ app.post("/api/push/subscribe", async (req, res) => {
   }
 });
 
-// Optional: Keep this for cleanup if needed, but won't be used from frontend
+// Unsubscribe endpoint
 app.post("/api/push/unsubscribe", async (req, res) => {
-  // This endpoint exists but won't be called from frontend
-  res.json({ success: true, message: "Unsubscribe endpoint (not used)" });
+  try {
+    const { endpoint } = req.body;
+    if (endpoint) {
+      await PushSubscription.findOneAndDelete({ endpoint });
+      console.log(`✅ Unsubscribed endpoint: ${endpoint}`);
+    }
+    res.json({ success: true, message: "Unsubscribed successfully" });
+  } catch (error) {
+    console.error("Error unsubscribing:", error);
+    res.status(500).json({ error: "Failed to unsubscribe" });
+  }
 });
 
 /* ============ AUTHENTICATION ROUTES ============ */
-// ... (keep all your existing auth routes)
 
 /**
  * @route   POST /api/auth/register
@@ -2007,23 +2101,27 @@ app.get("*", (req, res) => {
   }
   
   // Check if the file exists in the public folder
-  const filePath = path.join(__dirname, "../public", req.path);
+  const filePath = path.join(PUBLIC_DIR, req.path);
   if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
     return res.sendFile(filePath);
   }
   
   // Otherwise serve index.html for SPA routing
-  const indexPath = path.join(__dirname, "../public/index.html");
+  const indexPath = path.join(PUBLIC_DIR, 'index.html');
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
     console.error("index.html not found at:", indexPath);
     res.status(404).send(`
       <html>
-        <body>
-          <h1>404 - Page Not Found</h1>
+        <body style="font-family: Arial; text-align: center; padding: 50px; background: #0f0f0f; color: white;">
+          <h1 style="color: #6366f1;">404 - Page Not Found</h1>
           <p>The requested page could not be found.</p>
-          <p>Please check that index.html exists in the public folder.</p>
+          <p>Server is running but frontend files are missing.</p>
+          <p>Please upload your frontend files to:</p>
+          <p><code>${PUBLIC_DIR}</code></p>
+          <p>📁 Current directory: ${__dirname}</p>
+          <p>📁 Public directory: ${PUBLIC_DIR}</p>
         </body>
       </html>
     `);
@@ -2032,6 +2130,6 @@ app.get("*", (req, res) => {
 
 /* ============ START SERVER ============ */
 
-server.listen(PORT, () =>
+server.listen(PORT, '0.0.0.0', () =>
   console.log(`🚀 Server running on http://localhost:${PORT}`)
 );
