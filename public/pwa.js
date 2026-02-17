@@ -68,10 +68,8 @@ window.addEventListener('beforeinstallprompt', (e) => {
           console.log('✅ User accepted the install prompt');
           localStorage.setItem('pwa-mode', 'true');
           
-          // Show welcome popup immediately after installation
-          setTimeout(() => {
-            showWelcomePopup();
-          }, 1000);
+          // Set a flag that installation just happened
+          localStorage.setItem('just-installed', 'true');
         }
         deferredPrompt = null;
       });
@@ -82,6 +80,8 @@ window.addEventListener('beforeinstallprompt', (e) => {
 window.addEventListener('appinstalled', (evt) => {
   console.log('✅ PWA was installed');
   localStorage.setItem('pwa-mode', 'true');
+  localStorage.setItem('just-installed', 'true');
+  
   // Clear session storage to ensure first launch detection works
   sessionStorage.removeItem('pwa-launched');
   localStorage.setItem('pwa-first-launch', 'false');
@@ -90,7 +90,7 @@ window.addEventListener('appinstalled', (evt) => {
     installButton.style.display = 'none';
   }
   
-  // Show welcome popup after installation
+  // Show welcome popup after a short delay
   setTimeout(() => {
     showWelcomePopup();
   }, 1500);
@@ -100,7 +100,10 @@ window.addEventListener('appinstalled', (evt) => {
 function showWelcomePopup() {
   // Check if already shown
   if (localStorage.getItem('welcome-popup-shown') === 'true') {
-    return;
+    // If already shown but just installed, maybe show again?
+    if (localStorage.getItem('just-installed') !== 'true') {
+      return;
+    }
   }
   
   // Create popup element
@@ -168,7 +171,7 @@ function showWelcomePopup() {
       </div>
       
       <div style="display: flex; gap: 10px; justify-content: center;">
-        <button onclick="this.closest('div[style*=\\'fixed\\']').remove(); localStorage.setItem('welcome-popup-shown', 'true');" style="
+        <button id="welcome-later-btn" style="
           background: transparent;
           color: var(--text-primary);
           border: 1px solid var(--border-color);
@@ -178,9 +181,10 @@ function showWelcomePopup() {
           font-weight: 600;
           font-size: 14px;
           flex: 1;
+          transition: all 0.2s ease;
         ">Maybe Later</button>
         
-        <button onclick="this.closest('div[style*=\\'fixed\\']').remove(); localStorage.setItem('welcome-popup-shown', 'true'); if(window.PushManager) PushManager.requestPermission();" style="
+        <button id="welcome-enable-btn" style="
           background: var(--gradient-primary);
           color: white;
           border: none;
@@ -190,6 +194,7 @@ function showWelcomePopup() {
           font-weight: 600;
           font-size: 14px;
           flex: 1;
+          transition: all 0.2s ease;
         ">Enable Notifications</button>
       </div>
       
@@ -214,19 +219,52 @@ function showWelcomePopup() {
         from { transform: translateY(50px); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
       }
+      #welcome-later-btn:hover {
+        background: var(--border-color);
+      }
+      #welcome-enable-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+      }
     `;
     document.head.appendChild(style);
   }
   
-  // Mark as shown
-  localStorage.setItem('welcome-popup-shown', 'true');
+  // Handle "Enable Notifications" button
+  document.getElementById('welcome-enable-btn').addEventListener('click', function() {
+    popup.remove();
+    localStorage.setItem('welcome-popup-shown', 'true');
+    localStorage.removeItem('just-installed');
+    
+    // Small delay to ensure popup is closed
+    setTimeout(() => {
+      if (window.PushManager) {
+        window.PushManager.requestPermission();
+      } else {
+        // Fallback
+        Notification.requestPermission();
+      }
+    }, 300);
+  });
+  
+  // Handle "Maybe Later" button
+  document.getElementById('welcome-later-btn').addEventListener('click', function() {
+    popup.remove();
+    localStorage.setItem('welcome-popup-shown', 'true');
+    localStorage.removeItem('just-installed');
+  });
   
   // Close on click outside
   popup.addEventListener('click', function(e) {
     if (e.target === popup) {
       popup.remove();
+      localStorage.setItem('welcome-popup-shown', 'true');
+      localStorage.removeItem('just-installed');
     }
   });
+  
+  // Mark as shown
+  localStorage.setItem('welcome-popup-shown', 'true');
 }
 
 // Network status monitoring
