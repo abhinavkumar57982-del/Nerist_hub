@@ -1,8 +1,7 @@
-// public/push-notifications.js - Smart notification manager with working button
+// public/push-notifications.js - Only request notifications after PWA installation
 
 const PushManager = {
   vapidPublicKey: null,
-  permissionRequested: false,
   
   // Initialize
   async init() {
@@ -19,6 +18,18 @@ const PushManager = {
       return false;
     }
     
+    // Check if running as installed PWA
+    const isInstalledPWA = this.isRunningAsPWA();
+    console.log('📱 Running as installed PWA:', isInstalledPWA);
+    
+    // Only proceed if this is an installed PWA
+    if (!isInstalledPWA) {
+      console.log('📱 Not running as installed PWA - skipping notification request');
+      return false;
+    }
+    
+    console.log('✅ Running as installed PWA - will request notifications');
+    
     // Check current permission state
     console.log('📱 Current notification permission:', Notification.permission);
     
@@ -26,24 +37,38 @@ const PushManager = {
     if (Notification.permission === 'granted') {
       console.log('✅ Permission already granted, subscribing...');
       await this.subscribe();
-      this.hideButton();
       return true;
     }
     
     if (Notification.permission === 'denied') {
       console.log('❌ Permission was denied by user');
-      // Show button with special handling for denied state
-      this.showButton(true); // Pass true to indicate permanently denied
+      // Optionally show a small message that they can enable in settings
       return false;
     }
     
     // If default (not asked yet), request permission
     if (Notification.permission === 'default') {
-      console.log('🔔 Permission not yet requested, will request...');
-      this.requestPermissionWithRetry();
+      console.log('🔔 PWA detected, requesting notification permission...');
+      
+      // Small delay to ensure everything is ready
+      setTimeout(() => {
+        this.attemptPermissionRequest();
+      }, 1000);
     }
     
     return true;
+  },
+  
+  // Check if running as installed PWA
+  isRunningAsPWA() {
+    // Check if in standalone mode (installed to home screen)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                         window.navigator.standalone === true;
+    
+    // Also check if it's been installed (you can add a flag in localStorage)
+    const wasInstalled = localStorage.getItem('pwa-installed') === 'true';
+    
+    return isStandalone || wasInstalled;
   },
   
   // Check if push notifications are supported
@@ -73,72 +98,23 @@ const PushManager = {
     }
   },
   
-  // Request permission with multiple retry attempts
-  requestPermissionWithRetry() {
-    // Try immediately
-    this.attemptPermissionRequest();
-    
-    // Try again after 1 second
-    setTimeout(() => {
-      if (Notification.permission === 'default') {
-        console.log('🔄 Retry 1: Permission still default, trying again...');
-        this.attemptPermissionRequest();
-      }
-    }, 1000);
-    
-    // Try again after 3 seconds
-    setTimeout(() => {
-      if (Notification.permission === 'default') {
-        console.log('🔄 Retry 2: Permission still default, trying again...');
-        this.attemptPermissionRequest();
-      }
-    }, 3000);
-    
-    // Final try after 5 seconds
-    setTimeout(() => {
-      if (Notification.permission === 'default') {
-        console.log('🔄 Retry 3: Permission still default, trying again...');
-        this.attemptPermissionRequest();
-        
-        // If still default after all retries, show button
-        setTimeout(() => {
-          if (Notification.permission === 'default') {
-            console.log('⚠️ Auto-request failed after multiple attempts, showing button');
-            this.showButton(false);
-          }
-        }, 1000);
-      }
-    }, 5000);
-  },
-  
   // Attempt to request permission
   async attemptPermissionRequest() {
-    // Don't try if already requested
-    if (this.permissionRequested && Notification.permission !== 'default') {
-      return;
-    }
-    
-    // Mark that we've attempted
-    this.permissionRequested = true;
-    
     try {
-      console.log('🔔 Requesting notification permission NOW...');
+      console.log('🔔 Requesting notification permission (PWA mode)...');
       
-      // Use the raw Notification.requestPermission
       const permission = await Notification.requestPermission();
-      
       console.log('📱 Permission result:', permission);
       
       if (permission === 'granted') {
         console.log('✅ Permission granted, subscribing...');
         await this.subscribe();
-        this.hideButton();
+        
+        // Show a small toast (optional)
+        this.showToast('✅ Notifications enabled!');
       } else if (permission === 'denied') {
         console.log('❌ Permission denied by user');
-        this.showButton(true); // Pass true to indicate permanently denied
-      } else {
-        console.log('⏸️ Permission dismissed by user');
-        // If dismissed, we'll try again later via retry mechanism
+        this.showToast('❌ Notifications blocked. Enable in settings.', 'error');
       }
     } catch (error) {
       console.error('❌ Error during permission request:', error);
@@ -222,201 +198,49 @@ const PushManager = {
     return outputArray;
   },
   
-  // Show the enable button (only when needed)
-  showButton(isPermanentlyDenied = false) {
-    const btn = document.getElementById('notification-enable-btn');
-    if (!btn) return;
+  // Show a small toast message (optional)
+  showToast(message, type = 'success') {
+    // You can remove this if you don't want any UI
+    console.log('Toast:', message);
     
-    if (isPermanentlyDenied) {
-      // Change button to show instructions instead
-      btn.innerHTML = '<i class="fas fa-cog"></i> <span>Fix Notifications</span>';
-      btn.title = 'Click to see how to enable notifications in browser settings';
-      btn.style.display = 'inline-flex';
-      
-      // Change click handler temporarily
-      btn.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.showInstructions();
-      };
-    } else {
-      // Normal button
-      btn.innerHTML = '<i class="fas fa-bell"></i> <span>Enable Notifications</span>';
-      btn.title = 'Click to enable notifications';
-      btn.style.display = 'inline-flex';
-      
-      // Restore normal click handler
-      btn.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.handleButtonClick();
-      };
-    }
-    
-    console.log('🔔 Showing enable button' + (isPermanentlyDenied ? ' (permanently denied)' : ''));
-  },
-  
-  // Hide the enable button
-  hideButton() {
-    const btn = document.getElementById('notification-enable-btn');
-    if (btn) {
-      btn.style.display = 'none';
-      console.log('🔔 Hiding enable button');
-    }
-  },
-  
-  // Show instructions for permanently denied state
-  showInstructions() {
-    // Create a modal with instructions
-    const modal = document.createElement('div');
-    modal.style.cssText = `
+    // Optional: Create a small toast
+    const toast = document.createElement('div');
+    toast.style.cssText = `
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.8);
-      z-index: 10000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      animation: fadeIn 0.3s ease;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: ${type === 'success' ? '#10b981' : '#ef4444'};
+      color: white;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-size: 14px;
+      z-index: 9999;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      animation: fadeInOut 3s ease forwards;
     `;
+    toast.textContent = message;
     
-    const isChrome = navigator.userAgent.indexOf("Chrome") !== -1;
-    const isFirefox = navigator.userAgent.indexOf("Firefox") !== -1;
-    const isSafari = navigator.userAgent.indexOf("Safari") !== -1;
-    
-    let browserInstructions = '';
-    if (isChrome) {
-      browserInstructions = `
-        <p>1. Click the <strong>lock icon</strong> (🔒) in the address bar</p>
-        <p>2. Find "Notifications" in the site settings</p>
-        <p>3. Change from "Block" to "Allow"</p>
-        <p>4. Refresh the page</p>
-      `;
-    } else if (isFirefox) {
-      browserInstructions = `
-        <p>1. Click the <strong>shield icon</strong> in the address bar</p>
-        <p>2. Click the gear/settings icon</p>
-        <p>3. Find "Notifications" and change to "Allow"</p>
-        <p>4. Refresh the page</p>
-      `;
-    } else if (isSafari) {
-      browserInstructions = `
-        <p>1. Go to <strong>Safari > Settings</strong> (or Preferences)</p>
-        <p>2. Click on "Websites" tab</p>
-        <p>3. Select "Notifications" from the left sidebar</p>
-        <p>4. Find this site and change to "Allow"</p>
-        <p>5. Refresh the page</p>
-      `;
-    } else {
-      browserInstructions = `
-        <p>1. Click the <strong>site info icon</strong> (lock/i) in the address bar</p>
-        <p>2. Find "Notifications" in the site permissions</p>
-        <p>3. Change from "Block" to "Allow"</p>
-        <p>4. Refresh the page</p>
-      `;
-    }
-    
-    modal.innerHTML = `
-      <div style="
-        background: var(--bg-card, #1e1e1e);
-        color: var(--text-primary, white);
-        padding: 30px;
-        border-radius: 16px;
-        max-width: 500px;
-        width: 90%;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-        border: 1px solid var(--border-color, #2d2d2d);
-      ">
-        <h2 style="color: #6366f1; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-          <i class="fas fa-bell-slash"></i> Notifications Blocked
-        </h2>
-        <p style="margin-bottom: 20px; line-height: 1.6;">
-          You've permanently blocked notifications for this site. 
-          To enable them, you need to change your browser settings:
-        </p>
-        <div style="background: var(--bg-secondary, #2d2d2d); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-          ${browserInstructions}
-        </div>
-        <p style="margin-bottom: 25px; color: var(--text-secondary, #a0a0a0); font-size: 14px;">
-          <i class="fas fa-info-circle"></i> After changing the setting, refresh this page.
-        </p>
-        <div style="display: flex; gap: 10px; justify-content: flex-end;">
-          <button onclick="this.closest('div[style*=\\'fixed\\']').remove()" style="
-            background: transparent;
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-          ">Close</button>
-          <button onclick="location.reload()" style="
-            background: #6366f1;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-          ">Refresh Page</button>
-        </div>
-      </div>
+    // Add animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes fadeInOut {
+        0% { opacity: 0; transform: translate(-50%, 20px); }
+        10% { opacity: 1; transform: translate(-50%, 0); }
+        90% { opacity: 1; transform: translate(-50%, 0); }
+        100% { opacity: 0; transform: translate(-50%, -20px); }
+      }
     `;
+    document.head.appendChild(style);
     
-    document.body.appendChild(modal);
+    document.body.appendChild(toast);
     
-    // Remove on click outside
-    modal.addEventListener('click', function(e) {
-      if (e.target === modal) {
-        modal.remove();
+    // Remove after 3 seconds
+    setTimeout(() => {
+      if (toast.parentElement) {
+        toast.remove();
       }
-    });
-  },
-  
-  // Handle button click
-  async handleButtonClick() {
-    console.log('👆 Enable button clicked');
-    
-    // Check if already permanently denied
-    if (Notification.permission === 'denied') {
-      this.showInstructions();
-      return;
-    }
-    
-    this.hideButton();
-    
-    // Reset permission requested flag so we can try again
-    this.permissionRequested = false;
-    
-    // Request permission again
-    try {
-      const permission = await Notification.requestPermission();
-      console.log('📱 Permission result:', permission);
-      
-      if (permission === 'granted') {
-        await this.subscribe();
-        // Button stays hidden
-        if (window.showAlert) {
-          window.showAlert('✅ Notifications enabled!', 'success');
-        }
-      } else if (permission === 'denied') {
-        console.log('❌ User denied again');
-        // Show button with instructions
-        this.showButton(true);
-        if (window.showAlert) {
-          window.showAlert('❌ Notifications blocked permanently. Click the button for instructions.', 'error');
-        }
-      } else {
-        // Dismissed - show button again
-        this.showButton(false);
-      }
-    } catch (error) {
-      console.error('❌ Error:', error);
-      this.showButton(false);
-    }
+    }, 3000);
   }
 };
 
@@ -424,19 +248,21 @@ const PushManager = {
 document.addEventListener('DOMContentLoaded', () => {
   console.log('📄 DOM loaded, initializing push manager...');
   
-  // Try immediately
+  // Try immediately with a delay
   setTimeout(() => {
     PushManager.init();
-  }, 500);
+  }, 1000);
+});
+
+// Also listen for app installed event
+window.addEventListener('appinstalled', () => {
+  console.log('✅ PWA was installed');
+  localStorage.setItem('pwa-installed', 'true');
   
-  // Try on user interaction (for browsers that require it)
-  document.addEventListener('click', function onClick() {
-    console.log('👆 User clicked, checking permission...');
-    if (Notification.permission === 'default') {
-      PushManager.attemptPermissionRequest();
-    }
-    document.removeEventListener('click', onClick);
-  }, { once: true });
+  // Small delay then try to request notifications
+  setTimeout(() => {
+    PushManager.init();
+  }, 2000);
 });
 
 // Make PushManager globally available
