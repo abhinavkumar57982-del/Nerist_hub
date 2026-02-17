@@ -32,8 +32,8 @@ const PushManager = {
     
     if (Notification.permission === 'denied') {
       console.log('❌ Permission was denied by user');
-      // Show button to let them enable
-      this.showButton();
+      // Show button with special handling for denied state
+      this.showButton(true); // Pass true to indicate permanently denied
       return false;
     }
     
@@ -104,7 +104,7 @@ const PushManager = {
         setTimeout(() => {
           if (Notification.permission === 'default') {
             console.log('⚠️ Auto-request failed after multiple attempts, showing button');
-            this.showButton();
+            this.showButton(false);
           }
         }, 1000);
       }
@@ -135,7 +135,7 @@ const PushManager = {
         this.hideButton();
       } else if (permission === 'denied') {
         console.log('❌ Permission denied by user');
-        this.showButton();
+        this.showButton(true); // Pass true to indicate permanently denied
       } else {
         console.log('⏸️ Permission dismissed by user');
         // If dismissed, we'll try again later via retry mechanism
@@ -223,14 +223,37 @@ const PushManager = {
   },
   
   // Show the enable button (only when needed)
-  showButton() {
+  showButton(isPermanentlyDenied = false) {
     const btn = document.getElementById('notification-enable-btn');
-    if (btn) {
+    if (!btn) return;
+    
+    if (isPermanentlyDenied) {
+      // Change button to show instructions instead
+      btn.innerHTML = '<i class="fas fa-cog"></i> <span>Fix Notifications</span>';
+      btn.title = 'Click to see how to enable notifications in browser settings';
       btn.style.display = 'inline-flex';
-      console.log('🔔 Showing enable button');
+      
+      // Change click handler temporarily
+      btn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.showInstructions();
+      };
     } else {
-      console.log('❌ Enable button not found in DOM');
+      // Normal button
+      btn.innerHTML = '<i class="fas fa-bell"></i> <span>Enable Notifications</span>';
+      btn.title = 'Click to enable notifications';
+      btn.style.display = 'inline-flex';
+      
+      // Restore normal click handler
+      btn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.handleButtonClick();
+      };
     }
+    
+    console.log('🔔 Showing enable button' + (isPermanentlyDenied ? ' (permanently denied)' : ''));
   },
   
   // Hide the enable button
@@ -242,9 +265,127 @@ const PushManager = {
     }
   },
   
+  // Show instructions for permanently denied state
+  showInstructions() {
+    // Create a modal with instructions
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease;
+    `;
+    
+    const isChrome = navigator.userAgent.indexOf("Chrome") !== -1;
+    const isFirefox = navigator.userAgent.indexOf("Firefox") !== -1;
+    const isSafari = navigator.userAgent.indexOf("Safari") !== -1;
+    
+    let browserInstructions = '';
+    if (isChrome) {
+      browserInstructions = `
+        <p>1. Click the <strong>lock icon</strong> (🔒) in the address bar</p>
+        <p>2. Find "Notifications" in the site settings</p>
+        <p>3. Change from "Block" to "Allow"</p>
+        <p>4. Refresh the page</p>
+      `;
+    } else if (isFirefox) {
+      browserInstructions = `
+        <p>1. Click the <strong>shield icon</strong> in the address bar</p>
+        <p>2. Click the gear/settings icon</p>
+        <p>3. Find "Notifications" and change to "Allow"</p>
+        <p>4. Refresh the page</p>
+      `;
+    } else if (isSafari) {
+      browserInstructions = `
+        <p>1. Go to <strong>Safari > Settings</strong> (or Preferences)</p>
+        <p>2. Click on "Websites" tab</p>
+        <p>3. Select "Notifications" from the left sidebar</p>
+        <p>4. Find this site and change to "Allow"</p>
+        <p>5. Refresh the page</p>
+      `;
+    } else {
+      browserInstructions = `
+        <p>1. Click the <strong>site info icon</strong> (lock/i) in the address bar</p>
+        <p>2. Find "Notifications" in the site permissions</p>
+        <p>3. Change from "Block" to "Allow"</p>
+        <p>4. Refresh the page</p>
+      `;
+    }
+    
+    modal.innerHTML = `
+      <div style="
+        background: var(--bg-card, #1e1e1e);
+        color: var(--text-primary, white);
+        padding: 30px;
+        border-radius: 16px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        border: 1px solid var(--border-color, #2d2d2d);
+      ">
+        <h2 style="color: #6366f1; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+          <i class="fas fa-bell-slash"></i> Notifications Blocked
+        </h2>
+        <p style="margin-bottom: 20px; line-height: 1.6;">
+          You've permanently blocked notifications for this site. 
+          To enable them, you need to change your browser settings:
+        </p>
+        <div style="background: var(--bg-secondary, #2d2d2d); padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+          ${browserInstructions}
+        </div>
+        <p style="margin-bottom: 25px; color: var(--text-secondary, #a0a0a0); font-size: 14px;">
+          <i class="fas fa-info-circle"></i> After changing the setting, refresh this page.
+        </p>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+          <button onclick="this.closest('div[style*=\\'fixed\\']').remove()" style="
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+          ">Close</button>
+          <button onclick="location.reload()" style="
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+          ">Refresh Page</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Remove on click outside
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
+  },
+  
   // Handle button click
   async handleButtonClick() {
     console.log('👆 Enable button clicked');
+    
+    // Check if already permanently denied
+    if (Notification.permission === 'denied') {
+      this.showInstructions();
+      return;
+    }
+    
     this.hideButton();
     
     // Reset permission requested flag so we can try again
@@ -263,18 +404,18 @@ const PushManager = {
         }
       } else if (permission === 'denied') {
         console.log('❌ User denied again');
-        // Show button again since they denied
-        this.showButton();
+        // Show button with instructions
+        this.showButton(true);
         if (window.showAlert) {
-          window.showAlert('❌ Notifications blocked. You can enable them in browser settings.', 'error');
+          window.showAlert('❌ Notifications blocked permanently. Click the button for instructions.', 'error');
         }
       } else {
         // Dismissed - show button again
-        this.showButton();
+        this.showButton(false);
       }
     } catch (error) {
       console.error('❌ Error:', error);
-      this.showButton();
+      this.showButton(false);
     }
   }
 };
