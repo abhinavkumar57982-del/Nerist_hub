@@ -1,4 +1,4 @@
-// public/push-notifications.js - Force notification popup to show
+// public/push-notifications.js - Force notification popup to show with fallback button
 
 const PushManager = {
   vapidPublicKey: null,
@@ -214,9 +214,8 @@ const PushManager = {
     return outputArray;
   },
   
-  // Optional: Show a small thank you message (can be removed if you want)
+  // Optional: Show a small thank you message
   showThankYouMessage() {
-    // You can remove this entire function if you don't want any message
     console.log('🙏 Thank you for enabling notifications!');
     
     // Optional: Create a small toast that disappears
@@ -282,6 +281,22 @@ document.addEventListener('DOMContentLoaded', () => {
     document.removeEventListener('scroll', onScroll);
   }, { once: true });
 });
+
+// ===== FALLBACK BUTTON CODE =====
+// This shows a button if auto-request fails after 3 seconds
+setTimeout(() => {
+  if (Notification.permission === 'default') {
+    console.log('⚠️ Auto-request failed, showing fallback button');
+    const fallbackBtn = document.getElementById('fallback-notification-btn');
+    if (fallbackBtn) {
+      fallbackBtn.style.display = 'inline-flex';
+      fallbackBtn.onclick = () => {
+        PushManager.attemptPermissionRequest();
+        fallbackBtn.style.display = 'none';
+      };
+    }
+  }
+}, 3000);
 
 // Make PushManager globally available
 window.PushManager = PushManager;
