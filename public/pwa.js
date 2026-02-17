@@ -26,11 +26,16 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Check if running as PWA
-if (window.matchMedia('(display-mode: standalone)').matches || 
-    window.navigator.standalone === true) {
+// Check if running as PWA and store in localStorage
+const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+              window.navigator.standalone === true;
+
+if (isPWA) {
   console.log('📱 Running as standalone PWA');
   document.body.classList.add('pwa-mode');
+  localStorage.setItem('pwa-mode', 'true');
+} else {
+  localStorage.setItem('pwa-mode', 'false');
 }
 
 // Install prompt
@@ -50,6 +55,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
       deferredPrompt.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === 'accepted') {
           console.log('✅ User accepted the install prompt');
+          localStorage.setItem('pwa-mode', 'true');
         }
         deferredPrompt = null;
       });
@@ -59,6 +65,8 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 window.addEventListener('appinstalled', (evt) => {
   console.log('✅ PWA was installed');
+  localStorage.setItem('pwa-mode', 'true');
+  
   if (installButton) {
     installButton.style.display = 'none';
   }
