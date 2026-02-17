@@ -1,4 +1,4 @@
-// public/push-notifications.js - Simple Push Notification Manager (Enable Only)
+// public/push-notifications.js - Auto-request notifications on page load
 
 const PushManager = {
   vapidPublicKey: null,
@@ -21,12 +21,14 @@ const PushManager = {
     // Check if already subscribed
     const isSubscribed = await this.checkSubscriptionStatus();
     
-    // Only add button if not already subscribed
-    if (!isSubscribed) {
-      this.addPermissionButton();
-    } else {
+    if (isSubscribed) {
       console.log('✅ Already subscribed to push notifications');
+      return true;
     }
+    
+    // AUTO-REQUEST permission on page load (no button needed)
+    console.log('🔔 Auto-requesting notification permission...');
+    await this.autoRequestPermission();
     
     return true;
   },
@@ -55,14 +57,44 @@ const PushManager = {
     }
   },
   
-  // Request permission
-  async requestPermission() {
+  // Auto-request permission without button
+  async autoRequestPermission() {
     if (!this.isSupported()) return false;
     
+    // Only request if permission is not already granted or denied
+    if (Notification.permission === 'granted') {
+      console.log('✅ Notification permission already granted');
+      await this.subscribe();
+      return true;
+    }
+    
+    if (Notification.permission === 'denied') {
+      console.log('❌ Notification permission previously denied');
+      // Optionally show a small message that notifications are blocked
+      this.showNotificationBlockedMessage();
+      return false;
+    }
+    
+    // Permission is 'default' - ask automatically
     try {
+      console.log('🔔 Requesting notification permission...');
       const permission = await Notification.requestPermission();
-      console.log('📱 Notification permission:', permission);
-      return permission === 'granted';
+      console.log('📱 Notification permission result:', permission);
+      
+      if (permission === 'granted') {
+        await this.subscribe();
+        
+        // Show welcome message
+        if (window.showAlert) {
+          window.showAlert('✅ Notifications enabled! You will receive alerts for new posts.', 'success');
+        }
+        return true;
+      } else {
+        console.log('❌ Notification permission denied by user');
+        // Optionally show a small message that notifications were denied
+        this.showNotificationBlockedMessage();
+        return false;
+      }
     } catch (error) {
       console.error('Error requesting permission:', error);
       return false;
@@ -102,13 +134,7 @@ const PushManager = {
       const sent = await this.sendSubscriptionToServer(subscription);
       
       if (sent) {
-        // Remove the button after successful subscription
-        this.removePermissionButton();
-        
-        // Show success message
-        if (window.showAlert) {
-          window.showAlert('✅ Notifications enabled! You will receive alerts for new posts.', 'success');
-        }
+        console.log('✅ Subscription sent to server');
       }
       
       return true;
@@ -118,7 +144,7 @@ const PushManager = {
     }
   },
   
-  // Send subscription to server (no auth headers)
+  // Send subscription to server
   async sendSubscriptionToServer(subscription) {
     try {
       const response = await fetch('/api/push/subscribe', {
@@ -168,72 +194,52 @@ const PushManager = {
     return outputArray;
   },
   
-  // Add notification permission button to navbar
-  addPermissionButton() {
-    // Check if button already exists
-    if (document.getElementById('push-permission-btn')) return;
+  // Show a small message if notifications are blocked
+  showNotificationBlockedMessage() {
+    // Create a small non-intrusive banner
+    const banner = document.createElement('div');
+    banner.id = 'notification-blocked-banner';
+    banner.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: #ff4757;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 9999;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideIn 0.3s ease;
+      max-width: 300px;
+    `;
     
-    const navRight = document.querySelector('.nav-right');
-    if (!navRight) {
-      console.log('Navbar not found, cannot add button');
-      return;
-    }
+    banner.innerHTML = `
+      <i class="fas fa-bell-slash"></i>
+      <span>Notifications are blocked. Enable them in browser settings to get alerts.</span>
+      <button onclick="this.parentElement.remove()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer; margin-left: auto;">&times;</button>
+    `;
     
-    const btn = document.createElement('button');
-    btn.id = 'push-permission-btn';
-    btn.className = 'push-permission-btn';
-    btn.innerHTML = '<i class="fas fa-bell"></i> <span>Enable Notifications</span>';
-    btn.title = 'Click to enable push notifications';
+    document.body.appendChild(banner);
     
-    btn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      // Show loading state
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Asking...';
-      btn.disabled = true;
-      
-      const granted = await this.requestPermission();
-      if (granted) {
-        await this.subscribe();
-      } else {
-        // Reset button if permission denied
-        btn.innerHTML = '<i class="fas fa-bell"></i> <span>Enable Notifications</span>';
-        btn.disabled = false;
-        
-        if (window.showAlert) {
-          window.showAlert('❌ Notification permission denied. You can enable it later from browser settings.', 'error');
-        }
+    // Auto-remove after 8 seconds
+    setTimeout(() => {
+      if (banner.parentElement) {
+        banner.remove();
       }
-    });
-    
-    // Insert before theme toggle
-    const themeToggle = navRight.querySelector('.theme-toggle');
-    if (themeToggle) {
-      navRight.insertBefore(btn, themeToggle);
-    } else {
-      navRight.appendChild(btn);
-    }
-    
-    console.log('🔔 Push notification button added to navbar');
-  },
-  
-  // Remove the button after successful subscription
-  removePermissionButton() {
-    const btn = document.getElementById('push-permission-btn');
-    if (btn) {
-      btn.remove();
-      console.log('✅ Notification button removed - user is subscribed');
-    }
+    }, 8000);
   }
 };
 
-// Initialize when DOM is ready (no login required)
+// Initialize when DOM is ready (no button needed)
 document.addEventListener('DOMContentLoaded', () => {
   // Small delay to ensure service worker is registered
   setTimeout(() => {
     PushManager.init();
-  }, 1000);
+  }, 1500); // Slightly longer delay to ensure everything is ready
 });
 
 // Make PushManager globally available
