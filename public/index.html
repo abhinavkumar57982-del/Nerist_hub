@@ -145,18 +145,6 @@
 </div>
 </nav>
 
-  <script>
-  // Set up notification button handler
-  document.addEventListener('DOMContentLoaded', function() {
-    const notifBtn = document.getElementById('notification-enable-btn');
-    if (notifBtn) {
-      notifBtn.addEventListener('click', function() {
-        window.PushManager.handleButtonClick();
-      });
-    }
-  });
-</script>
-
   <!-- HERO SECTION -->
   <section class="hero">
     <div class="container">
@@ -509,6 +497,46 @@
       document.body.classList.add('light-theme');
     }
   </script>
+
+
+  <script>
+  // Set up notification button handler - THIS IS CRITICAL
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔧 Setting up notification button handler');
+    
+    const notifBtn = document.getElementById('notification-enable-btn');
+    if (notifBtn) {
+      console.log('✅ Found notification button, attaching click handler');
+      
+      // Remove any existing handlers
+      notifBtn.replaceWith(notifBtn.cloneNode(true));
+      
+      // Get fresh reference
+      const freshBtn = document.getElementById('notification-enable-btn');
+      
+      // Add click handler
+      freshBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('👆 Notification button clicked');
+        
+        if (window.PushManager) {
+          window.PushManager.handleButtonClick();
+        } else {
+          console.error('❌ PushManager not available');
+          // Fallback: try direct request
+          Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+              freshBtn.style.display = 'none';
+            }
+          });
+        }
+      });
+    } else {
+      console.error('❌ Notification button not found in DOM');
+    }
+  });
+</script>
   <script src="auth.js"></script>
   <script src="app.js"></script>
   <script src="push-notifications.js"></script>
