@@ -5310,3 +5310,66 @@ body.dark-theme .feature-card:hover .feature-link-hint {
   background: rgba(117, 68, 239, 0.1);
   color: var(--accent-danger);
 }
+
+/* Push Notification Button */
+.push-permission-btn {
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: var(--transition);
+  margin-left: 8px;
+}
+
+.push-permission-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.push-permission-btn i {
+  font-size: 16px;
+}
+
+.push-permission-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .push-permission-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .push-permission-btn i {
+    font-size: 14px;
+  }
+  
+  .push-permission-btn span {
+    display: inline; /* Keep text on mobile */
+  }
+}
+
+@media (max-width: 480px) {
+  .push-permission-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  
+  .push-permission-btn span {
+    max-width: 80px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
