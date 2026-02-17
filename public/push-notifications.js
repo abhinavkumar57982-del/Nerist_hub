@@ -1,4 +1,4 @@
-// public/push-notifications.js - Only request notifications after PWA installation
+// public/push-notifications.js - Only shows in PWA mode
 
 const PushManager = {
   vapidPublicKey: null,
@@ -12,23 +12,24 @@ const PushManager = {
       return false;
     }
     
+    // Check if in PWA mode
+    const isPWA = localStorage.getItem('pwa-mode') === 'true' || 
+                   window.matchMedia('(display-mode: standalone)').matches || 
+                   window.navigator.standalone === true;
+    
+    if (!isPWA) {
+      console.log('🌐 Not in PWA mode - hiding notification UI');
+      this.hideButton(); // Ensure button is hidden in website mode
+      return false;
+    }
+    
+    console.log('📱 PWA mode detected - managing notifications');
+    
     // Get VAPID public key from server
     const keyObtained = await this.getVapidKey();
     if (!keyObtained) {
       return false;
     }
-    
-    // Check if running as installed PWA
-    const isInstalledPWA = this.isRunningAsPWA();
-    console.log('📱 Running as installed PWA:', isInstalledPWA);
-    
-    // Only proceed if this is an installed PWA
-    if (!isInstalledPWA) {
-      console.log('📱 Not running as installed PWA - skipping notification request');
-      return false;
-    }
-    
-    console.log('✅ Running as installed PWA - will request notifications');
     
     // Check current permission state
     console.log('📱 Current notification permission:', Notification.permission);
@@ -37,16 +38,18 @@ const PushManager = {
     if (Notification.permission === 'granted') {
       console.log('✅ Permission already granted, subscribing...');
       await this.subscribe();
+      this.hideButton();
       return true;
     }
     
     if (Notification.permission === 'denied') {
       console.log('❌ Permission was denied by user');
-      // Optionally show a small message that they can enable in settings
+      // Show button in PWA mode only when denied
+      this.showButton();
       return false;
     }
     
-    // If default (not asked yet), request permission
+    // If default (not asked yet), request permission automatically in PWA mode
     if (Notification.permission === 'default') {
       console.log('🔔 PWA detected, requesting notification permission...');
       
@@ -57,18 +60,6 @@ const PushManager = {
     }
     
     return true;
-  },
-  
-  // Check if running as installed PWA
-  isRunningAsPWA() {
-    // Check if in standalone mode (installed to home screen)
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                         window.navigator.standalone === true;
-    
-    // Also check if it's been installed (you can add a flag in localStorage)
-    const wasInstalled = localStorage.getItem('pwa-installed') === 'true';
-    
-    return isStandalone || wasInstalled;
   },
   
   // Check if push notifications are supported
@@ -109,12 +100,10 @@ const PushManager = {
       if (permission === 'granted') {
         console.log('✅ Permission granted, subscribing...');
         await this.subscribe();
-        
-        // Show a small toast (optional)
-        this.showToast('✅ Notifications enabled!');
+        this.hideButton();
       } else if (permission === 'denied') {
         console.log('❌ Permission denied by user');
-        this.showToast('❌ Notifications blocked. Enable in settings.', 'error');
+        this.showButton();
       }
     } catch (error) {
       console.error('❌ Error during permission request:', error);
@@ -198,49 +187,63 @@ const PushManager = {
     return outputArray;
   },
   
-  // Show a small toast message (optional)
-  showToast(message, type = 'success') {
-    // You can remove this if you don't want any UI
-    console.log('Toast:', message);
+  // Show the enable button (only in PWA mode when denied)
+  showButton() {
+    // Double-check we're in PWA mode
+    const isPWA = localStorage.getItem('pwa-mode') === 'true' || 
+                   window.matchMedia('(display-mode: standalone)').matches || 
+                   window.navigator.standalone === true;
     
-    // Optional: Create a small toast
-    const toast = document.createElement('div');
-    toast.style.cssText = `
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: ${type === 'success' ? '#10b981' : '#ef4444'};
-      color: white;
-      padding: 10px 20px;
-      border-radius: 30px;
-      font-size: 14px;
-      z-index: 9999;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      animation: fadeInOut 3s ease forwards;
-    `;
-    toast.textContent = message;
+    if (!isPWA) {
+      console.log('🌐 Not in PWA mode - not showing button');
+      return;
+    }
     
-    // Add animation
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes fadeInOut {
-        0% { opacity: 0; transform: translate(-50%, 20px); }
-        10% { opacity: 1; transform: translate(-50%, 0); }
-        90% { opacity: 1; transform: translate(-50%, 0); }
-        100% { opacity: 0; transform: translate(-50%, -20px); }
+    const btn = document.getElementById('notification-enable-btn');
+    if (btn) {
+      btn.style.display = 'inline-flex';
+      console.log('🔔 Showing enable button in PWA');
+    } else {
+      console.log('❌ Enable button not found in DOM');
+    }
+  },
+  
+  // Hide the enable button
+  hideButton() {
+    const btn = document.getElementById('notification-enable-btn');
+    if (btn) {
+      btn.style.display = 'none';
+      console.log('🔔 Hiding enable button');
+    }
+  },
+  
+  // Handle button click
+  async handleButtonClick() {
+    console.log('👆 Enable button clicked in PWA');
+    
+    this.hideButton();
+    
+    // Request permission again
+    try {
+      const permission = await Notification.requestPermission();
+      console.log('📱 Permission result:', permission);
+      
+      if (permission === 'granted') {
+        await this.subscribe();
+        if (window.showAlert) {
+          window.showAlert('✅ Notifications enabled!', 'success');
+        }
+      } else if (permission === 'denied') {
+        console.log('❌ User denied again');
+        this.showButton();
+        if (window.showAlert) {
+          window.showAlert('❌ Notifications blocked. Enable in browser settings.', 'error');
+        }
       }
-    `;
-    document.head.appendChild(style);
-    
-    document.body.appendChild(toast);
-    
-    // Remove after 3 seconds
-    setTimeout(() => {
-      if (toast.parentElement) {
-        toast.remove();
-      }
-    }, 3000);
+    } catch (error) {
+      console.error('❌ Error:', error);
+      this.showButton();
+    }
   }
 };
 
@@ -251,13 +254,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Try immediately with a delay
   setTimeout(() => {
     PushManager.init();
-  }, 1000);
+  }, 1500);
 });
 
 // Also listen for app installed event
 window.addEventListener('appinstalled', () => {
-  console.log('✅ PWA was installed');
-  localStorage.setItem('pwa-installed', 'true');
+  console.log('✅ PWA was installed - reinitializing push manager');
+  localStorage.setItem('pwa-mode', 'true');
   
   // Small delay then try to request notifications
   setTimeout(() => {
