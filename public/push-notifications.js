@@ -1,4 +1,5 @@
-// public/push-notifications.js - Force notification popup to show with fallback button
+// public/push-notifications.js - Smart notification manager
+// Shows button ONLY when user has blocked notifications
 
 const PushManager = {
   vapidPublicKey: null,
@@ -22,24 +23,24 @@ const PushManager = {
     // Check current permission state
     console.log('📱 Current notification permission:', Notification.permission);
     
-    // If already granted, subscribe
+    // Handle based on permission state
     if (Notification.permission === 'granted') {
       console.log('✅ Permission already granted, subscribing...');
       await this.subscribe();
+      this.hideButton();
       return true;
     }
     
-    // If denied, we can't do anything
     if (Notification.permission === 'denied') {
-      console.log('❌ Permission was denied by user previously');
+      console.log('❌ Permission was denied by user');
+      // Show button to let them enable
+      this.showButton();
       return false;
     }
     
     // If default (not asked yet), request permission
     if (Notification.permission === 'default') {
       console.log('🔔 Permission not yet requested, will request...');
-      
-      // Try multiple times to ensure popup shows
       this.requestPermissionWithRetry();
     }
     
@@ -99,6 +100,14 @@ const PushManager = {
       if (Notification.permission === 'default') {
         console.log('🔄 Retry 3: Permission still default, trying again...');
         this.attemptPermissionRequest();
+        
+        // If still default after all retries, show button
+        setTimeout(() => {
+          if (Notification.permission === 'default') {
+            console.log('⚠️ Auto-request failed after multiple attempts, showing button');
+            this.showButton();
+          }
+        }, 1000);
       }
     }, 5000);
   },
@@ -124,13 +133,13 @@ const PushManager = {
       if (permission === 'granted') {
         console.log('✅ Permission granted, subscribing...');
         await this.subscribe();
-        
-        // Show a small thank you (optional)
-        this.showThankYouMessage();
+        this.hideButton();
       } else if (permission === 'denied') {
         console.log('❌ Permission denied by user');
+        this.showButton();
       } else {
         console.log('⏸️ Permission dismissed by user');
+        // If dismissed, we'll try again later via retry mechanism
       }
     } catch (error) {
       console.error('❌ Error during permission request:', error);
@@ -214,89 +223,65 @@ const PushManager = {
     return outputArray;
   },
   
-  // Optional: Show a small thank you message
-  showThankYouMessage() {
-    console.log('🙏 Thank you for enabling notifications!');
+  // Show the enable button (only when needed)
+  showButton() {
+    const btn = document.getElementById('notification-enable-btn');
+    if (btn) {
+      btn.style.display = 'inline-flex';
+      console.log('🔔 Showing enable button');
+    }
+  },
+  
+  // Hide the enable button
+  hideButton() {
+    const btn = document.getElementById('notification-enable-btn');
+    if (btn) {
+      btn.style.display = 'none';
+      console.log('🔔 Hiding enable button');
+    }
+  },
+  
+  // Handle button click
+  async handleButtonClick() {
+    console.log('👆 Enable button clicked');
+    this.hideButton();
     
-    // Optional: Create a small toast that disappears
-    const toast = document.createElement('div');
-    toast.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #10b981;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 14px;
-      z-index: 9999;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      animation: fadeInOut 3s ease forwards;
-    `;
-    toast.textContent = '✅ Notifications enabled! You\'ll receive alerts.';
-    
-    // Add animation
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes fadeInOut {
-        0% { opacity: 0; transform: translateY(-20px); }
-        10% { opacity: 1; transform: translateY(0); }
-        90% { opacity: 1; transform: translateY(0); }
-        100% { opacity: 0; transform: translateY(-20px); }
+    // Request permission again
+    try {
+      const permission = await Notification.requestPermission();
+      console.log('📱 Permission result:', permission);
+      
+      if (permission === 'granted') {
+        await this.subscribe();
+        // Button stays hidden
+      } else if (permission === 'denied') {
+        // If denied again, maybe show a message?
+        console.log('❌ User denied again');
       }
-    `;
-    document.head.appendChild(style);
-    
-    document.body.appendChild(toast);
-    
-    // Remove after 3 seconds
-    setTimeout(() => {
-      if (toast.parentElement) {
-        toast.remove();
-      }
-    }, 3000);
+    } catch (error) {
+      console.error('❌ Error:', error);
+    }
   }
 };
 
-// Initialize with multiple triggers to ensure popup shows
+// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('📄 DOM loaded, will request notifications soon...');
+  console.log('📄 DOM loaded, initializing push manager...');
   
   // Try immediately
   setTimeout(() => {
     PushManager.init();
   }, 500);
   
-  // Try again after user interacts with the page (some browsers require user gesture)
+  // Try on user interaction (for browsers that require it)
   document.addEventListener('click', function onClick() {
-    console.log('👆 User clicked, trying notification request...');
-    PushManager.init();
+    console.log('👆 User clicked, checking permission...');
+    if (Notification.permission === 'default') {
+      PushManager.attemptPermissionRequest();
+    }
     document.removeEventListener('click', onClick);
   }, { once: true });
-  
-  // Try on scroll as well
-  document.addEventListener('scroll', function onScroll() {
-    console.log('📜 User scrolled, trying notification request...');
-    PushManager.init();
-    document.removeEventListener('scroll', onScroll);
-  }, { once: true });
 });
-
-// ===== FALLBACK BUTTON CODE =====
-// This shows a button if auto-request fails after 3 seconds
-setTimeout(() => {
-  if (Notification.permission === 'default') {
-    console.log('⚠️ Auto-request failed, showing fallback button');
-    const fallbackBtn = document.getElementById('fallback-notification-btn');
-    if (fallbackBtn) {
-      fallbackBtn.style.display = 'inline-flex';
-      fallbackBtn.onclick = () => {
-        PushManager.attemptPermissionRequest();
-        fallbackBtn.style.display = 'none';
-      };
-    }
-  }
-}, 3000);
 
 // Make PushManager globally available
 window.PushManager = PushManager;
