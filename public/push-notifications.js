@@ -1,4 +1,4 @@
-// public/push-notifications.js - Only shows in PWA mode
+// public/push-notifications.js - Only shows when PWA is launched from home screen
 
 const PushManager = {
   vapidPublicKey: null,
@@ -12,18 +12,16 @@ const PushManager = {
       return false;
     }
     
-    // Check if in PWA mode
-    const isPWA = localStorage.getItem('pwa-mode') === 'true' || 
-                   window.matchMedia('(display-mode: standalone)').matches || 
-                   window.navigator.standalone === true;
+    // Check if this is a launched PWA (from home screen)
+    const isLaunchedPWA = this.isLaunchedPWA();
     
-    if (!isPWA) {
-      console.log('🌐 Not in PWA mode - hiding notification UI');
-      this.hideButton(); // Ensure button is hidden in website mode
+    if (!isLaunchedPWA) {
+      console.log('🌐 Not launched as PWA - no notification UI');
+      this.hideButton();
       return false;
     }
     
-    console.log('📱 PWA mode detected - managing notifications');
+    console.log('📱 Launched as PWA from home screen - managing notifications');
     
     // Get VAPID public key from server
     const keyObtained = await this.getVapidKey();
@@ -44,14 +42,13 @@ const PushManager = {
     
     if (Notification.permission === 'denied') {
       console.log('❌ Permission was denied by user');
-      // Show button in PWA mode only when denied
-      this.showButton();
+      this.showButton(true);
       return false;
     }
     
-    // If default (not asked yet), request permission automatically in PWA mode
+    // If default (not asked yet), request permission automatically
     if (Notification.permission === 'default') {
-      console.log('🔔 PWA detected, requesting notification permission...');
+      console.log('🔔 PWA launched, requesting notification permission...');
       
       // Small delay to ensure everything is ready
       setTimeout(() => {
@@ -60,6 +57,26 @@ const PushManager = {
     }
     
     return true;
+  },
+  
+  // Check if this is a launched PWA (from home screen)
+  isLaunchedPWA() {
+    // Check if in standalone mode (installed to home screen and launched)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                         window.navigator.standalone === true;
+    
+    // Also check if it's been launched after installation
+    // We can use a session flag to differentiate between first install and subsequent launches
+    const hasLaunchedBefore = sessionStorage.getItem('pwa-launched') === 'true';
+    
+    if (isStandalone && !hasLaunchedBefore) {
+      // First time launch after installation
+      sessionStorage.setItem('pwa-launched', 'true');
+      console.log('📱 First launch of installed PWA');
+      return true;
+    }
+    
+    return isStandalone;
   },
   
   // Check if push notifications are supported
@@ -92,7 +109,7 @@ const PushManager = {
   // Attempt to request permission
   async attemptPermissionRequest() {
     try {
-      console.log('🔔 Requesting notification permission (PWA mode)...');
+      console.log('🔔 Requesting notification permission (PWA launched)...');
       
       const permission = await Notification.requestPermission();
       console.log('📱 Permission result:', permission);
@@ -103,7 +120,7 @@ const PushManager = {
         this.hideButton();
       } else if (permission === 'denied') {
         console.log('❌ Permission denied by user');
-        this.showButton();
+        this.showButton(true);
       }
     } catch (error) {
       console.error('❌ Error during permission request:', error);
@@ -187,25 +204,44 @@ const PushManager = {
     return outputArray;
   },
   
-  // Show the enable button (only in PWA mode when denied)
-  showButton() {
-    // Double-check we're in PWA mode
-    const isPWA = localStorage.getItem('pwa-mode') === 'true' || 
-                   window.matchMedia('(display-mode: standalone)').matches || 
-                   window.navigator.standalone === true;
-    
-    if (!isPWA) {
-      console.log('🌐 Not in PWA mode - not showing button');
+  // Show the enable button
+  showButton(isPermanentlyDenied = false) {
+    // Double-check we're in launched PWA mode
+    if (!this.isLaunchedPWA()) {
+      console.log('🌐 Not launched as PWA - not showing button');
       return;
     }
     
     const btn = document.getElementById('notification-enable-btn');
-    if (btn) {
-      btn.style.display = 'inline-flex';
-      console.log('🔔 Showing enable button in PWA');
-    } else {
+    if (!btn) {
       console.log('❌ Enable button not found in DOM');
+      return;
     }
+    
+    if (isPermanentlyDenied) {
+      btn.innerHTML = '<i class="fas fa-cog"></i> <span>Notification Settings</span>';
+      btn.title = 'Click to see how to enable notifications';
+      btn.classList.add('settings-mode');
+      
+      btn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.showInstructions();
+      };
+    } else {
+      btn.innerHTML = '<i class="fas fa-bell"></i> <span>Enable Notifications</span>';
+      btn.title = 'Click to enable notifications';
+      btn.classList.remove('settings-mode');
+      
+      btn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.handleButtonClick();
+      };
+    }
+    
+    btn.style.display = 'inline-flex';
+    console.log('🔔 Showing button in launched PWA' + (isPermanentlyDenied ? ' (settings mode)' : ''));
   },
   
   // Hide the enable button
@@ -213,17 +249,16 @@ const PushManager = {
     const btn = document.getElementById('notification-enable-btn');
     if (btn) {
       btn.style.display = 'none';
-      console.log('🔔 Hiding enable button');
+      console.log('🔔 Hiding button');
     }
   },
   
-  // Handle button click
+  // Handle button click for normal mode
   async handleButtonClick() {
     console.log('👆 Enable button clicked in PWA');
     
     this.hideButton();
     
-    // Request permission again
     try {
       const permission = await Notification.requestPermission();
       console.log('📱 Permission result:', permission);
@@ -235,15 +270,159 @@ const PushManager = {
         }
       } else if (permission === 'denied') {
         console.log('❌ User denied again');
-        this.showButton();
+        this.showButton(true);
         if (window.showAlert) {
-          window.showAlert('❌ Notifications blocked. Enable in browser settings.', 'error');
+          window.showAlert('❌ Notifications blocked permanently. Click the settings button for instructions.', 'error');
         }
       }
     } catch (error) {
       console.error('❌ Error:', error);
-      this.showButton();
+      this.showButton(true);
     }
+  },
+  
+  // Show instructions for permanently denied state
+  showInstructions() {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease;
+    `;
+    
+    // Detect browser
+    const isChrome = navigator.userAgent.indexOf("Chrome") !== -1;
+    const isFirefox = navigator.userAgent.indexOf("Firefox") !== -1;
+    const isSafari = navigator.userAgent.indexOf("Safari") !== -1 && !isChrome;
+    const isEdge = navigator.userAgent.indexOf("Edg") !== -1;
+    
+    let browserInstructions = '';
+    
+    if (isSafari) {
+      browserInstructions = `
+        <div style="margin-bottom: 15px; padding: 10px; background: #2d2d2d; border-radius: 8px;">
+          <p><strong>For iOS Safari (PWA):</strong></p>
+          <p>1. Go to <strong>Settings</strong> app on your iPhone/iPad</p>
+          <p>2. Scroll down and tap <strong>NERIST Hub</strong> (or Safari > Notifications)</p>
+          <p>3. Tap <strong>Notifications</strong></p>
+          <p>4. Toggle <strong>Allow Notifications</strong> ON</p>
+          <p>5. Return to the app and refresh</p>
+        </div>
+        <div style="margin-top: 15px; padding: 10px; background: #2d2d2d; border-radius: 8px;">
+          <p><strong>Note:</strong> On iPhone, notifications for PWAs work like regular apps once installed to home screen.</p>
+        </div>
+      `;
+    } else if (isChrome || isEdge) {
+      browserInstructions = `
+        <div style="margin-bottom: 15px; padding: 10px; background: #2d2d2d; border-radius: 8px;">
+          <p><strong>For Chrome/Edge (PWA):</strong></p>
+          <p>1. Click the <strong>lock icon</strong> (🔒) in the browser's address bar</p>
+          <p>2. Click <strong>Site settings</strong></p>
+          <p>3. Find <strong>Notifications</strong></p>
+          <p>4. Change from "Block" to "Allow"</p>
+          <p>5. Close and reopen the app from your home screen</p>
+        </div>
+      `;
+    } else if (isFirefox) {
+      browserInstructions = `
+        <div style="margin-bottom: 15px; padding: 10px; background: #2d2d2d; border-radius: 8px;">
+          <p><strong>For Firefox (PWA):</strong></p>
+          <p>1. Click the <strong>shield icon</strong> in the address bar</p>
+          <p>2. Click the <strong>gear/settings icon</strong></p>
+          <p>3. Find <strong>Notifications</strong></p>
+          <p>4. Change to "Allow"</p>
+          <p>5. Close and reopen the app from your home screen</p>
+        </div>
+      `;
+    } else {
+      browserInstructions = `
+        <div style="margin-bottom: 15px; padding: 10px; background: #2d2d2d; border-radius: 8px;">
+          <p><strong>General Instructions:</strong></p>
+          <p>1. Go to your browser <strong>Settings</strong></p>
+          <p>2. Find <strong>Site Permissions</strong> or <strong>Notifications</strong></p>
+          <p>3. Look for "NERIST Hub" in the list</p>
+          <p>4. Change permission to <strong>Allow</strong></p>
+          <p>5. Close and reopen the app from your home screen</p>
+        </div>
+      `;
+    }
+    
+    modal.innerHTML = `
+      <div style="
+        background: var(--bg-card, #1e1e1e);
+        color: var(--text-primary, white);
+        padding: 30px;
+        border-radius: 16px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        border: 1px solid var(--border-color, #2d2d2d);
+      ">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+          <i class="fas fa-bell-slash" style="color: #ef4444; font-size: 24px;"></i>
+          <h2 style="color: #6366f1; margin: 0;">Notifications Blocked</h2>
+        </div>
+        
+        <p style="margin-bottom: 20px; line-height: 1.6; color: var(--text-secondary);">
+          You've blocked notifications for this app. To enable them:
+        </p>
+        
+        ${browserInstructions}
+        
+        <div style="margin-top: 25px; display: flex; gap: 10px; justify-content: flex-end;">
+          <button onclick="this.closest('div[style*=\\'fixed\\']').remove()" style="
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+          ">Close</button>
+          <button onclick="location.reload()" style="
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+          ">Refresh App</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Add animation style if not exists
+    if (!document.getElementById('modal-animation-style')) {
+      const style = document.createElement('style');
+      style.id = 'modal-animation-style';
+      style.textContent = `
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    // Remove on click outside
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
   }
 };
 
@@ -251,21 +430,17 @@ const PushManager = {
 document.addEventListener('DOMContentLoaded', () => {
   console.log('📄 DOM loaded, initializing push manager...');
   
-  // Try immediately with a delay
+  // Small delay to ensure everything is ready
   setTimeout(() => {
     PushManager.init();
   }, 1500);
 });
 
-// Also listen for app installed event
+// Listen for app installed event but DON'T show popup
 window.addEventListener('appinstalled', () => {
-  console.log('✅ PWA was installed - reinitializing push manager');
-  localStorage.setItem('pwa-mode', 'true');
-  
-  // Small delay then try to request notifications
-  setTimeout(() => {
-    PushManager.init();
-  }, 2000);
+  console.log('✅ PWA was installed - will show notification popup on next launch');
+  localStorage.setItem('pwa-installed', 'true');
+  // NO popup here - will show on next launch
 });
 
 // Make PushManager globally available
