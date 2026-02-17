@@ -1,4 +1,4 @@
-// public/push-notifications.js - Auto-request notifications on page load
+// public/push-notifications.js - Silent notification request (no UI elements)
 
 const PushManager = {
   vapidPublicKey: null,
@@ -26,9 +26,8 @@ const PushManager = {
       return true;
     }
     
-    // AUTO-REQUEST permission on page load (no button needed)
-    console.log('🔔 Auto-requesting notification permission...');
-    await this.autoRequestPermission();
+    // Auto-request permission (silent - no UI elements)
+    await this.requestPermission();
     
     return true;
   },
@@ -57,25 +56,16 @@ const PushManager = {
     }
   },
   
-  // Auto-request permission without button
-  async autoRequestPermission() {
+  // Request permission silently
+  async requestPermission() {
     if (!this.isSupported()) return false;
     
-    // Only request if permission is not already granted or denied
-    if (Notification.permission === 'granted') {
-      console.log('✅ Notification permission already granted');
-      await this.subscribe();
-      return true;
-    }
-    
-    if (Notification.permission === 'denied') {
-      console.log('❌ Notification permission previously denied');
-      // Optionally show a small message that notifications are blocked
-      this.showNotificationBlockedMessage();
+    // Only request if permission is default (not granted or denied)
+    if (Notification.permission !== 'default') {
+      console.log(`📱 Notification permission already: ${Notification.permission}`);
       return false;
     }
     
-    // Permission is 'default' - ask automatically
     try {
       console.log('🔔 Requesting notification permission...');
       const permission = await Notification.requestPermission();
@@ -83,18 +73,10 @@ const PushManager = {
       
       if (permission === 'granted') {
         await this.subscribe();
-        
-        // Show welcome message
-        if (window.showAlert) {
-          window.showAlert('✅ Notifications enabled! You will receive alerts for new posts.', 'success');
-        }
-        return true;
-      } else {
-        console.log('❌ Notification permission denied by user');
-        // Optionally show a small message that notifications were denied
-        this.showNotificationBlockedMessage();
-        return false;
       }
+      // No else - silently ignore if denied
+      
+      return true;
     } catch (error) {
       console.error('Error requesting permission:', error);
       return false;
@@ -130,12 +112,8 @@ const PushManager = {
         return true;
       }
       
-      // Send subscription to server (no auth required)
-      const sent = await this.sendSubscriptionToServer(subscription);
-      
-      if (sent) {
-        console.log('✅ Subscription sent to server');
-      }
+      // Send subscription to server
+      await this.sendSubscriptionToServer(subscription);
       
       return true;
     } catch (error) {
@@ -192,54 +170,15 @@ const PushManager = {
       outputArray[i] = rawData.charCodeAt(i);
     }
     return outputArray;
-  },
-  
-  // Show a small message if notifications are blocked
-  showNotificationBlockedMessage() {
-    // Create a small non-intrusive banner
-    const banner = document.createElement('div');
-    banner.id = 'notification-blocked-banner';
-    banner.style.cssText = `
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      background: #ff4757;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 14px;
-      z-index: 9999;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      animation: slideIn 0.3s ease;
-      max-width: 300px;
-    `;
-    
-    banner.innerHTML = `
-      <i class="fas fa-bell-slash"></i>
-      <span>Notifications are blocked. Enable them in browser settings to get alerts.</span>
-      <button onclick="this.parentElement.remove()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer; margin-left: auto;">&times;</button>
-    `;
-    
-    document.body.appendChild(banner);
-    
-    // Auto-remove after 8 seconds
-    setTimeout(() => {
-      if (banner.parentElement) {
-        banner.remove();
-      }
-    }, 8000);
   }
 };
 
-// Initialize when DOM is ready (no button needed)
+// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   // Small delay to ensure service worker is registered
   setTimeout(() => {
     PushManager.init();
-  }, 1500); // Slightly longer delay to ensure everything is ready
+  }, 1500);
 });
 
 // Make PushManager globally available
