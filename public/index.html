@@ -145,6 +145,18 @@
 </div>
 </nav>
 
+  <script>
+  // Set up notification button handler
+  document.addEventListener('DOMContentLoaded', function() {
+    const notifBtn = document.getElementById('notification-enable-btn');
+    if (notifBtn) {
+      notifBtn.addEventListener('click', function() {
+        window.PushManager.handleButtonClick();
+      });
+    }
+  });
+</script>
+
   <!-- HERO SECTION -->
   <section class="hero">
     <div class="container">
