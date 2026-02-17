@@ -4,10 +4,25 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js')
       .then(function(registration) {
         console.log('✅ Service Worker registered with scope:', registration.scope);
+        
+        // Check for updates
+        registration.addEventListener('updatefound', function() {
+          console.log('🔄 New service worker installing...');
+        });
       })
       .catch(function(error) {
         console.log('❌ Service Worker registration failed:', error);
       });
+      
+    // Check for updates on page load
+    navigator.serviceWorker.ready.then(function(registration) {
+      registration.update();
+    });
+  });
+  
+  // Handle controller change (new service worker activated)
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    console.log('🔄 New service worker activated');
   });
 }
 
