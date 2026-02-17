@@ -34,8 +34,21 @@ if (isPWA) {
   console.log('📱 Running as standalone PWA');
   document.body.classList.add('pwa-mode');
   localStorage.setItem('pwa-mode', 'true');
+  
+  // Set a flag for first launch detection
+  // This will be used by push-notifications.js
+  if (!sessionStorage.getItem('pwa-launched')) {
+    console.log('📱 First launch of PWA detected');
+    sessionStorage.setItem('pwa-launched', 'true');
+    // Store a flag that this is first launch
+    localStorage.setItem('pwa-first-launch', 'true');
+  } else {
+    console.log('📱 Subsequent PWA launch');
+    localStorage.setItem('pwa-first-launch', 'false');
+  }
 } else {
   localStorage.setItem('pwa-mode', 'false');
+  localStorage.setItem('pwa-first-launch', 'false');
 }
 
 // Install prompt
@@ -56,6 +69,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
         if (choiceResult.outcome === 'accepted') {
           console.log('✅ User accepted the install prompt');
           localStorage.setItem('pwa-mode', 'true');
+          // Don't set first launch flag here - will be set when they actually open the app
         }
         deferredPrompt = null;
       });
@@ -64,8 +78,11 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 window.addEventListener('appinstalled', (evt) => {
-  console.log('✅ PWA was installed');
+  console.log('✅ PWA was installed - notifications will be requested on next launch');
   localStorage.setItem('pwa-mode', 'true');
+  // Clear session storage to ensure first launch detection works
+  sessionStorage.removeItem('pwa-launched');
+  localStorage.setItem('pwa-first-launch', 'false'); // Reset for next launch
   
   if (installButton) {
     installButton.style.display = 'none';
