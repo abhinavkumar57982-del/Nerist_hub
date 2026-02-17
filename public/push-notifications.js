@@ -1,7 +1,8 @@
-// public/push-notifications.js - Silent notification request (no UI elements)
+// public/push-notifications.js - Force notification popup to show
 
 const PushManager = {
   vapidPublicKey: null,
+  permissionRequested: false,
   
   // Initialize
   async init() {
@@ -18,25 +19,41 @@ const PushManager = {
       return false;
     }
     
-    // Check if already subscribed
-    const isSubscribed = await this.checkSubscriptionStatus();
+    // Check current permission state
+    console.log('📱 Current notification permission:', Notification.permission);
     
-    if (isSubscribed) {
-      console.log('✅ Already subscribed to push notifications');
+    // If already granted, subscribe
+    if (Notification.permission === 'granted') {
+      console.log('✅ Permission already granted, subscribing...');
+      await this.subscribe();
       return true;
     }
     
-    // Auto-request permission (silent - no UI elements)
-    await this.requestPermission();
+    // If denied, we can't do anything
+    if (Notification.permission === 'denied') {
+      console.log('❌ Permission was denied by user previously');
+      return false;
+    }
+    
+    // If default (not asked yet), request permission
+    if (Notification.permission === 'default') {
+      console.log('🔔 Permission not yet requested, will request...');
+      
+      // Try multiple times to ensure popup shows
+      this.requestPermissionWithRetry();
+    }
     
     return true;
   },
   
   // Check if push notifications are supported
   isSupported() {
-    return 'Notification' in window && 
+    const supported = 'Notification' in window && 
            'serviceWorker' in navigator && 
            'PushManager' in window;
+    
+    console.log('🔧 Push notifications supported:', supported);
+    return supported;
   },
   
   // Get VAPID public key from server
@@ -56,30 +73,67 @@ const PushManager = {
     }
   },
   
-  // Request permission silently
-  async requestPermission() {
-    if (!this.isSupported()) return false;
+  // Request permission with multiple retry attempts
+  requestPermissionWithRetry() {
+    // Try immediately
+    this.attemptPermissionRequest();
     
-    // Only request if permission is default (not granted or denied)
-    if (Notification.permission !== 'default') {
-      console.log(`📱 Notification permission already: ${Notification.permission}`);
-      return false;
+    // Try again after 1 second
+    setTimeout(() => {
+      if (Notification.permission === 'default') {
+        console.log('🔄 Retry 1: Permission still default, trying again...');
+        this.attemptPermissionRequest();
+      }
+    }, 1000);
+    
+    // Try again after 3 seconds
+    setTimeout(() => {
+      if (Notification.permission === 'default') {
+        console.log('🔄 Retry 2: Permission still default, trying again...');
+        this.attemptPermissionRequest();
+      }
+    }, 3000);
+    
+    // Final try after 5 seconds
+    setTimeout(() => {
+      if (Notification.permission === 'default') {
+        console.log('🔄 Retry 3: Permission still default, trying again...');
+        this.attemptPermissionRequest();
+      }
+    }, 5000);
+  },
+  
+  // Attempt to request permission
+  async attemptPermissionRequest() {
+    // Don't try if already requested
+    if (this.permissionRequested && Notification.permission !== 'default') {
+      return;
     }
     
+    // Mark that we've attempted
+    this.permissionRequested = true;
+    
     try {
-      console.log('🔔 Requesting notification permission...');
+      console.log('🔔 Requesting notification permission NOW...');
+      
+      // Use the raw Notification.requestPermission
       const permission = await Notification.requestPermission();
-      console.log('📱 Notification permission result:', permission);
+      
+      console.log('📱 Permission result:', permission);
       
       if (permission === 'granted') {
+        console.log('✅ Permission granted, subscribing...');
         await this.subscribe();
+        
+        // Show a small thank you (optional)
+        this.showThankYouMessage();
+      } else if (permission === 'denied') {
+        console.log('❌ Permission denied by user');
+      } else {
+        console.log('⏸️ Permission dismissed by user');
       }
-      // No else - silently ignore if denied
-      
-      return true;
     } catch (error) {
-      console.error('Error requesting permission:', error);
-      return false;
+      console.error('❌ Error during permission request:', error);
     }
   },
   
@@ -144,18 +198,6 @@ const PushManager = {
     }
   },
   
-  // Check subscription status
-  async checkSubscriptionStatus() {
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-      return !!subscription;
-    } catch (error) {
-      console.error('Error checking subscription:', error);
-      return false;
-    }
-  },
-  
   // Helper: Convert base64 string to Uint8Array
   urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -170,15 +212,75 @@ const PushManager = {
       outputArray[i] = rawData.charCodeAt(i);
     }
     return outputArray;
+  },
+  
+  // Optional: Show a small thank you message (can be removed if you want)
+  showThankYouMessage() {
+    // You can remove this entire function if you don't want any message
+    console.log('🙏 Thank you for enabling notifications!');
+    
+    // Optional: Create a small toast that disappears
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #10b981;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 9999;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      animation: fadeInOut 3s ease forwards;
+    `;
+    toast.textContent = '✅ Notifications enabled! You\'ll receive alerts.';
+    
+    // Add animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes fadeInOut {
+        0% { opacity: 0; transform: translateY(-20px); }
+        10% { opacity: 1; transform: translateY(0); }
+        90% { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; transform: translateY(-20px); }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    document.body.appendChild(toast);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+      if (toast.parentElement) {
+        toast.remove();
+      }
+    }, 3000);
   }
 };
 
-// Initialize when DOM is ready
+// Initialize with multiple triggers to ensure popup shows
 document.addEventListener('DOMContentLoaded', () => {
-  // Small delay to ensure service worker is registered
+  console.log('📄 DOM loaded, will request notifications soon...');
+  
+  // Try immediately
   setTimeout(() => {
     PushManager.init();
-  }, 1500);
+  }, 500);
+  
+  // Try again after user interacts with the page (some browsers require user gesture)
+  document.addEventListener('click', function onClick() {
+    console.log('👆 User clicked, trying notification request...');
+    PushManager.init();
+    document.removeEventListener('click', onClick);
+  }, { once: true });
+  
+  // Try on scroll as well
+  document.addEventListener('scroll', function onScroll() {
+    console.log('📜 User scrolled, trying notification request...');
+    PushManager.init();
+    document.removeEventListener('scroll', onScroll);
+  }, { once: true });
 });
 
 // Make PushManager globally available
