@@ -30,18 +30,25 @@ const PushManager = {
     }
     
     // Check current permission state
+    await this.checkPermissionAndUpdateUI();
+    
+    return true;
+  },
+  
+  // Check permission and update UI accordingly
+  async checkPermissionAndUpdateUI() {
     console.log('📱 Current notification permission:', Notification.permission);
     
     // Handle based on permission state
     if (Notification.permission === 'granted') {
-      console.log('✅ Permission already granted, subscribing...');
+      console.log('✅ Permission granted, subscribing...');
       await this.subscribe();
       this.hideButton();
       return true;
     }
     
     if (Notification.permission === 'denied') {
-      console.log('❌ Permission was denied by user');
+      console.log('❌ Permission is denied');
       this.showButton(true);
       return false;
     }
@@ -66,7 +73,6 @@ const PushManager = {
                          window.navigator.standalone === true;
     
     // Also check if it's been launched after installation
-    // We can use a session flag to differentiate between first install and subsequent launches
     const hasLaunchedBefore = sessionStorage.getItem('pwa-launched') === 'true';
     
     if (isStandalone && !hasLaunchedBefore) {
@@ -281,7 +287,6 @@ const PushManager = {
     }
   },
   
-  // ===== NEW METHOD ADDED =====
   // Manual permission request (called from welcome popup)
   async requestPermission() {
     console.log('🔔 Manual permission request triggered from welcome popup');
@@ -469,11 +474,23 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 1500);
 });
 
-// Listen for app installed event but DON'T show popup
+// Listen for visibility change (when user returns to the app after changing settings)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    console.log('👁️ App became visible, checking permission...');
+    // Small delay to ensure everything is ready
+    setTimeout(() => {
+      if (PushManager.isLaunchedPWA()) {
+        PushManager.checkPermissionAndUpdateUI();
+      }
+    }, 500);
+  }
+});
+
+// Listen for app installed event
 window.addEventListener('appinstalled', () => {
   console.log('✅ PWA was installed - will show notification popup on next launch');
   localStorage.setItem('pwa-installed', 'true');
-  // NO popup here - will show on next launch
 });
 
 // Make PushManager globally available
