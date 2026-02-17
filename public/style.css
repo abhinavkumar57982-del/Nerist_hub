@@ -5373,3 +5373,41 @@ body.dark-theme .feature-card:hover .feature-link-hint {
     text-overflow: ellipsis;
   }
 }
+
+/* Fallback notification button */
+#fallback-notification-btn {
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-left: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#fallback-notification-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+#fallback-notification-btn i {
+  font-size: 16px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  #fallback-notification-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  #fallback-notification-btn i {
+    font-size: 14px;
+  }
+}
