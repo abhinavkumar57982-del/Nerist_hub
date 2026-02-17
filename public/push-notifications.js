@@ -1,5 +1,4 @@
-// public/push-notifications.js - Smart notification manager
-// Shows button ONLY when user has blocked notifications
+// public/push-notifications.js - Smart notification manager with working button
 
 const PushManager = {
   vapidPublicKey: null,
@@ -229,6 +228,8 @@ const PushManager = {
     if (btn) {
       btn.style.display = 'inline-flex';
       console.log('🔔 Showing enable button');
+    } else {
+      console.log('❌ Enable button not found in DOM');
     }
   },
   
@@ -246,6 +247,9 @@ const PushManager = {
     console.log('👆 Enable button clicked');
     this.hideButton();
     
+    // Reset permission requested flag so we can try again
+    this.permissionRequested = false;
+    
     // Request permission again
     try {
       const permission = await Notification.requestPermission();
@@ -254,12 +258,23 @@ const PushManager = {
       if (permission === 'granted') {
         await this.subscribe();
         // Button stays hidden
+        if (window.showAlert) {
+          window.showAlert('✅ Notifications enabled!', 'success');
+        }
       } else if (permission === 'denied') {
-        // If denied again, maybe show a message?
         console.log('❌ User denied again');
+        // Show button again since they denied
+        this.showButton();
+        if (window.showAlert) {
+          window.showAlert('❌ Notifications blocked. You can enable them in browser settings.', 'error');
+        }
+      } else {
+        // Dismissed - show button again
+        this.showButton();
       }
     } catch (error) {
       console.error('❌ Error:', error);
+      this.showButton();
     }
   }
 };
