@@ -8,11 +8,13 @@ const http = require("http");
 const socketIo = require("socket.io");
 const crypto = require("crypto");
 const fs = require("fs");
+// Web Push imports
+const webPush = require('web-push');
 // Cloudinary imports
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// Models - WITH CORRECT PATHS (FIXED)
+// Models
 const User = require("./server/User");
 const LostItem = require("./server/LostItem");
 const MarketplaceItem = require("./server/MarketplaceItem");
@@ -21,8 +23,9 @@ const QuestionPaper = require("./server/QuestionPaper");
 const BikeRental = require("./server/BikeRental");
 const Building = require("./server/Building");
 const Notification = require("./server/Notification");
+const PushSubscription = require("./server/PushSubscription"); // Add this model
 
-// Utilities (FIXED)
+// Utilities
 const getLocalAnswer = require("./server/chatbot");
 const registrationValidator = require("./server/RegistrationValidator");
 
@@ -44,32 +47,27 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-/* ---------------- MIDDLEWARE ---------------- */
+/* ---------------- WEB PUSH CONFIGURATION ---------------- */
+// Configure web-push with VAPID keys
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webPush.setVapidDetails(
+    process.env.VAPID_EMAIL || 'mailto:abhinavkumar53210@gmail.com',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+  console.log("🔑 Web Push configured with VAPID keys");
+} else {
+  console.warn("⚠️ VAPID keys not configured. Push notifications will not work.");
+}
+
 /* ---------------- MIDDLEWARE ---------------- */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from the public folder
-app.use(express.static(path.join(__dirname, "public")));
-
-// Serve geojson files from the GEOJSON MAP folder (in the src directory)
-const geojsonPath = path.join(__dirname, "GEOJSON MAP");
-console.log("=" .repeat(50));
-console.log("📁 Serving GeoJSON from:", geojsonPath);
-console.log("📁 GeoJSON directory exists:", fs.existsSync(geojsonPath));
-if (fs.existsSync(geojsonPath)) {
-  try {
-    const files = fs.readdirSync(geojsonPath);
-    console.log("📁 GeoJSON files found:", files);
-  } catch (e) {
-    console.error("❌ Error reading GeoJSON directory:", e);
-  }
-} else {
-  console.log("❌ GeoJSON directory does not exist!");
-}
-console.log("=" .repeat(50));
-
-app.use("/geojson", express.static(geojsonPath));
+app.use(express.static(path.join(__dirname, "../public")));
+// Serve geojson files from the GEOJSON MAP folder
+app.use("/geojson", express.static(path.join(__dirname, "../GEOJSON MAP")));
 
 /* ---------------- CORS ---------------- */
 app.use((req, res, next) => {
@@ -115,74 +113,6 @@ io.on('connection', (socket) => {
 
 app.set('io', io);
 app.set('onlineUsers', onlineUsers);
-
-/* ---------------- NOTIFICATION HELPER ---------------- */
-async function createNotification(userId, type, title, message, itemId = null, itemModel = null) {
-  try {
-    const notification = await Notification.create({
-      userId,
-      type,
-      title,
-      message,
-      itemId,
-      itemModel
-    });
-
-    const socketId = onlineUsers.get(userId.toString());
-    if (socketId) {
-      io.to(socketId).emit('notification', {
-        _id: notification._id,
-        type,
-        title,
-        message,
-        itemId,
-        createdAt: notification.createdAt,
-        read: false
-      });
-    }
-
-    return notification;
-  } catch (error) {
-    console.error('Error creating notification:', error);
-    return null;
-  }
-}
-
-async function notifyAllUsers(type, title, message, itemId = null, itemModel = null) {
-  try {
-    const users = await User.find({}, '_id');
-    
-    const notifications = users.map(user => ({
-      userId: user._id,
-      type,
-      title,
-      message,
-      itemId,
-      itemModel,
-      read: false
-    }));
-    
-    await Notification.insertMany(notifications);
-    
-    users.forEach(user => {
-      const socketId = onlineUsers.get(user._id.toString());
-      if (socketId) {
-        io.to(socketId).emit('notification', {
-          type,
-          title,
-          message,
-          itemId,
-          createdAt: new Date(),
-          read: false
-        });
-      }
-    });
-    
-    console.log(`📢 Notification sent to ${users.length} users: ${title}`);
-  } catch (error) {
-    console.error('Error sending notifications to all users:', error);
-  }
-}
 
 /* ---------------- RATE LIMITERS ---------------- */
 const lostLimiter = rateLimit({
@@ -329,7 +259,397 @@ async function deleteFromCloudinary(publicId, resourceType = 'image') {
   }
 }
 
+/* ============ PUSH NOTIFICATION FUNCTIONS ============ */
+
+// Helper to get URL for notification type
+function getUrlForType(type, itemId) {
+  const urls = {
+    'lost': `/lost.html?id=${itemId}`,
+    'found': `/found.html?id=${itemId}`,
+    'buy': `/buy-requests.html?id=${itemId}`,
+    'sell': `/marketplace.html?id=${itemId}`,
+    'rental': `/rentals.html?id=${itemId}`,
+    'service': `/rentals.html?id=${itemId}`
+  };
+  return urls[type] || '/';
+}
+
+// Send push notification to a specific user
+async function sendPushNotification(userId, type, title, body, itemId = null) {
+  try {
+    // Check if web-push is configured
+    if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+      console.log("⚠️ Push notifications not configured - skipping");
+      return false;
+    }
+    
+    // Get all subscriptions for this user
+    const subscriptions = await PushSubscription.find({ userId });
+    
+    if (subscriptions.length === 0) {
+      console.log(`No push subscriptions found for user ${userId}`);
+      return false;
+    }
+    
+    const payload = JSON.stringify({
+      title: title,
+      body: body,
+      icon: "/feviconicon.png",
+      badge: "/images/icon-72x72.png",
+      vibrate: [200, 100, 200],
+      data: {
+        url: getUrlForType(type, itemId),
+        timestamp: Date.now(),
+        type: type,
+        itemId: itemId
+      },
+      actions: [
+        { action: "open", title: "Open App" },
+        { action: "close", title: "Close" }
+      ]
+    });
+    
+    let sentCount = 0;
+    
+    for (const sub of subscriptions) {
+      try {
+        await webPush.sendNotification(sub.subscription, payload);
+        sub.lastUsed = new Date();
+        await sub.save();
+        sentCount++;
+      } catch (error) {
+        console.error(`Error sending to subscription ${sub._id}:`, error);
+        
+        // If subscription is expired or invalid, remove it
+        if (error.statusCode === 410 || error.statusCode === 404) {
+          console.log(`Removing expired subscription ${sub._id}`);
+          await PushSubscription.findByIdAndDelete(sub._id);
+        }
+      }
+    }
+    
+    console.log(`📨 Push notification sent to ${sentCount}/${subscriptions.length} devices for user ${userId}`);
+    return sentCount > 0;
+  } catch (error) {
+    console.error("Error sending push notification:", error);
+    return false;
+  }
+}
+
+// Send push notification to all users
+async function sendPushToAllUsers(type, title, body, itemId = null) {
+  try {
+    // Check if web-push is configured
+    if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+      console.log("⚠️ Push notifications not configured - skipping");
+      return false;
+    }
+    
+    const subscriptions = await PushSubscription.find({});
+    
+    if (subscriptions.length === 0) {
+      console.log("No push subscriptions found");
+      return false;
+    }
+    
+    const payload = JSON.stringify({
+      title: title,
+      body: body,
+      icon: "/feviconicon.png",
+      badge: "/images/icon-72x72.png",
+      vibrate: [200, 100, 200],
+      data: {
+        url: getUrlForType(type, itemId),
+        timestamp: Date.now(),
+        type: type,
+        itemId: itemId
+      },
+      actions: [
+        { action: "open", title: "Open App" },
+        { action: "close", title: "Close" }
+      ]
+    });
+    
+    let sentCount = 0;
+    const sendPromises = subscriptions.map(async (sub) => {
+      try {
+        await webPush.sendNotification(sub.subscription, payload);
+        sub.lastUsed = new Date();
+        await sub.save();
+        sentCount++;
+      } catch (error) {
+        console.error(`Error sending to subscription ${sub._id}:`, error);
+        if (error.statusCode === 410 || error.statusCode === 404) {
+          await PushSubscription.findByIdAndDelete(sub._id);
+        }
+      }
+    });
+    
+    await Promise.allSettled(sendPromises);
+    
+    console.log(`📨 Push notification sent to ${sentCount}/${subscriptions.length} devices`);
+    return sentCount > 0;
+  } catch (error) {
+    console.error("Error sending push to all users:", error);
+    return false;
+  }
+}
+
+/* ============ NOTIFICATION HELPER (UPDATED) ============ */
+async function createNotification(userId, type, title, message, itemId = null, itemModel = null) {
+  try {
+    const notification = await Notification.create({
+      userId,
+      type,
+      title,
+      message,
+      itemId,
+      itemModel
+    });
+
+    // Send real-time notification via Socket.IO
+    const socketId = onlineUsers.get(userId.toString());
+    if (socketId) {
+      io.to(socketId).emit('notification', {
+        _id: notification._id,
+        type,
+        title,
+        message,
+        itemId,
+        createdAt: notification.createdAt,
+        read: false
+      });
+    }
+    
+    // Send push notification
+    await sendPushNotification(userId, type, title, message, itemId);
+
+    return notification;
+  } catch (error) {
+    console.error('Error creating notification:', error);
+    return null;
+  }
+}
+
+async function notifyAllUsers(type, title, message, itemId = null, itemModel = null) {
+  try {
+    const users = await User.find({}, '_id');
+    
+    const notifications = users.map(user => ({
+      userId: user._id,
+      type,
+      title,
+      message,
+      itemId,
+      itemModel,
+      read: false
+    }));
+    
+    await Notification.insertMany(notifications);
+    
+    // Send to online users via Socket.IO
+    users.forEach(user => {
+      const socketId = onlineUsers.get(user._id.toString());
+      if (socketId) {
+        io.to(socketId).emit('notification', {
+          type,
+          title,
+          message,
+          itemId,
+          createdAt: new Date(),
+          read: false
+        });
+      }
+    });
+    
+    // Send push notifications to all users
+    await sendPushToAllUsers(type, title, message, itemId);
+    
+    console.log(`📢 Notification sent to ${users.length} users: ${title}`);
+  } catch (error) {
+    console.error('Error sending notifications to all users:', error);
+  }
+}
+
+/* ============ PUSH NOTIFICATION ROUTES ============ */
+
+/* ============ PUSH NOTIFICATION FUNCTIONS ============ */
+
+// Helper to get URL for notification type
+function getUrlForType(type, itemId) {
+  const urls = {
+    'lost': `/lost.html?id=${itemId}`,
+    'found': `/found.html?id=${itemId}`,
+    'buy': `/buy-requests.html?id=${itemId}`,
+    'sell': `/marketplace.html?id=${itemId}`,
+    'rental': `/rentals.html?id=${itemId}`,
+    'service': `/rentals.html?id=${itemId}`
+  };
+  return urls[type] || '/';
+}
+
+// Send push notification to ALL subscribers (no login required)
+async function sendPushToAllUsers(type, title, body, itemId = null) {
+  try {
+    // Check if web-push is configured
+    if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+      console.log("⚠️ Push notifications not configured - skipping");
+      return false;
+    }
+    
+    // Get ALL subscriptions (no userId filter)
+    const subscriptions = await PushSubscription.find({});
+    
+    if (subscriptions.length === 0) {
+      console.log("No push subscriptions found");
+      return false;
+    }
+    
+    const payload = JSON.stringify({
+      title: title,
+      body: body,
+      icon: "/feviconicon.png",
+      badge: "/images/icon-72x72.png",
+      vibrate: [200, 100, 200],
+      data: {
+        url: getUrlForType(type, itemId),
+        timestamp: Date.now(),
+        type: type,
+        itemId: itemId
+      },
+      actions: [
+        { action: "open", title: "Open App" },
+        { action: "close", title: "Close" }
+      ]
+    });
+    
+    let sentCount = 0;
+    const sendPromises = subscriptions.map(async (sub) => {
+      try {
+        await webPush.sendNotification(sub.subscription, payload);
+        sub.lastUsed = new Date();
+        await sub.save();
+        sentCount++;
+      } catch (error) {
+        console.error(`Error sending to subscription ${sub._id}:`, error);
+        // If subscription is expired or invalid, remove it
+        if (error.statusCode === 410 || error.statusCode === 404) {
+          await PushSubscription.findByIdAndDelete(sub._id);
+        }
+      }
+    });
+    
+    await Promise.allSettled(sendPromises);
+    
+    console.log(`📨 Push notification sent to ${sentCount}/${subscriptions.length} devices`);
+    return sentCount > 0;
+  } catch (error) {
+    console.error("Error sending push to all users:", error);
+    return false;
+  }
+}
+
+/* ============ UPDATED NOTIFICATION HELPER ============ */
+async function notifyAllUsers(type, title, message, itemId = null, itemModel = null) {
+  try {
+    // Save to database for logged-in users' in-app notifications
+    const users = await User.find({}, '_id');
+    
+    if (users.length > 0) {
+      const notifications = users.map(user => ({
+        userId: user._id,
+        type,
+        title,
+        message,
+        itemId,
+        itemModel,
+        read: false
+      }));
+      
+      await Notification.insertMany(notifications);
+      
+      // Send to online users via Socket.IO
+      users.forEach(user => {
+        const socketId = onlineUsers.get(user._id.toString());
+        if (socketId) {
+          io.to(socketId).emit('notification', {
+            type,
+            title,
+            message,
+            itemId,
+            createdAt: new Date(),
+            read: false
+          });
+        }
+      });
+    }
+    
+    // Send push notifications to ALL subscribers (logged in or not)
+    await sendPushToAllUsers(type, title, message, itemId);
+    
+    console.log(`📢 Notification sent to ${users.length} in-app users + push subscribers: ${title}`);
+  } catch (error) {
+    console.error('Error sending notifications to all users:', error);
+  }
+}
+
+/* ============ PUSH NOTIFICATION ROUTES (NO LOGIN REQUIRED) ============ */
+
+// Get VAPID public key for frontend - PUBLIC
+app.get("/api/push/vapid-public-key", (req, res) => {
+  if (!process.env.VAPID_PUBLIC_KEY) {
+    return res.status(500).json({ error: "VAPID public key not configured" });
+  }
+  res.json({ publicKey: process.env.VAPID_PUBLIC_KEY });
+});
+
+// Subscribe to push notifications - NO AUTHENTICATION REQUIRED
+app.post("/api/push/subscribe", async (req, res) => {
+  try {
+    const { subscription } = req.body;
+    
+    if (!subscription || !subscription.endpoint) {
+      return res.status(400).json({ error: "Invalid subscription object" });
+    }
+    
+    // Check if subscription already exists
+    const existing = await PushSubscription.findOne({ 
+      endpoint: subscription.endpoint 
+    });
+    
+    if (existing) {
+      // Update existing subscription
+      existing.lastUsed = new Date();
+      existing.subscription = subscription;
+      await existing.save();
+      console.log(`🔄 Updated push subscription for endpoint: ${subscription.endpoint}`);
+      return res.json({ success: true, message: "Subscription updated" });
+    }
+    
+    // Create new subscription (without userId for anonymous users)
+    await PushSubscription.create({
+      // No userId field - this is for anonymous users
+      subscription: subscription,
+      endpoint: subscription.endpoint
+    });
+    
+    console.log(`✅ New push subscription saved for endpoint: ${subscription.endpoint}`);
+    res.json({ success: true, message: "Subscribed successfully" });
+    
+  } catch (error) {
+    console.error("Error saving push subscription:", error);
+    res.status(500).json({ error: "Failed to save subscription" });
+  }
+});
+
+// Optional: Keep this for cleanup if needed, but won't be used from frontend
+app.post("/api/push/unsubscribe", async (req, res) => {
+  // This endpoint exists but won't be called from frontend
+  res.json({ success: true, message: "Unsubscribe endpoint (not used)" });
+});
+
 /* ============ AUTHENTICATION ROUTES ============ */
+// ... (keep all your existing auth routes)
 
 /**
  * @route   POST /api/auth/register
@@ -894,7 +1214,7 @@ app.post(
         contact: req.body.contact,
         status: req.body.status === "found" ? "found" : "lost",
         image: imageUrl,
-        imagePublicId: imagePublicId, // Store public_id for future deletion
+        imagePublicId: imagePublicId,
         postedBy: req.user.name,
         postedByRegistration: req.user.registrationNumber,
         userId: req.user.id
@@ -944,7 +1264,7 @@ app.post(
         contact: req.body.contact,
         status: "found",
         image: imageUrl,
-        imagePublicId: imagePublicId, // Store public_id for future deletion
+        imagePublicId: imagePublicId,
         postedBy: req.user.name,
         postedByRegistration: req.user.registrationNumber,
         userId: req.user.id
@@ -1032,8 +1352,6 @@ app.delete("/api/items/:id", authenticateToken, async (req, res) => {
 
 /* ============ QUESTION PAPERS ROUTES ============ */
 
-/* ============ QUESTION PAPERS ROUTES ============ */
-
 // UPLOAD - PROTECTED
 app.post(
   "/api/question-papers/upload",
@@ -1062,7 +1380,7 @@ app.post(
         uploadedByRegistration: req.user.registrationNumber,
         userId: req.user.id,
         pdf: pdfUrl,
-        pdfPublicId: pdfPublicId // Store public_id for future deletion
+        pdfPublicId: pdfPublicId
       });
       
       console.log("Paper uploaded:", paper);
@@ -1124,7 +1442,6 @@ app.delete("/api/question-papers/:id", authenticateToken, async (req, res) => {
         console.log(`Deleted from Cloudinary: ${paper.pdfPublicId}`);
       } catch (cloudinaryError) {
         console.error('Error deleting from Cloudinary:', cloudinaryError);
-        // Continue with deletion even if Cloudinary delete fails
       }
     }
     
@@ -1135,7 +1452,6 @@ app.delete("/api/question-papers/:id", authenticateToken, async (req, res) => {
     res.status(500).json({ error: "Failed to delete question paper" });
   }
 });
-
 
 /* ============ MARKETPLACE ROUTES ============ */
 
@@ -1169,7 +1485,7 @@ app.post(
         userId: req.user.id,
         status: "available",
         image: imageUrl,
-        imagePublicId: imagePublicId // Store public_id for future deletion
+        imagePublicId: imagePublicId
       });
 
       await notifyAllUsers(
@@ -1430,7 +1746,6 @@ app.get("/api/rentals", optionalAuth, async (req, res) => {
     
     console.log(`✅ Found ${rentals.length} rentals`);
     
-    // Log sample to verify data structure
     if (rentals.length > 0) {
       console.log("Sample rental:", {
         id: rentals[0]._id,
@@ -1684,7 +1999,7 @@ app.use('/api/*', (req, res) => {
   res.status(404).json({ error: 'API endpoint not found' });
 });
 
-// FIXED FOR HOSTING: Catch-all route for frontend - serves files from public folder
+// Catch-all route for frontend - serves from public folder
 app.get("*", (req, res) => {
   // Skip API routes
   if (req.path.startsWith('/api/')) {
@@ -1692,36 +2007,22 @@ app.get("*", (req, res) => {
   }
   
   // Check if the file exists in the public folder
-  const filePath = path.join(__dirname, "public", req.path);
+  const filePath = path.join(__dirname, "../public", req.path);
   if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
     return res.sendFile(filePath);
   }
   
-  // Otherwise serve index.html from public folder
-  const indexPath = path.join(__dirname, "public", "index.html");
+  // Otherwise serve index.html for SPA routing
+  const indexPath = path.join(__dirname, "../public/index.html");
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
     console.error("index.html not found at:", indexPath);
-    // List files in public directory to help debug
-    try {
-      const publicPath = path.join(__dirname, "public");
-      if (fs.existsSync(publicPath)) {
-        const publicFiles = fs.readdirSync(publicPath);
-        console.log("Files in public directory:", publicFiles);
-      } else {
-        console.log("public directory does not exist at:", publicPath);
-      }
-    } catch (e) {
-      console.error("Could not read public directory:", e);
-    }
-    
     res.status(404).send(`
       <html>
         <body>
           <h1>404 - Page Not Found</h1>
           <p>The requested page could not be found.</p>
-          <p>Looking for index.html at: ${indexPath}</p>
           <p>Please check that index.html exists in the public folder.</p>
         </body>
       </html>
