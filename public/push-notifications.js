@@ -281,6 +281,39 @@ const PushManager = {
     }
   },
   
+  // ===== NEW METHOD ADDED =====
+  // Manual permission request (called from welcome popup)
+  async requestPermission() {
+    console.log('🔔 Manual permission request triggered from welcome popup');
+    
+    try {
+      const permission = await Notification.requestPermission();
+      console.log('📱 Permission result:', permission);
+      
+      if (permission === 'granted') {
+        await this.subscribe();
+        this.hideButton();
+        if (window.showAlert) {
+          window.showAlert('✅ Notifications enabled!', 'success');
+        }
+        return true;
+      } else if (permission === 'denied') {
+        console.log('❌ Permission denied');
+        this.showButton(true);
+        if (window.showAlert) {
+          window.showAlert('❌ Notifications blocked. You can enable them in browser settings.', 'error');
+        }
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Error in requestPermission:', error);
+      if (window.showAlert) {
+        window.showAlert('❌ Failed to enable notifications', 'error');
+      }
+      return false;
+    }
+  },
+  
   // Show instructions for permanently denied state
   showInstructions() {
     const modal = document.createElement('div');
