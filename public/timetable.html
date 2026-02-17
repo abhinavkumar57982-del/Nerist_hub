@@ -151,36 +151,6 @@
             cursor: not-allowed;
         }
 
-        .program-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            width: 100%;
-        }
-
-        .program-tab {
-            padding: 12px 20px;
-            background: var(--bg-secondary);
-            border: 2px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.95rem;
-            transition: var(--transition);
-            flex: 1;
-            text-align: center;
-        }
-
-        .program-tab.active {
-            background: var(--accent-primary);
-            color: white;
-            border-color: var(--accent-primary);
-        }
-
-        .program-tab:hover:not(.active) {
-            background: var(--border-color);
-        }
-
         .view-button {
             width: 100%;
             padding: 16px;
@@ -504,16 +474,6 @@
                 margin-bottom: 20px;
             }
 
-            .filters-card .program-tabs {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .filters-card .program-tab {
-                width: 100%;
-                padding: 12px;
-            }
-
             .filters-card .filter-group select {
                 font-size: 16px; /* Prevents zoom on iOS */
                 padding: 12px;
@@ -724,14 +684,19 @@
             <div class="branch-tags">
                 <span class="branch-tag">Base (1st & 2nd Year)</span>
                 <span class="branch-tag">B.Tech</span>
+                <span class="branch-tag">B.Sc</span>
+                <span class="branch-tag">M.Tech</span>
+                <span class="branch-tag">M.Sc</span>
                 <span class="branch-tag">AE</span>
                 <span class="branch-tag">CE</span>
                 <span class="branch-tag">CSE</span>
                 <span class="branch-tag">EC</span>
                 <span class="branch-tag">EE</span>
                 <span class="branch-tag">ME</span>
-                <span class="branch-tag">AG (Agriculture)</span>
                 <span class="branch-tag">FR (Forestry)</span>
+                <span class="branch-tag">PH (Physics)</span>
+                <span class="branch-tag">CY (Chemistry)</span>
+                <span class="branch-tag">MA (Maths)</span>
             </div>
         </div>
 
@@ -739,9 +704,17 @@
             <div class="filters-card">
                 <h2 class="section-title">Select Filters</h2>
                 
-                <div class="program-tabs">
-                    <div class="program-tab active" data-program="Base">Base (1st-2nd Year)</div>
-                    <div class="program-tab" data-program="Btech">B.Tech</div>
+                <!-- Program Dropdown Selector (replacing tabs) -->
+                <div class="filter-group">
+                    <label for="program"><i class="fas fa-graduation-cap"></i> Program</label>
+                    <select id="program">
+                        <option value="">-- Select Program --</option>
+                        <option value="Base">Base (1st-2nd Year)</option>
+                        <option value="Btech">B.Tech</option>
+                        <option value="Bsc">B.Sc</option>
+                        <option value="Mtech">M.Tech</option>
+                        <option value="Msc">M.Sc</option>
+                    </select>
                 </div>
                 
                 <div class="filter-group">
@@ -766,9 +739,9 @@
                 </div>
                 
                 <div class="filter-group" id="divisionGroup" style="display: none;">
-                    <label for="division"><i class="fas fa-layer-group"></i> Division/Batch</label>
+                    <label for="division"><i class="fas fa-layer-group"></i> Division/Batch/Specialization</label>
                     <select id="division">
-                        <option value="">-- Select Division --</option>
+                        <option value="">-- Select Option --</option>
                     </select>
                 </div>
                 
@@ -935,7 +908,7 @@
         const PDF_FILENAME = 'timetable_odd_2026.pdf';
         const TOTAL_PAGES = 114;
 
-        // Timetable data structure (keep your existing data)
+        // Timetable data structure with all programs (Base, Btech, Bsc, Mtech, Msc)
         const timetableData = {
             "Base": {
                 "AE": {
@@ -1334,11 +1307,229 @@
                         }
                     }
                 }
+            },
+            "Bsc": {
+                "FR": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "even-odd",
+                                "even": 87,
+                                "odd": 86
+                            }
+                        }
+                    },
+                    "2": {
+                        "semesters": {
+                            "4": {
+                                "type": "single",
+                                "page": 88
+                            }
+                        }
+                    },
+                    "3": {
+                        "semesters": {
+                            "6": {
+                                "type": "single",
+                                "page": 89
+                            }
+                        }
+                    },
+                    "4": {
+                        "semesters": {
+                            "8": {
+                                "type": "single",
+                                "page": 90
+                            }
+                        }
+                    }
+                },
+                "MA": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "single",
+                                "page": 92
+                            }
+                        }
+                    }
+                },
+                "PH": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "single",
+                                "page": 110
+                            }
+                        }
+                    }
+                },
+                "CY": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "single",
+                                "page": 50
+                            }
+                        }
+                    }
+                }
+            },
+            "Mtech": {
+                "AE": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "specializations",
+                                "specializations": {
+                                    "FMP": 14,
+                                    "SWC": 15
+                                }
+                            }
+                        }
+                    }
+                },
+                "CE": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "specializations",
+                                "specializations": {
+                                    "ESE": 35,
+                                    "GTE": 36
+                                }
+                            }
+                        }
+                    }
+                },
+                "CSE": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "specializations",
+                                "specializations": {
+                                    "AI": 48,
+                                    "CSE": 49
+                                }
+                            }
+                        }
+                    }
+                },
+                "EC": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "specializations",
+                                "specializations": {
+                                    "VLSI": 71,
+                                    "Comm": 72
+                                }
+                            }
+                        }
+                    }
+                },
+                "ME": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "specializations",
+                                "specializations": {
+                                    "CIM": 108,
+                                    "TFE": 109
+                                }
+                            }
+                        }
+                    }
+                },
+                "EE": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "specializations",
+                                "specializations": {
+                                    "PSE": 85
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "Msc": {
+                "CY": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "single",
+                                "page": 51
+                            }
+                        }
+                    },
+                    "2": {
+                        "semesters": {
+                            "4": {
+                                "type": "specializations",
+                                "specializations": {
+                                    "Org": 52,
+                                    "inOrg": 53,
+                                    "phy": 54
+                                }
+                            }
+                        }
+                    }
+                },
+                "PH": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "even-odd",
+                                "even": 112,
+                                "odd": 111
+                            }
+                        }
+                    },
+                    "2": {
+                        "semesters": {
+                            "4": {
+                                "type": "even-odd",
+                                "even": 114,
+                                "odd": 113
+                            }
+                        }
+                    }
+                },
+                "MA": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "single",
+                                "page": 93
+                            }
+                        }
+                    },
+                    "2": {
+                        "semesters": {
+                            "4": {
+                                "type": "single",
+                                "page": 94
+                            }
+                        }
+                    }
+                },
+                "FR": {
+                    "1": {
+                        "semesters": {
+                            "2": {
+                                "type": "single",
+                                "page": 91
+                            }
+                        }
+                    }
+                }
             }
         };
 
         // DOM Elements
-        const programTabs = document.querySelectorAll('.program-tab');
+        const programSelect = document.getElementById('program');
         const yearSelect = document.getElementById('year');
         const branchSelect = document.getElementById('branch');
         const semesterSelect = document.getElementById('semester');
@@ -1369,28 +1560,12 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            setupProgramTabs();
             setupEventListeners();
             updateYearOptions();
             setupZoomControls();
             checkAuth();
             initBackToTop();
         });
-
-        // Setup program tabs
-        function setupProgramTabs() {
-            programTabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    programTabs.forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    currentProgram = tab.dataset.program;
-                    
-                    resetFilters();
-                    updateYearOptions();
-                    updateViewButtonState();
-                });
-            });
-        }
 
         // Setup zoom controls
         function setupZoomControls() {
@@ -1410,6 +1585,13 @@
 
         // Setup event listeners
         function setupEventListeners() {
+            programSelect.addEventListener('change', () => {
+                currentProgram = programSelect.value;
+                resetFilters();
+                updateYearOptions();
+                updateViewButtonState();
+            });
+            
             yearSelect.addEventListener('change', () => {
                 currentYear = yearSelect.value;
                 updateBranchOptions();
@@ -1461,7 +1643,7 @@
             yearSelect.innerHTML = '<option value="">-- Select Year --</option>';
             branchSelect.innerHTML = '<option value="">-- Select Branch --</option>';
             semesterSelect.innerHTML = '<option value="">-- Select Semester --</option>';
-            divisionSelect.innerHTML = '<option value="">-- Select Division --</option>';
+            divisionSelect.innerHTML = '<option value="">-- Select Option --</option>';
             divisionGroup.style.display = 'none';
             
             currentYear = '';
@@ -1517,7 +1699,7 @@
             const programData = timetableData[currentProgram];
             branchSelect.innerHTML = '<option value="">-- Select Branch --</option>';
             semesterSelect.innerHTML = '<option value="">-- Select Semester --</option>';
-            divisionSelect.innerHTML = '<option value="">-- Select Division --</option>';
+            divisionSelect.innerHTML = '<option value="">-- Select Option --</option>';
             divisionGroup.style.display = 'none';
             
             if (programData && currentYear) {
@@ -1541,6 +1723,9 @@
                     else if (branch === 'EE') branchName = 'Electrical Engineering';
                     else if (branch === 'ME') branchName = 'Mechanical Engineering';
                     else if (branch === 'FR') branchName = 'Forestry';
+                    else if (branch === 'PH') branchName = 'Physics';
+                    else if (branch === 'CY') branchName = 'Chemistry';
+                    else if (branch === 'MA') branchName = 'Mathematics';
                     
                     option.textContent = `${branch} - ${branchName}`;
                     branchSelect.appendChild(option);
@@ -1559,7 +1744,7 @@
         function updateSemesterOptions() {
             const programData = timetableData[currentProgram];
             semesterSelect.innerHTML = '<option value="">-- Select Semester --</option>';
-            divisionSelect.innerHTML = '<option value="">-- Select Division --</option>';
+            divisionSelect.innerHTML = '<option value="">-- Select Option --</option>';
             divisionGroup.style.display = 'none';
             
             if (programData && currentYear && currentBranch && programData[currentBranch] && programData[currentBranch][currentYear]) {
@@ -1584,7 +1769,7 @@
         // Update division options based on semester type
         function updateDivisionOptions() {
             const programData = timetableData[currentProgram];
-            divisionSelect.innerHTML = '<option value="">-- Select Division --</option>';
+            divisionSelect.innerHTML = '<option value="">-- Select Option --</option>';
             
             if (programData && currentYear && currentBranch && currentSemester && 
                 programData[currentBranch][currentYear] && 
@@ -1617,6 +1802,39 @@
                     }
                     
                     divisionSelect.disabled = false;
+                } else if (semesterData.type === 'specializations' && semesterData.specializations) {
+                    divisionGroup.style.display = 'block';
+                    
+                    for (const spec in semesterData.specializations) {
+                        const option = document.createElement('option');
+                        option.value = spec;
+                        
+                        // Format specialization names
+                        let specName = spec;
+                        if (spec === 'FMP') specName = 'Farm Machinery & Power';
+                        else if (spec === 'SWC') specName = 'Soil & Water Conservation';
+                        else if (spec === 'ESE') specName = 'Environmental Engineering';
+                        else if (spec === 'GTE') specName = 'Geotechnical Engineering';
+                        else if (spec === 'AI') specName = 'Artificial Intelligence';
+                        else if (spec === 'VLSI') specName = 'VLSI Design';
+                        else if (spec === 'Comm') specName = 'Communication';
+                        else if (spec === 'CIM') specName = 'Computer Integrated Manufacturing';
+                        else if (spec === 'TFE') specName = 'Thermal Fluid Engineering';
+                        else if (spec === 'PSE') specName = 'Power System Engineering';
+                        else if (spec === 'Org') specName = 'Organic Chemistry';
+                        else if (spec === 'inOrg') specName = 'Inorganic Chemistry';
+                        else if (spec === 'phy') specName = 'Physical Chemistry';
+                        
+                        option.textContent = specName;
+                        divisionSelect.appendChild(option);
+                    }
+                    
+                    divisionSelect.disabled = false;
+                } else if (semesterData.type === 'single') {
+                    divisionGroup.style.display = 'none';
+                    divisionSelect.disabled = true;
+                    // Auto-select the single page
+                    currentDivision = 'page';
                 } else {
                     divisionGroup.style.display = 'none';
                     divisionSelect.disabled = true;
@@ -1641,6 +1859,10 @@
                     if (semesterData.type === 'even-odd' && currentDivision) {
                         isEnabled = true;
                     } else if (semesterData.type === 'Batch' && currentDivision) {
+                        isEnabled = true;
+                    } else if (semesterData.type === 'specializations' && currentDivision) {
+                        isEnabled = true;
+                    } else if (semesterData.type === 'single') {
                         isEnabled = true;
                     }
                 }
@@ -1667,6 +1889,10 @@
                 pageNumber = semesterData[currentDivision];
             } else if (semesterData.type === 'Batch' && currentDivision && semesterData.batches) {
                 pageNumber = semesterData.batches[currentDivision];
+            } else if (semesterData.type === 'specializations' && currentDivision && semesterData.specializations) {
+                pageNumber = semesterData.specializations[currentDivision];
+            } else if (semesterData.type === 'single') {
+                pageNumber = semesterData.page;
             }
             
             if (!pageNumber) {
@@ -1692,15 +1918,41 @@
             else if (currentBranch === 'EE') branchName = 'Electrical Engineering';
             else if (currentBranch === 'ME') branchName = 'Mechanical Engineering';
             else if (currentBranch === 'FR') branchName = 'Forestry';
+            else if (currentBranch === 'PH') branchName = 'Physics';
+            else if (currentBranch === 'CY') branchName = 'Chemistry';
+            else if (currentBranch === 'MA') branchName = 'Mathematics';
             
             let divisionText = '';
             if (semesterData.type === 'even-odd') {
                 divisionText = currentDivision === 'even' ? 'Even Semester' : 'Odd Semester';
             } else if (semesterData.type === 'Batch') {
                 divisionText = `Batch ${currentDivision}`;
+            } else if (semesterData.type === 'specializations') {
+                // Get specialization full name
+                let specName = currentDivision;
+                if (currentDivision === 'FMP') specName = 'Farm Machinery & Power';
+                else if (currentDivision === 'SWC') specName = 'Soil & Water Conservation';
+                else if (currentDivision === 'ESE') specName = 'Environmental Engineering';
+                else if (currentDivision === 'GTE') specName = 'Geotechnical Engineering';
+                else if (currentDivision === 'AI') specName = 'Artificial Intelligence';
+                else if (currentDivision === 'VLSI') specName = 'VLSI Design';
+                else if (currentDivision === 'Comm') specName = 'Communication';
+                else if (currentDivision === 'CIM') specName = 'Computer Integrated Manufacturing';
+                else if (currentDivision === 'TFE') specName = 'Thermal Fluid Engineering';
+                else if (currentDivision === 'PSE') specName = 'Power System Engineering';
+                else if (currentDivision === 'Org') specName = 'Organic Chemistry';
+                else if (currentDivision === 'inOrg') specName = 'Inorganic Chemistry';
+                else if (currentDivision === 'phy') specName = 'Physical Chemistry';
+                divisionText = specName;
             }
             
-            timetableInfo.textContent = `${currentProgram} - ${branchName} - Year ${currentYear} - Sem ${currentSemester} - ${divisionText}`;
+            let programDisplayName = currentProgram;
+            if (currentProgram === 'Btech') programDisplayName = 'B.Tech';
+            else if (currentProgram === 'Bsc') programDisplayName = 'B.Sc';
+            else if (currentProgram === 'Mtech') programDisplayName = 'M.Tech';
+            else if (currentProgram === 'Msc') programDisplayName = 'M.Sc';
+            
+            timetableInfo.textContent = `${programDisplayName} - ${branchName} - Year ${currentYear} - Sem ${currentSemester}${divisionText ? ' - ' + divisionText : ''}`;
             
             // Show the timetable page
             await showTimetablePage();
