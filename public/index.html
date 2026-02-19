@@ -2,145 +2,387 @@
 <html>
 <head>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-WW3G02KK0Z"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-WW3G02KK0Z');
-</script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-WW3G02KK0Z');
+  </script>
 
   <meta name="description" content="NERIST Campus Hub - Navigation, Marketplace, Lost & Found, Study Resources">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-<title>NERIST Campus Hub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>NERIST Campus Hub</title>
 
   <link rel="icon" href="feviconicon.png">
   <!-- Notification Styles -->
-<link rel="stylesheet" href="notifications.css">
+  <link rel="stylesheet" href="notifications.css">
   <link rel="stylesheet" href="style.css?v=20250216">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <meta name="theme-color" content="#6366f1">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="NERIST Hub">
-<link rel="apple-touch-icon" href="/images/icon-192x192.png">
-<link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="NERIST Hub">
+  <link rel="apple-touch-icon" href="/images/icon-192x192.png">
+  <link rel="manifest" href="/manifest.json">
+  
+  <style>
+    /* Welcome Popup Styles */
+    .welcome-popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .welcome-popup {
+      background: var(--card-bg, #1e293b);
+      border-radius: 2rem;
+      padding: 2rem;
+      max-width: 700px;
+      width: 90%;
+      max-height: 85vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border-color, #334155);
+      animation: slideUp 0.4s ease;
+    }
+
+    body.light-theme .welcome-popup {
+      background: #ffffff;
+      border-color: #e2e8f0;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .popup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--border-color, #334155);
+    }
+
+    .popup-header h2 {
+      font-size: 1.8rem;
+      background: linear-gradient(135deg, #818cf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 0;
+    }
+
+    .close-popup {
+      background: none;
+      border: none;
+      color: var(--text-secondary, #94a3b8);
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .close-popup:hover {
+      color: #ef4444;
+      transform: scale(1.1);
+    }
+
+    .popup-subtitle {
+      color: var(--text-secondary, #94a3b8);
+      margin-bottom: 2rem;
+      font-size: 1.1rem;
+    }
+
+    .popup-features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .popup-feature-item {
+      background: var(--bg-secondary, #0f172a);
+      border-radius: 1rem;
+      padding: 1.2rem 0.8rem;
+      text-align: center;
+      transition: transform 0.2s, background 0.2s;
+      border: 1px solid var(--border-color, #334155);
+    }
+
+    body.light-theme .popup-feature-item {
+      background: #f1f5f9;
+    }
+
+    .popup-feature-item:hover {
+      transform: translateY(-3px);
+      background: var(--hover-bg, #2d3a4f);
+    }
+
+    .popup-feature-item i {
+      font-size: 2rem;
+      color: #818cf8;
+      margin-bottom: 0.5rem;
+    }
+
+    .popup-feature-item h4 {
+      margin: 0.3rem 0;
+      color: var(--text-primary, #f1f5f9);
+      font-size: 1rem;
+    }
+
+    .popup-feature-item p {
+      margin: 0;
+      font-size: 0.75rem;
+      color: var(--text-secondary, #94a3b8);
+    }
+
+    .popup-highlight {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      border-radius: 1rem;
+      padding: 1.2rem;
+      margin: 1.5rem 0;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .popup-highlight i {
+      font-size: 2rem;
+      background: rgba(255,255,255,0.2);
+      padding: 0.8rem;
+      border-radius: 50%;
+    }
+
+    .popup-highlight-text {
+      flex: 1;
+    }
+
+    .popup-highlight-text h4 {
+      margin: 0 0 0.3rem 0;
+      font-size: 1.2rem;
+    }
+
+    .popup-highlight-text p {
+      margin: 0;
+      opacity: 0.9;
+    }
+
+    .popup-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      margin-top: 2rem;
+    }
+
+    .popup-btn {
+      padding: 0.8rem 1.8rem;
+      border-radius: 2rem;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 1rem;
+    }
+
+    .popup-btn-primary {
+      background: #6366f1;
+      color: white;
+    }
+
+    .popup-btn-primary:hover {
+      background: #4f46e5;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px -10px #6366f1;
+    }
+
+    .popup-btn-secondary {
+      background: transparent;
+      color: var(--text-secondary, #94a3b8);
+      border: 1px solid var(--border-color, #334155);
+    }
+
+    .popup-btn-secondary:hover {
+      background: var(--hover-bg, #2d3a4f);
+      color: var(--text-primary, #f1f5f9);
+    }
+
+    /* Don't show again checkbox */
+    .dont-show-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      padding: 0.5rem;
+      color: var(--text-secondary, #94a3b8);
+      font-size: 0.9rem;
+    }
+
+    .dont-show-container input[type="checkbox"] {
+      width: 1rem;
+      height: 1rem;
+      cursor: pointer;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .welcome-popup {
+        padding: 1.5rem;
+        width: 95%;
+      }
+      
+      .popup-features-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .popup-actions {
+        flex-direction: column;
+      }
+      
+      .popup-btn {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
 
   <!-- NAVBAR WITH AUTHENTICATION -->
-<nav class="navbar">
-  <div class="nav-left">
-    <a href="/index.html" class="logo">
-      <span class="logo-icon">🧑‍🎓</span>
-      <span>NERIST Hub</span>
-    </a>
-    
-    <div class="menu">
-      <span><i class="fas fa-search"></i> Lost & Found ▾</span>
-      <div class="dropdown">
-        <a href="/lost.html"><i class="fas fa-question-circle"></i> Lost Items</a>
-        <a href="/found.html"><i class="fas fa-check-circle"></i> Found Items</a>
+  <nav class="navbar">
+    <div class="nav-left">
+      <a href="/index.html" class="logo">
+        <span class="logo-icon">🧑‍🎓</span>
+        <span>NERIST Hub</span>
+      </a>
+      
+      <div class="menu">
+        <span><i class="fas fa-search"></i> Lost & Found ▾</span>
+        <div class="dropdown">
+          <a href="/lost.html"><i class="fas fa-question-circle"></i> Lost Items</a>
+          <a href="/found.html"><i class="fas fa-check-circle"></i> Found Items</a>
+        </div>
       </div>
-    </div>
 
-    <div class="menu">
-      <span><i class="fas fa-store"></i> Marketplace ▾</span>
-      <div class="dropdown">
-        <a href="/marketplace.html"><i class="fas fa-tag"></i> Sell Items</a>
-        <a href="/buy-requests.html"><i class="fas fa-shopping-cart"></i> Buy Requests</a>
+      <div class="menu">
+        <span><i class="fas fa-store"></i> Marketplace ▾</span>
+        <div class="dropdown">
+          <a href="/marketplace.html"><i class="fas fa-tag"></i> Sell Items</a>
+          <a href="/buy-requests.html"><i class="fas fa-shopping-cart"></i> Buy Requests</a>
+        </div>
       </div>
-    </div>
 
-    <div class="menu">
-      <span><i class="fas fa-file-alt"></i> Study ▾</span>
-      <div class="dropdown">
-        <a href="/questionpaper.html"><i class="fas fa-book"></i> Question Papers</a>
-        <a href="/upload-paper.html"><i class="fas fa-upload"></i> Upload Papers</a>
-        <a href="/timetable.html"><i class="fas fa-calendar-alt"></i> TimeTable</a>
+      <div class="menu">
+        <span><i class="fas fa-file-alt"></i> Study ▾</span>
+        <div class="dropdown">
+          <a href="/questionpaper.html"><i class="fas fa-book"></i> Question Papers</a>
+          <a href="/upload-paper.html"><i class="fas fa-upload"></i> Upload Papers</a>
+          <a href="/timetable.html"><i class="fas fa-calendar-alt"></i> TimeTable</a>
+        </div>
+      </div>
+      
+      <div class="menu">
+        <span><i class="fas fa-chalkboard-teacher"></i> Faculty ▾</span>
+        <div class="dropdown">
+          <a href="/teachers.html"><i class="fas fa-users"></i> Teacher Directory</a>
+          <a href="/teachers.html#staff-directory"><i class="fas fa-search"></i> Search Faculty</a>
+        </div>
+      </div>
+      
+      <div class="menu">
+        <span><i class="fa-solid fa-briefcase"></i> Services ▾</span>
+        <div class="dropdown">
+          <a href="/rentals.html"><i class="fa-solid fa-briefcase"></i> Services</a>
+        </div>
+      </div>
+      
+      <div class="menu">
+        <span><i class="fas fa-map"></i> Navigation ▾</span>
+        <div class="dropdown">
+          <a href="/map.html"><i class="fas fa-location-dot"></i> Campus Map</a>
+        </div>
       </div>
     </div>
     
-    <div class="menu">
-      <span><i class="fas fa-chalkboard-teacher"></i> Faculty ▾</span>
-      <div class="dropdown">
-        <a href="/teachers.html"><i class="fas fa-users"></i> Teacher Directory</a>
-        <a href="/teachers.html#staff-directory"><i class="fas fa-search"></i> Search Faculty</a>
-      </div>
-    </div>
-    
-    <div class="menu">
-      <span><i class="fa-solid fa-briefcase"></i> Services ▾</span>
-      <div class="dropdown">
-        <a href="/rentals.html"><i class="fa-solid fa-briefcase"></i> Services</a>
-      </div>
-    </div>
-    
-    <div class="menu">
-      <span><i class="fas fa-map"></i> Navigation ▾</span>
-      <div class="dropdown">
-        <a href="/map.html"><i class="fas fa-location-dot"></i> Campus Map</a>
-      </div>
-    </div>
-  </div>
-  
-  <!-- AUTH SECTION IN NAVBAR -->
-<div class="nav-right">
-    <div id="user-info" class="user-info">
+    <!-- AUTH SECTION IN NAVBAR -->
+    <div class="nav-right">
+      <div id="user-info" class="user-info">
         <span id="welcome-message" class="welcome-message" style="display: none;">
-            <i class="fas fa-user-circle"></i>
-            <span id="user-name"></span> (<span id="user-regno"></span>)
+          <i class="fas fa-user-circle"></i>
+          <span id="user-name"></span> (<span id="user-regno"></span>)
         </span>
         <button id="login-btn" class="auth-btn login-btn">
-            <i class="fas fa-sign-in-alt"></i>
-            <span>Login / Register</span>
+          <i class="fas fa-sign-in-alt"></i>
+          <span>Login / Register</span>
         </button>
         <button id="logout-btn" class="auth-btn logout-btn" style="display: none;">
-            <i class="fas fa-sign-out-alt"></i>
-            <span>Logout</span>
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
         </button>
-    </div>
-    
-    <!-- Notification Bell -->
-<div class="notification-bell-container">
-    <div class="notification-bell" id="notificationBell">
-        <i class="fas fa-bell"></i>
-        <span id="notification-badge" class="notification-badge" style="display: none;">0</span>
-    </div>
-    
-    <!-- Notification Dropdown -->
-    <div id="notification-dropdown" class="notification-dropdown">
-        <div class="notification-header">
+      </div>
+      
+      <!-- Notification Bell -->
+      <div class="notification-bell-container">
+        <div class="notification-bell" id="notificationBell">
+          <i class="fas fa-bell"></i>
+          <span id="notification-badge" class="notification-badge" style="display: none;">0</span>
+        </div>
+        
+        <!-- Notification Dropdown -->
+        <div id="notification-dropdown" class="notification-dropdown">
+          <div class="notification-header">
             <h3><i class="fas fa-bell"></i> Notifications</h3>
             <button class="mark-read-btn" id="markAllReadBtn">
-                <i class="fas fa-check-double"></i> Mark all as read
+              <i class="fas fa-check-double"></i> Mark all as read
             </button>
             <button class="delete-all-btn" id="deleteAllBtn" title="Delete all notifications">
-                    <i class="fas fa-trash-alt"></i> Delete All
-                </button>
-        </div>
-        <div id="notifications-list" class="notifications-list">
+              <i class="fas fa-trash-alt"></i> Delete All
+            </button>
+          </div>
+          <div id="notifications-list" class="notifications-list">
             <!-- Notifications will be loaded here -->
+          </div>
         </div>
-    </div>
-</div>
-    
-    <!-- Notification enable button - ONLY SHOWS IN PWA MODE WHEN BLOCKED -->
-    <button id="notification-enable-btn" class="notification-enable-btn" style="display: none;">
+      </div>
+      
+      <!-- Notification enable button - ONLY SHOWS IN PWA MODE WHEN BLOCKED -->
+      <button id="notification-enable-btn" class="notification-enable-btn" style="display: none;">
         <i class="fas fa-bell"></i> <span>Enable Notifications</span>
-    </button>
+      </button>
 
-    <button class="theme-toggle" onclick="toggleTheme()">
+      <button class="theme-toggle" onclick="toggleTheme()">
         <i class="fas fa-moon"></i>
         <span>Theme</span>
-    </button>
+      </button>
 
-    <!-- Install PWA Button -->
-    <button id="installPWA" class="install-pwa-btn" style="display: none;" title="Install App">
+      <!-- Install PWA Button -->
+      <button id="installPWA" class="install-pwa-btn" style="display: none;" title="Install App">
         <i class="fas fa-download"></i>
-    </button>
-</div>
-</nav>
+      </button>
+    </div>
+  </nav>
 
   <!-- HERO SECTION -->
   <section class="hero">
@@ -154,119 +396,118 @@
 
   <!-- QUICK ACTIONS -->
   <div class="container">
-    <!-- Update this section in index.html -->
-<div class="quick-actions">
-    <a href="/lost.html" class="quick-action">
+    <div class="quick-actions">
+      <a href="/lost.html" class="quick-action">
         <i class="fas fa-search"></i>
         <h3>Lost Something?</h3>
         <p>Report lost items or check found items</p>
-    </a>
-    
-    <a href="/marketplace.html" class="quick-action">
+      </a>
+      
+      <a href="/marketplace.html" class="quick-action">
         <i class="fas fa-tag"></i>
         <h3>Buy/Sell</h3>
         <p>Second-hand items at student-friendly prices</p>
-    </a>
-    
-    <a href="/questionpaper.html" class="quick-action">
+      </a>
+      
+      <a href="/questionpaper.html" class="quick-action">
         <i class="fas fa-book"></i>
         <h3>Question-Papers</h3>
         <p>Access previous year question papers</p>
-    </a>
-    
-    <a href="/rentals.html" class="quick-action">
+      </a>
+      
+      <a href="/rentals.html" class="quick-action">
         <i class="fa-solid fa-briefcase"></i>
         <h3>Services</h3>
         <p>Get different services</p>
-    </a>
+      </a>
 
-    <!-- Add this new quick action for timetable -->
-    <a href="timetable.html" class="quick-action">
+      <a href="timetable.html" class="quick-action">
         <i class="fas fa-calendar-alt"></i>
         <h3>View Timetable</h3>
         <p>Check your class schedule and timetable</p>
-    </a>
+      </a>
 
-    <a href="/manual.html" class="quick-action">
+      <a href="/manual.html" class="quick-action">
         <i class="fa-solid fa-briefcase"></i>
         <h3>User Guide</h3>
         <p>Know More About Nerist Hub</p>
-    </a>
-</div>
-  </div>
-  <!-- FEATURES -->
-  <section class="features">
-  <div class="container">
-    <h2 class="section-title">Our Services</h2>
-    <p class="section-subtitle">Click on any service below to explore</p>
-    <div class="features-grid">
-      <div class="feature-card" onclick="window.location.href='/lost.html'">
-        <div class="feature-icon">
-          <i class="fas fa-check-circle"></i>
-        </div>
-        <h3>Lost & Found</h3>
-        <p>Connect lost items with their owners through our efficient reporting system</p>
-        <span class="feature-link-hint">
-          <i class="fas fa-arrow-right"></i> Explore
-        </span>
-      </div>
-      
-      <div class="feature-card" onclick="window.location.href='/buy-requests.html'">
-        <div class="feature-icon">
-          <i class="fas fa-shopping-cart"></i>
-        </div>
-        <h3>Campus Marketplace</h3>
-        <p>Buy and sell second-hand items within campus safely and conveniently</p>
-        <span class="feature-link-hint">
-          <i class="fas fa-arrow-right"></i> Explore
-        </span>
-      </div>
-      
-      <div class="feature-card" onclick="window.location.href='/questionpaper.html'">
-        <div class="feature-icon">
-          <i class="fas fa-upload"></i>
-        </div>
-        <h3>Upload-Question-Papers</h3>
-        <p>Upload previous year question papers </p>
-        <span class="feature-link-hint">
-          <i class="fas fa-arrow-right"></i> Explore
-        </span>
-      </div>
-      
-      <div class="feature-card" onclick="window.location.href='/map.html'">
-        <div class="feature-icon">
-          <i class="fas fa-map-marked-alt"></i>
-        </div>
-        <h3>Campus Navigation</h3>
-        <p>Interactive map to find labs, classrooms, and other facilities easily</p>
-        <span class="feature-link-hint">
-          <i class="fas fa-arrow-right"></i> Explore
-        </span>
-      </div>
-
-      <div class="feature-card" onclick="window.location.href='/timetable.html'">
-        <div class="feature-icon">
-          <i class="fas fa-users"></i>
-        </div>
-        <h3>Teachers-Directory</h3>
-        <p>Search teachers</p>
-        <span class="feature-link-hint">
-          <i class="fas fa-arrow-right"></i> Explore
-        </span>
-      </div>
-      <div class="feature-card" onclick="window.location.href='https://docs.google.com/forms/d/e/1FAIpQLSe1XYRtRNLUKZoS1a44XJWvRnq5Amk0UD036FmEJMXb974_VA/viewform?usp=header'">
-        <div class="feature-icon">
-          <i class="fas fa-shopping-cart"></i>
-        </div>
-        <h3> Give feedback</h3>
-        <p>Help us improve! Submit suggestions, report bugs, or request new features.</p>
-        <span class="feature-link-hint">
-          <i class="fas fa-arrow-right"></i> Explore
-        </span>
-      </div>
+      </a>
     </div>
   </div>
-</section>
+
+  <!-- FEATURES -->
+  <section class="features">
+    <div class="container">
+      <h2 class="section-title">Our Services</h2>
+      <p class="section-subtitle">Click on any service below to explore</p>
+      <div class="features-grid">
+        <div class="feature-card" onclick="window.location.href='/lost.html'">
+          <div class="feature-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <h3>Lost & Found</h3>
+          <p>Connect lost items with their owners through our efficient reporting system</p>
+          <span class="feature-link-hint">
+            <i class="fas fa-arrow-right"></i> Explore
+          </span>
+        </div>
+        
+        <div class="feature-card" onclick="window.location.href='/buy-requests.html'">
+          <div class="feature-icon">
+            <i class="fas fa-shopping-cart"></i>
+          </div>
+          <h3>Campus Marketplace</h3>
+          <p>Buy and sell second-hand items within campus safely and conveniently</p>
+          <span class="feature-link-hint">
+            <i class="fas fa-arrow-right"></i> Explore
+          </span>
+        </div>
+        
+        <div class="feature-card" onclick="window.location.href='/questionpaper.html'">
+          <div class="feature-icon">
+            <i class="fas fa-upload"></i>
+          </div>
+          <h3>Upload-Question-Papers</h3>
+          <p>Upload previous year question papers </p>
+          <span class="feature-link-hint">
+            <i class="fas fa-arrow-right"></i> Explore
+          </span>
+        </div>
+        
+        <div class="feature-card" onclick="window.location.href='/map.html'">
+          <div class="feature-icon">
+            <i class="fas fa-map-marked-alt"></i>
+          </div>
+          <h3>Campus Navigation</h3>
+          <p>Interactive map to find labs, classrooms, and other facilities easily</p>
+          <span class="feature-link-hint">
+            <i class="fas fa-arrow-right"></i> Explore
+          </span>
+        </div>
+
+        <div class="feature-card" onclick="window.location.href='/timetable.html'">
+          <div class="feature-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <h3>Teachers-Directory</h3>
+          <p>Search teachers</p>
+          <span class="feature-link-hint">
+            <i class="fas fa-arrow-right"></i> Explore
+          </span>
+        </div>
+        <div class="feature-card" onclick="window.location.href='https://docs.google.com/forms/d/e/1FAIpQLSe1XYRtRNLUKZoS1a44XJWvRnq5Amk0UD036FmEJMXb974_VA/viewform?usp=header'">
+          <div class="feature-icon">
+            <i class="fas fa-shopping-cart"></i>
+          </div>
+          <h3>Give feedback</h3>
+          <p>Help us improve! Submit suggestions, report bugs, or request new features.</p>
+          <span class="feature-link-hint">
+            <i class="fas fa-arrow-right"></i> Explore
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- CHATBOT -->
   <div id="chatbot-btn" onclick="toggleChat()">
@@ -295,7 +536,6 @@
 
   <!-- FOOTER -->
   <footer class="footer">
-    <!-- Your existing footer content -->
     <div class="container">
       <div class="footer-content">
         <!-- Brand Section -->
@@ -391,39 +631,192 @@
     <i class="fas fa-arrow-up"></i>
   </button>
 
+  <!-- Welcome Popup for New Users -->
+  <div id="welcomePopup" class="welcome-popup-overlay" style="display: none;">
+    <div class="welcome-popup">
+      <div class="popup-header">
+        <h2>🎓 Welcome to NERIST Hub!</h2>
+        <button class="close-popup" onclick="closeWelcomePopup()"><i class="fas fa-times"></i></button>
+      </div>
+      
+      <p class="popup-subtitle">Your all-in-one campus platform — here's what you can do:</p>
+      
+      <div class="popup-features-grid">
+        <div class="popup-feature-item">
+          <i class="fas fa-map-marked-alt"></i>
+          <h4>Campus Map</h4>
+          <p>Interactive navigation to labs, classrooms & departments</p>
+        </div>
+        
+        <div class="popup-feature-item">
+          <i class="fas fa-search"></i>
+          <h4>Lost & Found</h4>
+          <p>Report lost items or browse found property</p>
+        </div>
+
+        <div class="popup-feature-item">
+          <i class="fas fa-upload"></i>
+          <h4>Upload Papers</h4>
+          <p>Upload previous year question papers</p>
+        </div>
+        
+        <div class="popup-feature-item">
+          <i class="fas fa-tag"></i>
+          <h4>Marketplace</h4>
+          <p>Buy & sell second-hand items safely</p>
+        </div>
+        
+        <div class="popup-feature-item">
+          <i class="fas fa-chalkboard-teacher"></i>
+          <h4>Faculty Directory</h4>
+          <p>Search teachers & staff contact info</p>
+        </div>
+        
+        <div class="popup-feature-item">
+          <i class="fa-solid fa-briefcase"></i>
+          <h4>Services</h4>
+          <p>Rentals, printing & other campus services</p>
+        </div>
+        
+        <div class="popup-feature-item">
+          <i class="fas fa-calendar-alt"></i>
+          <h4>Timetable</h4>
+          <p>View your class schedule</p>
+        </div>
+        
+        <div class="popup-feature-item">
+          <i class="fas fa-comment-dots"></i>
+          <h4>Feedback</h4>
+          <p>Help us improve & suggest features</p>
+        </div>
+      </div>
+      
+      <div class="popup-highlight">
+        <i class="fas fa-map"></i>
+        <div class="popup-highlight-text">
+          <h4>📍 Start with Campus Map</h4>
+          <p>Find your way around NERIST easily — labs, classrooms, departments all mapped out!</p>
+        </div>
+      </div>
+      
+      <div class="dont-show-container">
+        <input type="checkbox" id="dontShowAgain">
+        <label for="dontShowAgain">Don't show this again</label>
+      </div>
+      
+      <div class="popup-actions">
+        <button class="popup-btn popup-btn-secondary" onclick="closeWelcomePopup()">
+          <i class="fas fa-later"></i> Later
+        </button>
+        <button class="popup-btn popup-btn-primary" onclick="goToMap()">
+          <i class="fas fa-map-marked-alt"></i> Explore Campus Map
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
   <script>
     // Authentication JavaScript
     function checkAuth() {
-        const user = Auth.getCurrentUser();
-        
-        if (user) {
-            document.getElementById('welcome-message').style.display = 'flex';
-            document.getElementById('user-name').textContent = user.name;
-            document.getElementById('user-regno').textContent = user.registrationNumber;
-            document.getElementById('login-btn').style.display = 'none';
-            document.getElementById('logout-btn').style.display = 'flex';
-            
-            return user;
-        }
-        
-        document.getElementById('login-btn').style.display = 'flex';
-        document.getElementById('logout-btn').style.display = 'none';
-        document.getElementById('welcome-message').style.display = 'none';
-        return null;
+      const user = Auth.getCurrentUser ? Auth.getCurrentUser() : null;
+      
+      if (user) {
+        document.getElementById('welcome-message').style.display = 'flex';
+        document.getElementById('user-name').textContent = user.name || 'User';
+        document.getElementById('user-regno').textContent = user.registrationNumber || '000';
+        document.getElementById('login-btn').style.display = 'none';
+        document.getElementById('logout-btn').style.display = 'flex';
+        return user;
+      }
+      
+      document.getElementById('login-btn').style.display = 'flex';
+      document.getElementById('logout-btn').style.display = 'none';
+      document.getElementById('welcome-message').style.display = 'none';
+      return null;
     }
     
     // Event listeners
     document.getElementById('login-btn').addEventListener('click', () => {
-        window.location.href = 'login.html';
+      window.location.href = 'login.html';
     });
     
     document.getElementById('logout-btn').addEventListener('click', () => {
-        Auth.logout();
+      if (Auth.logout) Auth.logout();
     });
     
-    // Check auth on page load
-    document.addEventListener('DOMContentLoaded', checkAuth);
+    // Welcome Popup Functions
+    function showWelcomePopupIfNeeded() {
+      const hasSeenPopup = localStorage.getItem('neristHubWelcomeSeen');
+      
+      if (!hasSeenPopup) {
+        document.getElementById('welcomePopup').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // Track popup view in Google Analytics
+        if (typeof gtag !== 'undefined') {
+          gtag('event', 'welcome_popup_viewed', {
+            'event_category': 'engagement',
+            'event_label': 'new_user_popup'
+          });
+        }
+      }
+    }
+    
+    function closeWelcomePopup() {
+      document.getElementById('welcomePopup').style.display = 'none';
+      document.body.style.overflow = '';
+      
+      const dontShowAgain = document.getElementById('dontShowAgain').checked;
+      if (dontShowAgain) {
+        localStorage.setItem('neristHubWelcomeSeen', 'true');
+        
+        // Track opt-out in Google Analytics
+        if (typeof gtag !== 'undefined') {
+          gtag('event', 'welcome_popup_opt_out', {
+            'event_category': 'preference',
+            'event_label': 'dont_show_again'
+          });
+        }
+      }
+    }
+    
+    function goToMap() {
+      const dontShowAgain = document.getElementById('dontShowAgain').checked;
+      if (dontShowAgain) {
+        localStorage.setItem('neristHubWelcomeSeen', 'true');
+      }
+      
+      // Track map click in Google Analytics
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'welcome_popup_map_click', {
+          'event_category': 'navigation',
+          'event_label': 'explore_campus_map'
+        });
+      }
+      
+      window.location.href = '/map.html';
+    }
+    
+    // Close popup when clicking outside
+    window.addEventListener('click', function(e) {
+      const popup = document.getElementById('welcomePopup');
+      if (e.target === popup) {
+        closeWelcomePopup();
+      }
+    });
+    
+    // Check auth and show popup on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      checkAuth();
+      showWelcomePopupIfNeeded();
+      
+      // Load saved theme
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'light') {
+        document.body.classList.add('light-theme');
+      }
+    });
     
     // Chatbot functions
     function toggleChat() {
@@ -459,12 +852,32 @@
     function toggleTheme() {
       document.body.classList.toggle('light-theme');
       localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
+      
+      // Track theme toggle in Google Analytics
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'theme_toggle', {
+          'event_category': 'preference',
+          'event_label': document.body.classList.contains('light-theme') ? 'light' : 'dark'
+        });
+      }
     }
     
-    // Load saved theme
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light') {
-      document.body.classList.add('light-theme');
+    // Popup functions (for footer social)
+    window.showComingSoon = function(platform) {
+      document.getElementById('popupPlatform').innerText = platform;
+      document.getElementById('comingSoonPopup').style.display = 'flex';
+      
+      // Track social click in Google Analytics
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'social_click', {
+          'event_category': 'engagement',
+          'event_label': platform
+        });
+      }
+    }
+    
+    window.closePopup = function() {
+      document.getElementById('comingSoonPopup').style.display = 'none';
     }
   </script>
 
