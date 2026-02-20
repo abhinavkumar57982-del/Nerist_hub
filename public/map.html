@@ -99,6 +99,7 @@
       gap: 20px;
       min-height: calc(100vh - 180px);
       padding: 20px 0;
+      position: relative;
     }
     
     .map-sidebar {
@@ -116,6 +117,7 @@
       flex: 1;
       display: flex;
       flex-direction: column;
+      position: relative;
     }
     
     /* Control Panel Styles */
@@ -392,7 +394,7 @@
       z-index: 3000 !important;
     }
     
-    /* Loading overlay */
+    /* ===== FIXED LOADING OVERLAY STYLES ===== */
     #loadingOverlay {
       position: absolute;
       top: 0;
@@ -405,8 +407,10 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      transition: opacity 0.5s;
+      transition: opacity 0.5s ease;
       border-radius: var(--radius-lg);
+      opacity: 1;
+      pointer-events: none;
     }
     
     .spinner {
@@ -417,11 +421,19 @@
       border-radius: 50%;
       animation: spin 1s linear infinite;
       margin-bottom: 25px;
+      display: block;
     }
     
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
+    }
+    
+    #loadingOverlay h3,
+    #loadingOverlay p {
+      color: white !important;
+      margin: 10px 0;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     
     /* Zoom indicator */
@@ -472,13 +484,13 @@
         border-right: none;
         padding: 20px 16px;
         margin: 0;
-        order: 2; /* Sidebar below map */
+        order: 2;
       }
       
       .map-content {
         width: 100%;
         padding: 0 16px 20px;
-        order: 1; /* Map on top */
+        order: 1;
       }
       
       #map-container {
@@ -489,7 +501,6 @@
         width: 100%;
       }
       
-      /* Fullscreen on mobile */
       #map-container.fullscreen {
         height: 100vh;
         border-radius: 0;
@@ -633,7 +644,6 @@
       </div>
     </div>
     
-    <!-- NEW: Teacher Directory Menu -->
     <div class="menu">
       <span><i class="fas fa-chalkboard-teacher"></i> Faculty ▾</span>
       <div class="dropdown">
@@ -802,8 +812,8 @@
       <!-- Loading Overlay -->
       <div id="loadingOverlay">
         <div class="spinner"></div>
-        <h3 style="color: white;">Loading Campus Map</h3>
-        <p id="loadingStatus" style="color: white;">Initializing...</p>
+        <h3>Loading Campus Map</h3>
+        <p id="loadingStatus">Initializing...</p>
       </div>
       
       <!-- Map Container with Fullscreen Button -->
@@ -915,7 +925,6 @@
   <!-- AUTH UI FIX FOR MAP PAGE -->
   <script>
     (function() {
-      // Function to update auth UI
       function updateAuthUI() {
         const user = window.Auth ? window.Auth.getCurrentUser() : null;
         const welcomeMessage = document.getElementById('welcome-message');
@@ -939,7 +948,6 @@
         }
       }
       
-      // Set up event listeners for auth buttons
       function setupAuthListeners() {
         const loginBtn = document.getElementById('login-btn');
         const logoutBtn = document.getElementById('logout-btn');
@@ -959,11 +967,9 @@
         }
       }
       
-      // Run immediately
       updateAuthUI();
       setupAuthListeners();
       
-      // Run after various delays to ensure scripts are loaded
       setTimeout(updateAuthUI, 50);
       setTimeout(updateAuthUI, 100);
       setTimeout(updateAuthUI, 200);
@@ -971,16 +977,13 @@
       setTimeout(updateAuthUI, 500);
       setTimeout(updateAuthUI, 1000);
       
-      // Listen for auth state changes
       window.addEventListener('authStateChanged', updateAuthUI);
       
-      // Also run on load
       window.addEventListener('load', function() {
         updateAuthUI();
         setupAuthListeners();
       });
       
-      // Run on DOMContentLoaded
       document.addEventListener('DOMContentLoaded', function() {
         updateAuthUI();
         setupAuthListeners();
@@ -1000,34 +1003,28 @@
       const mapSidebar = document.querySelector('.map-sidebar');
       
       if (!mapContainer.classList.contains('fullscreen')) {
-        // Enter fullscreen
         mapContainer.classList.add('fullscreen');
         fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i> <span>Exit</span>';
         fullscreenBtn.classList.add('exit');
         
-        // Hide other elements
         if (navbar) navbar.style.display = 'none';
         if (footer) footer.style.display = 'none';
         if (mapSidebar) mapSidebar.style.display = 'none';
         
-        // Adjust map size
         setTimeout(() => {
           if (window.campusMap) {
             window.campusMap.invalidateSize();
           }
         }, 100);
       } else {
-        // Exit fullscreen
         mapContainer.classList.remove('fullscreen');
         fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i> <span>Fullscreen</span>';
         fullscreenBtn.classList.remove('exit');
         
-        // Show other elements
         if (navbar) navbar.style.display = 'flex';
         if (footer) footer.style.display = 'block';
         if (mapSidebar) mapSidebar.style.display = 'block';
         
-        // Adjust map size
         setTimeout(() => {
           if (window.campusMap) {
             window.campusMap.invalidateSize();
@@ -1036,7 +1033,6 @@
       }
     }
     
-    // Handle Escape key to exit fullscreen
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
         const mapContainer = document.getElementById('map-container');
@@ -1056,6 +1052,12 @@
     let labelDatabase = [];
     let labelLayers = [];
     
+    // Road network storage
+    let roadNodes = [];
+    let roadEdges = [];
+    let roadGraph = null;
+    let roadSegments = [];
+    
     // Layer storage
     let buildingLayers = [];
     let roomLayers = [];
@@ -1067,7 +1069,6 @@
     // MAP INITIALIZATION
     // ============================================
     document.addEventListener('DOMContentLoaded', function() {
-      // Initialize map with viewport checking
       const isMobile = window.innerWidth <= 768;
       const defaultZoom = isMobile ? 16 : 17;
       
@@ -1079,23 +1080,358 @@
         minZoom: 15
       }).addTo(map);
       
-      // Store map globally for app.js to access
       window.campusMap = map;
       
-      // Force map to recalculate size on mobile - multiple times for reliability
-      setTimeout(() => {
-        map.invalidateSize();
-        console.log('Map size invalidated on init');
-      }, 300);
+      setTimeout(() => map.invalidateSize(), 300);
+      setTimeout(() => map.invalidateSize(), 1000);
       
-      setTimeout(() => {
-        map.invalidateSize();
-        console.log('Map size invalidated again');
-      }, 1000);
-      
-      // Initialize all map features
       initializeMapFeatures(map);
     });
+
+    // ============================================
+    // ROAD NETWORK FUNCTIONS - DEBUG VERSION
+    // ============================================
+    function buildRoadNetwork() {
+      console.log('🏗️ Building road network from MultiLineString features...');
+      console.log('Total road layers:', roadLayers.length);
+      
+      roadNodes = [];
+      roadEdges = [];
+      roadSegments = [];
+      
+      if (roadLayers.length === 0) {
+        console.error('❌ No road layers found! ROAD.geojson may not have loaded.');
+        return;
+      }
+      
+      // Process each road layer
+      roadLayers.forEach((layerInfo, layerIndex) => {
+        const layer = layerInfo.layer;
+        console.log(`\n📁 Processing road layer ${layerIndex}:`, layer);
+        
+        // For GeoJSON layers, access internal layers directly
+        if (layer && layer._layers) {
+          const featureCount = Object.keys(layer._layers).length;
+          console.log(`   Found ${featureCount} features in layer`);
+          
+          // Iterate through each feature in the GeoJSON layer
+          Object.keys(layer._layers).forEach(key => {
+            const roadLayer = layer._layers[key];
+            console.log(`   🔍 Feature key: ${key}`, roadLayer);
+            
+            if (roadLayer.feature && roadLayer.feature.geometry) {
+              const geometry = roadLayer.feature.geometry;
+              const roadName = roadLayer.feature.properties?.name || 'Unnamed Road';
+              
+              console.log(`      Processing: ${roadName}`);
+              console.log(`      Geometry type: ${geometry.type}`);
+              
+              // Handle MultiLineString (your data uses this)
+              if (geometry.type === 'MultiLineString') {
+                console.log(`      MultiLineString with ${geometry.coordinates.length} segments`);
+                // Each MultiLineString contains multiple LineStrings
+                geometry.coordinates.forEach((lineString, index) => {
+                  console.log(`         Segment ${index+1} has ${lineString.length} points`);
+                  console.log(`         First point:`, lineString[0]);
+                  console.log(`         Last point:`, lineString[lineString.length-1]);
+                  processRoadLineString(lineString, `${roadName} (segment ${index+1})`);
+                });
+              } 
+              // Handle LineString (fallback)
+              else if (geometry.type === 'LineString') {
+                console.log(`      LineString with ${geometry.coordinates.length} points`);
+                processRoadLineString(geometry.coordinates, roadName);
+              }
+            } else {
+              console.log('      ❌ Feature has no geometry');
+            }
+          });
+        } else {
+          console.log('  ❌ Layer has no _layers property');
+        }
+      });
+      
+      // Build adjacency list for faster pathfinding
+      buildGraph();
+      
+      console.log('\n' + '='.repeat(60));
+      console.log(`✅ Road network built: ${roadNodes.length} nodes, ${roadEdges.length} edges`);
+      console.log('='.repeat(60));
+      
+      if (roadNodes.length === 0) {
+        console.error('❌ No road nodes created! Check if ROAD.geojson loaded properly.');
+        console.error('   Possible issues:');
+        console.error('   1. ROAD.geojson file path is incorrect');
+        console.error('   2. ROAD.geojson has wrong format');
+        console.error('   3. CORS issues preventing file loading');
+      } else {
+        console.log('Road network ready for routing');
+        console.log('First 5 nodes:', roadNodes.slice(0, 5));
+        console.log('First 5 edges:', roadEdges.slice(0, 5));
+      }
+    }
+
+    function processRoadLineString(coordinates, roadName) {
+      if (coordinates.length < 2) return;
+      
+      const segmentNodes = [];
+      
+      // Create nodes for each coordinate
+      for (let i = 0; i < coordinates.length; i++) {
+        const coord = coordinates[i];
+        // GeoJSON uses [lng, lat] format - IMPORTANT!
+        const lng = coord[0];
+        const lat = coord[1];
+        
+        const node = findOrCreateNode(lat, lng);
+        segmentNodes.push(node);
+      }
+      
+      // Create edges between consecutive nodes
+      for (let i = 0; i < segmentNodes.length - 1; i++) {
+        const node1 = segmentNodes[i];
+        const node2 = segmentNodes[i + 1];
+        
+        // Calculate distance in meters
+        const distance = calculateDistance(node1.lat, node1.lng, node2.lat, node2.lng);
+        
+        // Store segment for debugging
+        roadSegments.push({
+          roadName: roadName,
+          node1: node1,
+          node2: node2,
+          distance: distance
+        });
+        
+        // Add edge in both directions (bidirectional roads)
+        roadEdges.push({
+          from: node1.id,
+          to: node2.id,
+          distance: distance
+        });
+        roadEdges.push({
+          from: node2.id,
+          to: node1.id,
+          distance: distance
+        });
+      }
+    }
+
+    function findOrCreateNode(lat, lng) {
+      // Round to 6 decimal places for comparison (about 0.1 meter accuracy)
+      const roundedLat = Math.round(lat * 1000000) / 1000000;
+      const roundedLng = Math.round(lng * 1000000) / 1000000;
+      
+      // Check if node already exists (within 3 meters tolerance)
+      for (let i = 0; i < roadNodes.length; i++) {
+        const node = roadNodes[i];
+        const distance = calculateDistance(node.lat, node.lng, roundedLat, roundedLng);
+        if (distance < 3.0) { // 3 meter tolerance for merging nearby nodes
+          return node;
+        }
+      }
+      
+      // Create new node
+      const newNode = {
+        id: roadNodes.length,
+        lat: roundedLat,
+        lng: roundedLng,
+        latlng: L.latLng(roundedLat, roundedLng)
+      };
+      roadNodes.push(newNode);
+      return newNode;
+    }
+    
+    function calculateDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371e3; // Earth's radius in meters
+      const φ1 = lat1 * Math.PI / 180;
+      const φ2 = lat2 * Math.PI / 180;
+      const Δφ = (lat2 - lat1) * Math.PI / 180;
+      const Δλ = (lng2 - lng1) * Math.PI / 180;
+      
+      const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      
+      return R * c; // Distance in meters
+    }
+    
+    function buildGraph() {
+      // Create adjacency list for faster pathfinding
+      roadGraph = new Array(roadNodes.length);
+      for (let i = 0; i < roadNodes.length; i++) {
+        roadGraph[i] = [];
+      }
+      
+      roadEdges.forEach(edge => {
+        roadGraph[edge.from].push({
+          to: edge.to,
+          distance: edge.distance
+        });
+      });
+    }
+    
+    function findNearestRoadNode(lat, lng) {
+      if (roadNodes.length === 0) return null;
+      
+      let nearestNode = roadNodes[0];
+      let minDistance = calculateDistance(lat, lng, nearestNode.lat, nearestNode.lng);
+      
+      for (let i = 1; i < roadNodes.length; i++) {
+        const node = roadNodes[i];
+        const distance = calculateDistance(lat, lng, node.lat, node.lng);
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestNode = node;
+        }
+      }
+      
+      return {
+        node: nearestNode,
+        distance: minDistance
+      };
+    }
+    
+    function findShortestPath(startLatLng, endLatLng) {
+      if (roadNodes.length === 0 || roadEdges.length === 0) {
+        console.warn('⚠️ Road network not available - using straight line');
+        return {
+          path: [[startLatLng.lat, startLatLng.lng], [endLatLng.lat, endLatLng.lng]],
+          distance: calculateDistance(startLatLng.lat, startLatLng.lng, endLatLng.lat, endLatLng.lng),
+          usingRoads: false
+        };
+      }
+      
+      // Find nearest nodes on road network
+      const startNearest = findNearestRoadNode(startLatLng.lat, startLatLng.lng);
+      const endNearest = findNearestRoadNode(endLatLng.lat, endLatLng.lng);
+      
+      if (!startNearest || !endNearest) {
+        console.warn('⚠️ Could not find nearest road nodes - using straight line');
+        return {
+          path: [[startLatLng.lat, startLatLng.lng], [endLatLng.lat, endLatLng.lng]],
+          distance: calculateDistance(startLatLng.lat, startLatLng.lng, endLatLng.lat, endLatLng.lng),
+          usingRoads: false
+        };
+      }
+      
+      console.log(`🚦 Start nearest node: ${startNearest.node.id} (distance: ${startNearest.distance.toFixed(2)}m)`);
+      console.log(`🚦 End nearest node: ${endNearest.node.id} (distance: ${endNearest.distance.toFixed(2)}m)`);
+      
+      // If start and end are the same node or very close, use direct path
+      const directDistance = calculateDistance(startLatLng.lat, startLatLng.lng, endLatLng.lat, endLatLng.lng);
+      if (directDistance < 20 || startNearest.node.id === endNearest.node.id) {
+        console.log('📍 Points are very close - using direct path');
+        return {
+          path: [[startLatLng.lat, startLatLng.lng], [endLatLng.lat, endLatLng.lng]],
+          distance: directDistance,
+          usingRoads: false
+        };
+      }
+      
+      // Dijkstra's algorithm for shortest path on road network
+      const distances = new Array(roadNodes.length).fill(Infinity);
+      const previous = new Array(roadNodes.length).fill(null);
+      const visited = new Array(roadNodes.length).fill(false);
+      
+      distances[startNearest.node.id] = 0;
+      
+      // Priority queue using array
+      const unvisited = [];
+      for (let i = 0; i < roadNodes.length; i++) {
+        unvisited.push(i);
+      }
+      
+      let iterations = 0;
+      const maxIterations = roadNodes.length * 2;
+      
+      while (unvisited.length > 0 && iterations < maxIterations) {
+        iterations++;
+        
+        // Find node with smallest distance
+        let currentId = -1;
+        let minDistance = Infinity;
+        let minIndex = -1;
+        
+        for (let i = 0; i < unvisited.length; i++) {
+          const nodeId = unvisited[i];
+          if (distances[nodeId] < minDistance) {
+            minDistance = distances[nodeId];
+            currentId = nodeId;
+            minIndex = i;
+          }
+        }
+        
+        if (currentId === -1 || minDistance === Infinity) break;
+        
+        // Remove from unvisited
+        unvisited.splice(minIndex, 1);
+        visited[currentId] = true;
+        
+        // Stop if we reached the destination
+        if (currentId === endNearest.node.id) break;
+        
+        // Check all edges from current node
+        if (roadGraph && roadGraph[currentId]) {
+          roadGraph[currentId].forEach(edge => {
+            if (!visited[edge.to]) {
+              const newDistance = distances[currentId] + edge.distance;
+              if (newDistance < distances[edge.to]) {
+                distances[edge.to] = newDistance;
+                previous[edge.to] = currentId;
+              }
+            }
+          });
+        }
+      }
+      
+      // Check if path was found
+      if (distances[endNearest.node.id] === Infinity) {
+        console.warn('⚠️ No path found between nodes - using straight line');
+        return {
+          path: [[startLatLng.lat, startLatLng.lng], [endLatLng.lat, endLatLng.lng]],
+          distance: directDistance,
+          usingRoads: false
+        };
+      }
+      
+      // Reconstruct path
+      const pathNodes = [];
+      let current = endNearest.node.id;
+      
+      while (current !== null) {
+        pathNodes.unshift(roadNodes[current]);
+        current = previous[current];
+      }
+      
+      console.log(`🛣️ Path found with ${pathNodes.length} road nodes, distance: ${distances[endNearest.node.id].toFixed(2)}m`);
+      
+      // Build path coordinates including start and end points
+      const path = [];
+      
+      // Add start point
+      path.push([startLatLng.lat, startLatLng.lng]);
+      
+      // Add road nodes
+      for (let i = 0; i < pathNodes.length; i++) {
+        path.push([pathNodes[i].lat, pathNodes[i].lng]);
+      }
+      
+      // Add end point
+      path.push([endLatLng.lat, endLatLng.lng]);
+      
+      return {
+        path: path,
+        distance: distances[endNearest.node.id] + startNearest.distance + endNearest.distance,
+        usingRoads: true,
+        nodes: {
+          start: startNearest,
+          end: endNearest,
+          pathNodes: pathNodes
+        }
+      };
+    }
 
     // ============================================
     // HELPER FUNCTIONS
@@ -1127,23 +1463,19 @@
       return icons[type] || 'fas fa-map-marker-alt';
     }
     
-    // FIXED: Updated to handle AGRI and FORESTRY department labels
     function extractNameFromProperties(properties, filename, type) {
       if (!properties) {
         return filename.replace('.geojson', '').replace(/_/g, ' ');
       }
       
-      // Special case for AGRI.geojson - show "AGRI & HUMANITY"
       if (filename === 'AGRI.geojson') {
         return "AGRICULTURE AND HUMANITY DEPT";
       }
       
-      // Special case for DEPT OF FORESTRY.geojson
       if (filename === 'DEPT OF FORESTRY.geojson') {
         return "PHYSICS, CHEMISTRY & FORESTRY";
       }
       
-      // Special case for CSE DEPT.geojson - show all three departments
       if (filename === 'CSE DEPT.geojson') {
         return "CSE, EE, ECE";
       }
@@ -1480,21 +1812,25 @@
     }
 
     // ============================================
-    // GEOJSON LOADER
+    // GEOJSON LOADER - FIXED VERSION
     // ============================================
     async function loadGeoJSONFile(filename, type, color) {
       const url = `/geojson/${filename}`;
       const map = window.campusMap;
       
+      console.log(`📂 Attempting to load: ${url}`);
+      
       try {
         const response = await fetch(url);
         if (!response.ok) {
-          console.warn(`⚠️ File not found: ${filename}`);
+          console.warn(`⚠️ File not found: ${filename} (Status: ${response.status})`);
           return { success: false, layer: null, features: 0 };
         }
         
         const data = await response.json();
         const features = data.features || [];
+        
+        console.log(`✅ Loaded ${filename}: ${features.length} features`);
         
         const layer = L.geoJSON(data, {
           style: {
@@ -1553,7 +1889,10 @@
             if (type === 'building') buildingLayers.push(layerInfo);
             else if (type === 'room') roomLayers.push(layerInfo);
             else if (type === 'department') departmentLayers.push(layerInfo);
-            else if (type === 'road') roadLayers.push(layerInfo);
+            else if (type === 'road') {
+              console.log(`🛣️ Adding road layer from ${filename}`);
+              roadLayers.push(layerInfo);
+            }
             else if (type === 'corridor') corridorLayers.push(layerInfo);
             
             console.log(`📝 Loaded ${type}: ${name} from ${filename}`);
@@ -1596,6 +1935,7 @@
       
       console.log('📂 Starting to load GeoJSON files...');
       
+      // Load all files
       for (const geoFile of geoFiles) {
         updateLoadingStatus(`Loading ${geoFile.filename}...`);
         console.log(`\n🔍 Loading: ${geoFile.filename}`);
@@ -1611,6 +1951,11 @@
         }
         
         await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      
+      // Build road network after all roads are loaded
+      if (roadLayers.length > 0) {
+        buildRoadNetwork();
       }
       
       return { loadedCount, totalFeatures };
@@ -1700,7 +2045,6 @@
     // EVENT HANDLERS
     // ============================================
     function setupEventListeners(map) {
-      // Search input event
       const searchInput = document.getElementById('searchInput');
       if (searchInput) {
         searchInput.addEventListener('input', function(e) {
@@ -1708,11 +2052,9 @@
         });
       }
       
-      // Map zoom event for label visibility
       map.on('zoomend', updateLabelVisibility);
       map.on('moveend', updateLabelVisibility);
       
-      // Layer controls
       const toggleBuildings = document.getElementById('toggleBuildings');
       if (toggleBuildings) {
         toggleBuildings.addEventListener('change', function(e) {
@@ -1763,7 +2105,6 @@
         });
       }
       
-      // Route calculation
       const calculateRoute = document.getElementById('calculateRoute');
       if (calculateRoute) {
         calculateRoute.addEventListener('click', function() {
@@ -1791,46 +2132,82 @@
           
           if (currentRoute) {
             map.removeLayer(currentRoute);
+            currentRoute = null;
           }
           
-          currentRoute = L.polyline([startLatLng, endLatLng], {
-            color: '#f39c12',
-            weight: 6,
-            opacity: 0.9
-          }).addTo(map);
+          map.eachLayer(layer => {
+            if (layer instanceof L.Marker && layer.options && 
+                (layer.options.className === 'route-start' || 
+                 layer.options.className === 'route-end')) {
+              map.removeLayer(layer);
+            }
+          });
           
-          L.marker(startLatLng, {
-            icon: L.divIcon({
-              html: '<div style="background: #3498db; color: white; padding: 8px; border-radius: 50%; font-size: 18px; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"><i class="fas fa-play"></i></div>',
-              className: 'route-start',
-              iconSize: [40, 40]
-            })
-          }).addTo(map).bindPopup('<b>Start Point</b>').openPopup();
+          const pathResult = findShortestPath(startLatLng, endLatLng);
           
-          L.marker(endLatLng, {
-            icon: L.divIcon({
-              html: '<div style="background: #e74c3c; color: white; padding: 8px; border-radius: 50%; font-size: 18px; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"><i class="fas fa-flag"></i></div>',
-              className: 'route-end',
-              iconSize: [40, 40]
-            })
-          }).addTo(map).bindPopup(`<b>Destination:</b> ${selectedLocation.name}`).openPopup();
-          
-          const routeInfo = document.getElementById('routeInfo');
-          if (routeInfo) routeInfo.style.display = 'block';
-          
-          const distance = map.distance(startLatLng, endLatLng);
-          const routeDistance = document.getElementById('routeDistance');
-          const routeTime = document.getElementById('routeTime');
-          
-          if (routeDistance) routeDistance.textContent = (distance / 1000).toFixed(2) + ' km';
-          if (routeTime) routeTime.textContent = Math.round((distance / 1000) * 15) + ' minutes';
-          
-          const bounds = L.latLngBounds([startLatLng, endLatLng]);
-          map.fitBounds(bounds, { padding: [100, 100], maxZoom: 19 });
+          if (pathResult && pathResult.path && pathResult.path.length >= 2) {
+            const lineStyle = pathResult.usingRoads ? {
+              color: '#f39c12',
+              weight: 6,
+              opacity: 0.9,
+              lineCap: 'round',
+              lineJoin: 'round'
+            } : {
+              color: '#f39c12',
+              weight: 4,
+              opacity: 0.7,
+              dashArray: '10,10',
+              lineCap: 'round',
+              lineJoin: 'round'
+            };
+            
+            currentRoute = L.polyline(pathResult.path, lineStyle).addTo(map);
+            
+            L.marker(startLatLng, {
+              icon: L.divIcon({
+                html: '<div style="background: #3498db; color: white; padding: 8px; border-radius: 50%; font-size: 18px; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"><i class="fas fa-play"></i></div>',
+                className: 'route-start',
+                iconSize: [40, 40]
+              })
+            }).addTo(map).bindPopup('<b>Start Point</b>').openPopup();
+            
+            L.marker(endLatLng, {
+              icon: L.divIcon({
+                html: '<div style="background: #e74c3c; color: white; padding: 8px; border-radius: 50%; font-size: 18px; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"><i class="fas fa-flag"></i></div>',
+                className: 'route-end',
+                iconSize: [40, 40]
+              })
+            }).addTo(map).bindPopup(`<b>Destination:</b> ${selectedLocation.name}`).openPopup();
+            
+            const routeInfo = document.getElementById('routeInfo');
+            if (routeInfo) routeInfo.style.display = 'block';
+            
+            const routeDistance = document.getElementById('routeDistance');
+            const routeTime = document.getElementById('routeTime');
+            
+            const distanceKm = (pathResult.distance / 1000).toFixed(2);
+            const timeMinutes = Math.round(pathResult.distance / 80);
+            
+            if (routeDistance) {
+              routeDistance.textContent = distanceKm + ' km' + (pathResult.usingRoads ? ' (via roads)' : ' (straight line)');
+            }
+            if (routeTime) {
+              routeTime.textContent = timeMinutes + ' minutes';
+            }
+            
+            const bounds = L.latLngBounds([startLatLng, endLatLng]);
+            pathResult.path.forEach(point => {
+              bounds.extend(L.latLng(point[0], point[1]));
+            });
+            map.fitBounds(bounds, { padding: [100, 100], maxZoom: 19 });
+            
+            console.log(`✅ Route calculated: ${distanceKm}km via roads`);
+          } else {
+            alert('Could not find a path using roads. Please try a different location.');
+          }
         });
       }
       
-      // Clear route
       const clearRoute = document.getElementById('clearRoute');
       if (clearRoute) {
         clearRoute.addEventListener('click', function() {
@@ -1860,7 +2237,6 @@
         });
       }
       
-      // Locate me button
       const locateBtn = document.getElementById('locateBtn');
       if (locateBtn) {
         locateBtn.addEventListener('click', function() {
@@ -1900,7 +2276,6 @@
       try {
         console.log('🚀 Starting map initialization...');
         
-        // Add zoom indicator
         const mapContainer = document.getElementById('map-container');
         if (mapContainer) {
           const indicator = document.createElement('div');
@@ -1910,10 +2285,8 @@
           mapContainer.appendChild(indicator);
         }
         
-        // Setup event listeners
         setupEventListeners(map);
         
-        // Load all GeoJSON files
         const result = await loadAllGeoJSONFiles();
         
         console.log('\n' + '='.repeat(60));
@@ -1923,8 +2296,8 @@
         console.log(`📊 Total features: ${result.totalFeatures}`);
         console.log(`🔍 Search database: ${searchDatabase.length} items`);
         console.log(`🏷️ Labels created: ${labelDatabase.length} labels`);
+        console.log(`🛣️ Road network: ${roadNodes.length} nodes, ${roadEdges.length} edges`);
         
-        // Ensure labels are visible
         const labelsToggle = document.getElementById('toggleLabels');
         if (labelsToggle && !labelsToggle.checked) {
           labelsToggle.checked = true;
@@ -1933,15 +2306,15 @@
         
         updateLabelVisibility();
         
-        // Hide loading overlay
         setTimeout(() => {
           const loadingOverlay = document.getElementById('loadingOverlay');
           if (loadingOverlay) {
             loadingOverlay.style.opacity = '0';
+            loadingOverlay.style.transition = 'opacity 0.5s ease';
             setTimeout(() => {
               loadingOverlay.style.display = 'none';
               console.log('✅ Loading overlay hidden');
-            }, 300);
+            }, 500);
           }
         }, 1500);
         
@@ -1989,13 +2362,12 @@
     };
 
     // ============================================
-    // DEBUG FUNCTION
+    // DEBUG FUNCTIONS
     // ============================================
     window.debugLabels = function() {
       console.log('🏷️ === LABEL DATABASE ===');
       console.log('='.repeat(80));
       console.log(`Total Labels: ${labelDatabase.length}`);
-      console.log('='.repeat(80));
       
       const grouped = {};
       labelDatabase.forEach(label => {
@@ -2005,20 +2377,25 @@
       
       Object.keys(grouped).forEach(type => {
         console.log(`\n📁 ${type.toUpperCase()}S (${grouped[type].length}):`);
-        console.log('-'.repeat(40));
         grouped[type].slice(0, 5).forEach((label, index) => {
           console.log(`${index + 1}. ${label.name}`);
-          if (label.building) console.log(`   Building: ${label.building}`);
-          if (label.floor !== undefined) console.log(`   Floor: ${label.floor}`);
-          if (label.filename) console.log(`   File: ${label.filename}`);
         });
-        if (grouped[type].length > 5) {
-          console.log(`... and ${grouped[type].length - 5} more`);
-        }
+      });
+    };
+    
+    window.debugRoadNetwork = function() {
+      console.log('🛣️ === ROAD NETWORK DEBUG ===');
+      console.log('='.repeat(60));
+      console.log(`Nodes: ${roadNodes.length}`);
+      console.log(`Edges: ${roadEdges.length}`);
+      console.log(`Segments: ${roadSegments.length}`);
+      
+      console.log('\nSample road segments (first 10):');
+      roadSegments.slice(0, 10).forEach((seg, i) => {
+        console.log(`  ${i+1}. ${seg.roadName}: Node ${seg.node1.id} → Node ${seg.node2.id} (${seg.distance.toFixed(1)}m)`);
       });
     };
 
-    // Load saved theme - PRESERVED
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'light') {
       document.body.classList.add('light-theme');
