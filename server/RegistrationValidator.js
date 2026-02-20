@@ -5,7 +5,10 @@ class RegistrationValidator {
         // Define valid registration number ranges from your STD OF nerist.txt
         this.validRanges = {
             "125": { start: 1, end: 247 },
-            "225": { start: 1, end: 220 },
+            "225": [
+                { start: 1, end: 220 },
+                {start:230,end:245}
+            ],
             "325": { start: 1, end: 85 },
             "425": { start: 1, end: 244 },
             "525": { start: 1, end: 78 },
