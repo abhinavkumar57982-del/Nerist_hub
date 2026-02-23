@@ -1,5 +1,51 @@
 const mongoose = require("mongoose");
 
+const ReplySchema = new mongoose.Schema({
+  itemId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'LostItem',
+    required: true
+  },
+  senderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  senderName: {
+    type: String,
+    required: true
+  },
+  senderRegistration: {
+    type: String,
+    required: true
+  },
+  senderContact: {
+    type: String,
+    default: ""
+  },
+  message: {
+    type: String,
+    required: [true, "Message is required"]
+  },
+  replyType: {
+    type: String,
+    enum: ["question", "interest", "offer", "contact", "other"],
+    default: "question"
+  },
+  offerAmount: {
+    type: Number,
+    default: null
+  },
+  read: {
+    type: Boolean,
+    default: false
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
 const LostItemSchema = new mongoose.Schema(
   {
     title: {
@@ -50,4 +96,8 @@ const LostItemSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("LostItem", LostItemSchema);
+// Export both models
+module.exports = {
+  LostItem: mongoose.model("LostItem", LostItemSchema),
+  Reply: mongoose.model("Reply", ReplySchema)
+};
