@@ -1089,161 +1089,12 @@
     });
 
     // ============================================
-    // ROAD NETWORK FUNCTIONS - DEBUG VERSION
+    // ROAD NETWORK FUNCTIONS - COMPLETE FIX
     // ============================================
-    function buildRoadNetwork() {
-      console.log('🏗️ Building road network from MultiLineString features...');
-      console.log('Total road layers:', roadLayers.length);
-      
-      roadNodes = [];
-      roadEdges = [];
-      roadSegments = [];
-      
-      if (roadLayers.length === 0) {
-        console.error('❌ No road layers found! ROAD.geojson may not have loaded.');
-        return;
-      }
-      
-      // Process each road layer
-      roadLayers.forEach((layerInfo, layerIndex) => {
-        const layer = layerInfo.layer;
-        console.log(`\n📁 Processing road layer ${layerIndex}:`, layer);
-        
-        // For GeoJSON layers, access internal layers directly
-        if (layer && layer._layers) {
-          const featureCount = Object.keys(layer._layers).length;
-          console.log(`   Found ${featureCount} features in layer`);
-          
-          // Iterate through each feature in the GeoJSON layer
-          Object.keys(layer._layers).forEach(key => {
-            const roadLayer = layer._layers[key];
-            console.log(`   🔍 Feature key: ${key}`, roadLayer);
-            
-            if (roadLayer.feature && roadLayer.feature.geometry) {
-              const geometry = roadLayer.feature.geometry;
-              const roadName = roadLayer.feature.properties?.name || 'Unnamed Road';
-              
-              console.log(`      Processing: ${roadName}`);
-              console.log(`      Geometry type: ${geometry.type}`);
-              
-              // Handle MultiLineString (your data uses this)
-              if (geometry.type === 'MultiLineString') {
-                console.log(`      MultiLineString with ${geometry.coordinates.length} segments`);
-                // Each MultiLineString contains multiple LineStrings
-                geometry.coordinates.forEach((lineString, index) => {
-                  console.log(`         Segment ${index+1} has ${lineString.length} points`);
-                  console.log(`         First point:`, lineString[0]);
-                  console.log(`         Last point:`, lineString[lineString.length-1]);
-                  processRoadLineString(lineString, `${roadName} (segment ${index+1})`);
-                });
-              } 
-              // Handle LineString (fallback)
-              else if (geometry.type === 'LineString') {
-                console.log(`      LineString with ${geometry.coordinates.length} points`);
-                processRoadLineString(geometry.coordinates, roadName);
-              }
-            } else {
-              console.log('      ❌ Feature has no geometry');
-            }
-          });
-        } else {
-          console.log('  ❌ Layer has no _layers property');
-        }
-      });
-      
-      // Build adjacency list for faster pathfinding
-      buildGraph();
-      
-      console.log('\n' + '='.repeat(60));
-      console.log(`✅ Road network built: ${roadNodes.length} nodes, ${roadEdges.length} edges`);
-      console.log('='.repeat(60));
-      
-      if (roadNodes.length === 0) {
-        console.error('❌ No road nodes created! Check if ROAD.geojson loaded properly.');
-        console.error('   Possible issues:');
-        console.error('   1. ROAD.geojson file path is incorrect');
-        console.error('   2. ROAD.geojson has wrong format');
-        console.error('   3. CORS issues preventing file loading');
-      } else {
-        console.log('Road network ready for routing');
-        console.log('First 5 nodes:', roadNodes.slice(0, 5));
-        console.log('First 5 edges:', roadEdges.slice(0, 5));
-      }
-    }
 
-    function processRoadLineString(coordinates, roadName) {
-      if (coordinates.length < 2) return;
-      
-      const segmentNodes = [];
-      
-      // Create nodes for each coordinate
-      for (let i = 0; i < coordinates.length; i++) {
-        const coord = coordinates[i];
-        // GeoJSON uses [lng, lat] format - IMPORTANT!
-        const lng = coord[0];
-        const lat = coord[1];
-        
-        const node = findOrCreateNode(lat, lng);
-        segmentNodes.push(node);
-      }
-      
-      // Create edges between consecutive nodes
-      for (let i = 0; i < segmentNodes.length - 1; i++) {
-        const node1 = segmentNodes[i];
-        const node2 = segmentNodes[i + 1];
-        
-        // Calculate distance in meters
-        const distance = calculateDistance(node1.lat, node1.lng, node2.lat, node2.lng);
-        
-        // Store segment for debugging
-        roadSegments.push({
-          roadName: roadName,
-          node1: node1,
-          node2: node2,
-          distance: distance
-        });
-        
-        // Add edge in both directions (bidirectional roads)
-        roadEdges.push({
-          from: node1.id,
-          to: node2.id,
-          distance: distance
-        });
-        roadEdges.push({
-          from: node2.id,
-          to: node1.id,
-          distance: distance
-        });
-      }
-    }
-
-    function findOrCreateNode(lat, lng) {
-      // Round to 6 decimal places for comparison (about 0.1 meter accuracy)
-      const roundedLat = Math.round(lat * 1000000) / 1000000;
-      const roundedLng = Math.round(lng * 1000000) / 1000000;
-      
-      // Check if node already exists (within 3 meters tolerance)
-      for (let i = 0; i < roadNodes.length; i++) {
-        const node = roadNodes[i];
-        const distance = calculateDistance(node.lat, node.lng, roundedLat, roundedLng);
-        if (distance < 3.0) { // 3 meter tolerance for merging nearby nodes
-          return node;
-        }
-      }
-      
-      // Create new node
-      const newNode = {
-        id: roadNodes.length,
-        lat: roundedLat,
-        lng: roundedLng,
-        latlng: L.latLng(roundedLat, roundedLng)
-      };
-      roadNodes.push(newNode);
-      return newNode;
-    }
-    
+    // Calculate distance between two points in meters
     function calculateDistance(lat1, lng1, lat2, lng2) {
-      const R = 6371e3; // Earth's radius in meters
+      const R = 6371e3;
       const φ1 = lat1 * Math.PI / 180;
       const φ2 = lat2 * Math.PI / 180;
       const Δφ = (lat2 - lat1) * Math.PI / 180;
@@ -1254,45 +1105,198 @@
                 Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       
-      return R * c; // Distance in meters
+      return R * c;
     }
-    
+
+    // Remove duplicate edges from road network
+    function removeDuplicateEdges() {
+      const uniqueEdges = new Map();
+      roadEdges.forEach(edge => {
+        const key = `${edge.from}-${edge.to}`;
+        if (!uniqueEdges.has(key) || uniqueEdges.get(key).distance > edge.distance) {
+          uniqueEdges.set(key, edge);
+        }
+      });
+      roadEdges = Array.from(uniqueEdges.values());
+    }
+
+    // Build road network from loaded features
+    function buildRoadNetwork() {
+      console.log('%c🏗️ BUILDING ROAD NETWORK', 'background: #4CAF50; color: white; font-size: 16px; padding: 4px;');
+      console.log('Total road features in roadLayers:', roadLayers.length);
+      
+      // Clear existing network
+      roadNodes = [];
+      roadEdges = [];
+      roadSegments = [];
+      roadGraph = null;
+      
+      if (roadLayers.length === 0) {
+        console.error('%c❌ NO ROAD FEATURES FOUND!', 'background: #f44336; color: white; font-size: 14px; padding: 4px;');
+        return;
+      }
+      
+      let totalSegments = 0;
+      
+      // Process each road feature
+      roadLayers.forEach((roadInfo, index) => {
+        // Try to get feature from different possible structures
+        let feature = null;
+        let properties = {};
+        
+        if (roadInfo.feature) {
+          feature = roadInfo.feature;
+          properties = roadInfo.properties || {};
+        } else if (roadInfo.layer && roadInfo.layer.feature) {
+          feature = roadInfo.layer.feature;
+          properties = roadInfo.layer.feature.properties || {};
+        } else {
+          console.log(`   Road ${index + 1}: No feature data found`);
+          return;
+        }
+        
+        const roadName = properties.name || properties.NAME || `Road ${index + 1}`;
+        
+        console.log(`\n📁 Processing road ${index + 1}: ${roadName}`);
+        
+        if (feature && feature.geometry) {
+          const geometry = feature.geometry;
+          console.log(`   Geometry type: ${geometry.type}`);
+          
+          if (geometry.type === 'MultiLineString') {
+            console.log(`   Found ${geometry.coordinates.length} line segments`);
+            geometry.coordinates.forEach((lineString, segIdx) => {
+              console.log(`   Segment ${segIdx + 1}: ${lineString.length} points`);
+              totalSegments++;
+              processRoadLineString(lineString, `${roadName} (segment ${segIdx + 1})`);
+            });
+          }
+          else if (geometry.type === 'LineString') {
+            console.log(`   LineString with ${geometry.coordinates.length} points`);
+            totalSegments++;
+            processRoadLineString(geometry.coordinates, roadName);
+          }
+        } else {
+          console.log('   ❌ No geometry found for this feature');
+        }
+      });
+      
+      // Remove duplicate edges
+      removeDuplicateEdges();
+      
+      // Build graph
+      buildGraph();
+      
+      console.log('\n' + '='.repeat(70));
+      console.log('%c✅ ROAD NETWORK BUILD COMPLETE', 'background: #4CAF50; color: white; font-size: 16px; padding: 4px;');
+      console.log('='.repeat(70));
+      console.log(`📊 Statistics:`);
+      console.log(`   - Road features processed: ${roadLayers.length}`);
+      console.log(`   - Total segments: ${totalSegments}`);
+      console.log(`   - Road nodes: ${roadNodes.length}`);
+      console.log(`   - Road edges: ${roadEdges.length}`);
+      console.log('='.repeat(70));
+    }
+
+    function processRoadLineString(coordinates, roadName) {
+      if (!coordinates || coordinates.length < 2) return;
+      
+      const segmentNodes = [];
+      
+      for (let i = 0; i < coordinates.length; i++) {
+        const coord = coordinates[i];
+        // GeoJSON uses [lng, lat] format
+        const lng = coord[0];
+        const lat = coord[1];
+        
+        if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+          const node = findOrCreateNode(lat, lng);
+          segmentNodes.push(node);
+        }
+      }
+      
+      for (let i = 0; i < segmentNodes.length - 1; i++) {
+        const node1 = segmentNodes[i];
+        const node2 = segmentNodes[i + 1];
+        
+        if (node1 && node2) {
+          const distance = calculateDistance(node1.lat, node1.lng, node2.lat, node2.lng);
+          
+          roadSegments.push({
+            roadName: roadName,
+            node1: node1,
+            node2: node2,
+            distance: distance
+          });
+          
+          roadEdges.push({ from: node1.id, to: node2.id, distance: distance });
+          roadEdges.push({ from: node2.id, to: node1.id, distance: distance });
+        }
+      }
+    }
+
+    function findOrCreateNode(lat, lng) {
+      const roundedLat = Math.round(lat * 1000000) / 1000000;
+      const roundedLng = Math.round(lng * 1000000) / 1000000;
+      
+      for (let i = 0; i < roadNodes.length; i++) {
+        const node = roadNodes[i];
+        const distance = calculateDistance(node.lat, node.lng, roundedLat, roundedLng);
+        if (distance < 1.0) {
+          return node;
+        }
+      }
+      
+      const newNode = {
+        id: roadNodes.length,
+        lat: roundedLat,
+        lng: roundedLng,
+        latlng: L.latLng(roundedLat, roundedLng)
+      };
+      roadNodes.push(newNode);
+      return newNode;
+    }
+
     function buildGraph() {
-      // Create adjacency list for faster pathfinding
       roadGraph = new Array(roadNodes.length);
       for (let i = 0; i < roadNodes.length; i++) {
         roadGraph[i] = [];
       }
       
       roadEdges.forEach(edge => {
-        roadGraph[edge.from].push({
-          to: edge.to,
-          distance: edge.distance
-        });
+        if (edge.from < roadGraph.length && edge.to < roadGraph.length) {
+          roadGraph[edge.from].push({
+            to: edge.to,
+            distance: edge.distance
+          });
+        }
       });
     }
-    
-    function findNearestRoadNode(lat, lng) {
+
+    function findNearestRoadNode(lat, lng, maxDistance = 100) {
       if (roadNodes.length === 0) return null;
       
-      let nearestNode = roadNodes[0];
-      let minDistance = calculateDistance(lat, lng, nearestNode.lat, nearestNode.lng);
+      let nearestNode = null;
+      let minDistance = Infinity;
       
-      for (let i = 1; i < roadNodes.length; i++) {
+      for (let i = 0; i < roadNodes.length; i++) {
         const node = roadNodes[i];
         const distance = calculateDistance(lat, lng, node.lat, node.lng);
-        if (distance < minDistance) {
+        if (distance < minDistance && distance <= maxDistance) {
           minDistance = distance;
           nearestNode = node;
         }
       }
       
-      return {
-        node: nearestNode,
-        distance: minDistance
-      };
+      if (nearestNode) {
+        return { node: nearestNode, distance: minDistance };
+      }
+      return null;
     }
-    
+
+    // ============================================
+    // SHORTEST PATH FUNCTION
+    // ============================================
     function findShortestPath(startLatLng, endLatLng) {
       if (roadNodes.length === 0 || roadEdges.length === 0) {
         console.warn('⚠️ Road network not available - using straight line');
@@ -1303,12 +1307,11 @@
         };
       }
       
-      // Find nearest nodes on road network
-      const startNearest = findNearestRoadNode(startLatLng.lat, startLatLng.lng);
-      const endNearest = findNearestRoadNode(endLatLng.lat, endLatLng.lng);
+      const startNearest = findNearestRoadNode(startLatLng.lat, startLatLng.lng, 100);
+      const endNearest = findNearestRoadNode(endLatLng.lat, endLatLng.lng, 100);
       
       if (!startNearest || !endNearest) {
-        console.warn('⚠️ Could not find nearest road nodes - using straight line');
+        console.warn('⚠️ Points too far from road network - using straight line');
         return {
           path: [[startLatLng.lat, startLatLng.lng], [endLatLng.lat, endLatLng.lng]],
           distance: calculateDistance(startLatLng.lat, startLatLng.lng, endLatLng.lat, endLatLng.lng),
@@ -1316,40 +1319,25 @@
         };
       }
       
-      console.log(`🚦 Start nearest node: ${startNearest.node.id} (distance: ${startNearest.distance.toFixed(2)}m)`);
-      console.log(`🚦 End nearest node: ${endNearest.node.id} (distance: ${endNearest.distance.toFixed(2)}m)`);
-      
-      // If start and end are the same node or very close, use direct path
-      const directDistance = calculateDistance(startLatLng.lat, startLatLng.lng, endLatLng.lat, endLatLng.lng);
-      if (directDistance < 20 || startNearest.node.id === endNearest.node.id) {
-        console.log('📍 Points are very close - using direct path');
+      if (startNearest.node.id === endNearest.node.id) {
         return {
           path: [[startLatLng.lat, startLatLng.lng], [endLatLng.lat, endLatLng.lng]],
-          distance: directDistance,
+          distance: calculateDistance(startLatLng.lat, startLatLng.lng, endLatLng.lat, endLatLng.lng),
           usingRoads: false
         };
       }
       
-      // Dijkstra's algorithm for shortest path on road network
+      // Dijkstra's algorithm
       const distances = new Array(roadNodes.length).fill(Infinity);
       const previous = new Array(roadNodes.length).fill(null);
       const visited = new Array(roadNodes.length).fill(false);
       
       distances[startNearest.node.id] = 0;
       
-      // Priority queue using array
       const unvisited = [];
-      for (let i = 0; i < roadNodes.length; i++) {
-        unvisited.push(i);
-      }
+      for (let i = 0; i < roadNodes.length; i++) unvisited.push(i);
       
-      let iterations = 0;
-      const maxIterations = roadNodes.length * 2;
-      
-      while (unvisited.length > 0 && iterations < maxIterations) {
-        iterations++;
-        
-        // Find node with smallest distance
+      while (unvisited.length > 0) {
         let currentId = -1;
         let minDistance = Infinity;
         let minIndex = -1;
@@ -1365,14 +1353,11 @@
         
         if (currentId === -1 || minDistance === Infinity) break;
         
-        // Remove from unvisited
         unvisited.splice(minIndex, 1);
         visited[currentId] = true;
         
-        // Stop if we reached the destination
         if (currentId === endNearest.node.id) break;
         
-        // Check all edges from current node
         if (roadGraph && roadGraph[currentId]) {
           roadGraph[currentId].forEach(edge => {
             if (!visited[edge.to]) {
@@ -1386,12 +1371,11 @@
         }
       }
       
-      // Check if path was found
       if (distances[endNearest.node.id] === Infinity) {
-        console.warn('⚠️ No path found between nodes - using straight line');
+        console.warn('⚠️ No path found between nodes');
         return {
           path: [[startLatLng.lat, startLatLng.lng], [endLatLng.lat, endLatLng.lng]],
-          distance: directDistance,
+          distance: calculateDistance(startLatLng.lat, startLatLng.lng, endLatLng.lat, endLatLng.lng),
           usingRoads: false
         };
       }
@@ -1405,33 +1389,102 @@
         current = previous[current];
       }
       
-      console.log(`🛣️ Path found with ${pathNodes.length} road nodes, distance: ${distances[endNearest.node.id].toFixed(2)}m`);
+      console.log(`🛣️ Path found with ${pathNodes.length} road nodes`);
       
-      // Build path coordinates including start and end points
       const path = [];
-      
-      // Add start point
       path.push([startLatLng.lat, startLatLng.lng]);
       
-      // Add road nodes
-      for (let i = 0; i < pathNodes.length; i++) {
-        path.push([pathNodes[i].lat, pathNodes[i].lng]);
-      }
+      pathNodes.forEach(node => {
+        path.push([node.lat, node.lng]);
+      });
       
-      // Add end point
       path.push([endLatLng.lat, endLatLng.lng]);
       
-      return {
-        path: path,
-        distance: distances[endNearest.node.id] + startNearest.distance + endNearest.distance,
-        usingRoads: true,
-        nodes: {
-          start: startNearest,
-          end: endNearest,
-          pathNodes: pathNodes
+      // Remove duplicates
+      const uniquePath = [];
+      for (let i = 0; i < path.length; i++) {
+        if (i === 0) uniquePath.push(path[i]);
+        else {
+          const prev = path[i-1];
+          const curr = path[i];
+          if (Math.abs(prev[0] - curr[0]) > 0.000001 || Math.abs(prev[1] - curr[1]) > 0.000001) {
+            uniquePath.push(curr);
+          }
         }
+      }
+      
+      return {
+        path: uniquePath,
+        distance: distances[endNearest.node.id] + startNearest.distance + endNearest.distance,
+        usingRoads: true
       };
     }
+
+    // ============================================
+    // VISUAL DEBUG FUNCTION
+    // ============================================
+    window.visualizeRoadNetwork = function() {
+      const map = window.campusMap;
+      if (!map) {
+        console.error('Map not initialized');
+        return;
+      }
+      
+      console.log('%c🔍 VISUALIZING ROAD NETWORK', 'background: #2196F3; color: white; font-size: 14px; padding: 4px;');
+      
+      map.eachLayer(layer => {
+        if (layer.options && layer.options.className === 'debug-road-layer') {
+          map.removeLayer(layer);
+        }
+      });
+      
+      if (roadNodes.length === 0) {
+        console.error('No road nodes to visualize!');
+        return;
+      }
+      
+      const roadLayer = L.layerGroup().addTo(map);
+      
+      const edgeMap = new Map();
+      roadEdges.forEach(edge => {
+        const key = `${Math.min(edge.from, edge.to)}-${Math.max(edge.from, edge.to)}`;
+        if (!edgeMap.has(key)) {
+          edgeMap.set(key, edge);
+          
+          const fromNode = roadNodes[edge.from];
+          const toNode = roadNodes[edge.to];
+          
+          if (fromNode && toNode) {
+            L.polyline([[fromNode.lat, fromNode.lng], [toNode.lat, toNode.lng]], {
+              color: '#FF5722',
+              weight: 4,
+              opacity: 0.8,
+              className: 'debug-road-layer'
+            }).addTo(roadLayer);
+          }
+        }
+      });
+      
+      roadNodes.forEach((node, index) => {
+        L.circleMarker([node.lat, node.lng], {
+          radius: 3,
+          color: '#2196F3',
+          fillColor: '#2196F3',
+          fillOpacity: 0.8,
+          className: 'debug-road-layer'
+        }).addTo(roadLayer)
+          .bindTooltip(`Node ${index}`, {permanent: false});
+      });
+      
+      console.log(`✅ Visualized ${roadNodes.length} nodes and ${edgeMap.size} road segments`);
+      
+      if (roadNodes.length > 0) {
+        const bounds = L.latLngBounds(roadNodes.map(n => [n.lat, n.lng]));
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }
+      
+      return roadLayer;
+    };
 
     // ============================================
     // HELPER FUNCTIONS
@@ -1812,7 +1865,7 @@
     }
 
     // ============================================
-    // GEOJSON LOADER - FIXED VERSION
+    // GEOJSON LOADER - FIXED VERSION (ONLY ONE VERSION)
     // ============================================
     async function loadGeoJSONFile(filename, type, color) {
       const url = `/geojson/${filename}`;
@@ -1885,17 +1938,22 @@
             
             searchDatabase.push(featureData);
             
-            const layerInfo = { layer };
+            // Store feature data for road processing - THIS IS CRITICAL
+            const layerInfo = { 
+              layer: layer,
+              feature: feature,  // Store the actual feature
+              geometry: feature.geometry,
+              properties: feature.properties
+            };
+            
             if (type === 'building') buildingLayers.push(layerInfo);
             else if (type === 'room') roomLayers.push(layerInfo);
             else if (type === 'department') departmentLayers.push(layerInfo);
             else if (type === 'road') {
-              console.log(`🛣️ Adding road layer from ${filename}`);
+              console.log(`🛣️ Adding road feature: ${name}`);
               roadLayers.push(layerInfo);
             }
             else if (type === 'corridor') corridorLayers.push(layerInfo);
-            
-            console.log(`📝 Loaded ${type}: ${name} from ${filename}`);
           }
         }).addTo(map);
         
@@ -1935,7 +1993,6 @@
       
       console.log('📂 Starting to load GeoJSON files...');
       
-      // Load all files
       for (const geoFile of geoFiles) {
         updateLoadingStatus(`Loading ${geoFile.filename}...`);
         console.log(`\n🔍 Loading: ${geoFile.filename}`);
@@ -1956,6 +2013,8 @@
       // Build road network after all roads are loaded
       if (roadLayers.length > 0) {
         buildRoadNetwork();
+      } else {
+        console.error('%c❌ No road layers found to build network!', 'background: #f44336; color: white; font-size: 14px; padding: 4px;');
       }
       
       return { loadedCount, totalFeatures };
