@@ -1,21 +1,925 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="description" content="NERIST Campus Hub - Navigation, Marketplace, Lost & Found, Study Resources">
+  <meta name="description" content="NERIST Campus Hub - Buy Requests">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>NERIST Campus Hub</title>
-  <link rel="icon" href="feviconicon.png">
   <title>Buy Requests | NERIST Hub</title>
+  <link rel="icon" href="feviconicon.png">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <meta name="theme-color" content="#6366f1">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="NERIST Hub">
-<link rel="apple-touch-icon" href="/images/icon-192x192.png">
-<link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="NERIST Hub">
+  <link rel="apple-touch-icon" href="/images/icon-192x192.png">
+  <link rel="manifest" href="/manifest.json">
+  <style>
+    /* Image Preview Modal - WhatsApp Style */
+    .image-preview-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.95);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(5px);
+    }
+    
+    .image-preview-modal.active {
+      display: flex;
+    }
+    
+    .preview-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    .preview-image {
+      max-width: 100%;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      animation: zoomIn 0.2s ease-out;
+    }
+    
+    .close-preview {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      font-size: 28px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(5px);
+      z-index: 10001;
+    }
+    
+    .close-preview:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
+    }
+    
+    .download-preview {
+      position: absolute;
+      bottom: 30px;
+      right: 30px;
+      background: rgba(99, 102, 241, 0.9);
+      border: none;
+      color: white;
+      font-size: 20px;
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(5px);
+      z-index: 10001;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    
+    .download-preview:hover {
+      background: rgba(99, 102, 241, 1);
+      transform: translateY(-3px);
+    }
+    
+    .preview-caption {
+      position: absolute;
+      bottom: 30px;
+      left: 30px;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-size: 16px;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    @keyframes zoomIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    /* Make images clickable - not used in buy requests but keeping for consistency */
+    .clickable-image {
+      cursor: pointer;
+      transition: opacity 0.2s ease;
+    }
+    
+    .clickable-image:hover {
+      opacity: 0.9;
+    }
+    
+    /* Reply Modal Styles */
+    .reply-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      z-index: 11000;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(5px);
+    }
+    
+    .reply-modal.active {
+      display: flex;
+    }
+    
+    .reply-modal-content {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .reply-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .reply-modal-header h3 {
+      color: var(--text-primary);
+      margin: 0;
+    }
+    
+    .reply-modal-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 24px;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: var(--transition);
+    }
+    
+    .reply-modal-close:hover {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--accent-danger);
+    }
+    
+    .item-summary {
+      background: var(--bg-secondary);
+      padding: 15px;
+      border-radius: var(--radius-md);
+      margin-bottom: 20px;
+      border-left: 4px solid var(--accent-primary);
+    }
+    
+    .item-summary h4 {
+      color: var(--text-primary);
+      margin: 0 0 5px 0;
+      font-size: 18px;
+    }
+    
+    .item-summary p {
+      color: var(--text-secondary);
+      margin: 5px 0;
+      font-size: 14px;
+    }
+    
+    .item-summary p i {
+      color: var(--accent-primary);
+      width: 16px;
+      margin-right: 5px;
+    }
+    
+    .reply-type-group {
+      margin-bottom: 20px;
+    }
+    
+    .reply-type-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+    
+    .reply-type-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .reply-type-option {
+      flex: 1 0 calc(50% - 10px);
+      min-width: 120px;
+    }
+    
+    .reply-type-option input[type="radio"] {
+      display: none;
+    }
+    
+    .reply-type-option label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 15px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      margin: 0;
+    }
+    
+    .reply-type-option input[type="radio"]:checked + label {
+      background: var(--accent-primary);
+      color: white;
+      border-color: transparent;
+    }
+    
+    .reply-type-option label i {
+      font-size: 14px;
+    }
+    
+    .reply-offer-group {
+      display: none;
+      margin-bottom: 20px;
+    }
+    
+    .reply-offer-group.active {
+      display: block;
+    }
+    
+    .reply-offer-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+    
+    .reply-offer-group input {
+      width: 100%;
+      padding: 12px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+    }
+    
+    .reply-offer-group input:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+    }
+    
+    .reply-contact-group {
+      margin-bottom: 20px;
+    }
+    
+    .reply-contact-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+    
+    .reply-contact-group input {
+      width: 100%;
+      padding: 12px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+    }
+    
+    .reply-contact-group small {
+      display: block;
+      color: var(--text-secondary);
+      font-size: 12px;
+      margin-top: 5px;
+    }
+    
+    .reply-message-group {
+      margin-bottom: 20px;
+    }
+    
+    .reply-message-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+    
+    .reply-message-group textarea {
+      width: 100%;
+      padding: 12px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      resize: vertical;
+      min-height: 100px;
+    }
+    
+    .reply-message-group textarea:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+    }
+    
+    .reply-submit-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--gradient-primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: var(--transition);
+    }
+    
+    .reply-submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .reply-submit-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+    
+    /* Replies List Modal */
+    .replies-list-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      z-index: 11000;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(5px);
+    }
+    
+    .replies-list-modal.active {
+      display: flex;
+    }
+    
+    .replies-list-content {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 30px;
+      max-width: 700px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .replies-list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .replies-list-header h3 {
+      color: var(--text-primary);
+      margin: 0;
+    }
+    
+    .replies-list-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 24px;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: var(--transition);
+    }
+    
+    .replies-list-close:hover {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--accent-danger);
+    }
+    
+    .reply-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-bottom: 15px;
+      position: relative;
+      transition: var(--transition);
+    }
+    
+    .reply-item.unread {
+      border-left: 4px solid var(--accent-primary);
+      background: rgba(var(--accent-primary-rgb), 0.05);
+    }
+    
+    .reply-item:hover {
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .reply-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .reply-sender {
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .reply-sender i {
+      color: var(--accent-primary);
+      font-size: 14px;
+    }
+    
+    .reply-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--bg-card);
+      border: 1px solid;
+    }
+    
+    .reply-badge.question { background: rgba(99, 102, 241, 0.1); color: var(--accent-primary); border-color: var(--accent-primary); }
+    .reply-badge.offer { background: rgba(245, 158, 11, 0.1); color: var(--accent-warning); border-color: var(--accent-warning); }
+    .reply-badge.contact { background: rgba(99, 102, 241, 0.1); color: var(--accent-primary); border-color: var(--accent-primary); }
+    .reply-badge.other { background: rgba(107, 114, 128, 0.1); color: var(--text-secondary); border-color: var(--text-secondary); }
+    
+    .reply-offer-amount {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--accent-warning);
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin: 10px 0;
+    }
+    
+    .reply-message-text {
+      color: var(--text-primary);
+      font-size: 15px;
+      line-height: 1.6;
+      margin: 15px 0;
+      padding: 15px;
+      background: var(--bg-card);
+      border-radius: var(--radius-sm);
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    
+    .reply-contact {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin: 15px 0;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border-color);
+    }
+    
+    .reply-contact span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+    
+    .reply-contact i {
+      color: var(--accent-primary);
+      font-size: 12px;
+    }
+    
+    .reply-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .reply-date {
+      color: var(--text-secondary);
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .reply-actions {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .reply-action-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 5px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: var(--transition);
+    }
+    
+    .reply-action-btn:hover {
+      color: var(--accent-primary);
+      background: rgba(var(--accent-primary-rgb), 0.1);
+    }
+    
+    .reply-action-btn.delete:hover {
+      color: var(--accent-danger);
+      background: rgba(var(--accent-danger-rgb), 0.1);
+    }
+    
+    .reply-action-btn.mark-read:hover {
+      color: var(--accent-success);
+      background: rgba(var(--accent-success-rgb), 0.1);
+    }
+    
+    .read-status {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: var(--bg-card);
+      color: var(--text-secondary);
+    }
+    
+    .read-status.read {
+      color: var(--accent-success);
+    }
+    
+    .no-replies {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-secondary);
+    }
+    
+    .no-replies i {
+      font-size: 48px;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+    
+    .no-replies h4 {
+      color: var(--text-primary);
+      margin-bottom: 10px;
+    }
+    
+    /* Reply button on cards */
+    .reply-btn {
+      background: var(--accent-primary);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+    }
+    
+    .reply-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .reply-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .view-replies-btn {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+    }
+    
+    .view-replies-btn:hover {
+      background: var(--accent-primary);
+      color: white;
+      border-color: transparent;
+    }
+    
+    .success {
+      background: var(--accent-success);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+    }
+    
+    .danger {
+      background: var(--accent-danger);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+    }
+    
+    .card-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 15px;
+    }
+    
+    .card-actions button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .contact-note {
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-style: italic;
+      margin: 10px 0;
+      padding: 8px;
+      background: rgba(var(--accent-primary-rgb), 0.05);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .contact-note i {
+      color: var(--accent-primary);
+      font-size: 12px;
+    }
+    
+    /* Notification bell */
+    .notification-bell {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 56px;
+      height: 56px;
+      background: var(--gradient-primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow-lg);
+      z-index: 1000;
+      transition: var(--transition);
+      border: none;
+    }
+    
+    .notification-bell:hover {
+      transform: scale(1.1);
+    }
+    
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: var(--accent-danger);
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      min-width: 22px;
+      height: 22px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 6px;
+      border: 2px solid var(--bg-primary);
+    }
+    
+    @media (max-width: 768px) {
+      .notification-bell {
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+      }
+      
+      .reply-type-option {
+        flex: 1 0 100%;
+      }
+    }
+
+    /* Prevent double submission */
+    form.submitting {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    form.submitting button[type="submit"] {
+      cursor: not-allowed;
+    }
+
+    /* Loading state for cards */
+    .loading-state {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+      grid-column: 1 / -1;
+    }
+
+    .loading-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      color: var(--accent-primary);
+    }
+  </style>
 </head>
 <body>
+  <!-- Image Preview Modal -->
+  <div id="imagePreviewModal" class="image-preview-modal" onclick="closeImagePreview(event)">
+    <div class="preview-container">
+      <button class="close-preview" onclick="closeImagePreview(event)"><i class="fas fa-times"></i></button>
+      <img id="previewImage" class="preview-image" src="" alt="Preview">
+      <button class="download-preview" onclick="downloadPreviewImage()"><i class="fas fa-download"></i></button>
+      <div id="previewCaption" class="preview-caption"></div>
+    </div>
+  </div>
+
+  <!-- Reply Modal -->
+  <div id="replyModal" class="reply-modal">
+    <div class="reply-modal-content">
+      <div class="reply-modal-header">
+        <h3>Reply to Buy Request</h3>
+        <button class="reply-modal-close" onclick="closeReplyModal()"><i class="fas fa-times"></i></button>
+      </div>
+      
+      <div id="replyItemSummary" class="item-summary">
+        <!-- Will be filled dynamically -->
+      </div>
+      
+      <form id="replyForm">
+        <input type="hidden" id="replyRequestId" value="">
+        
+        <div class="reply-type-group">
+          <label>What would you like to do?</label>
+          <div class="reply-type-options">
+            <div class="reply-type-option">
+              <input type="radio" name="replyType" id="replyTypeQuestion" value="question" checked>
+              <label for="replyTypeQuestion"><i class="fas fa-question-circle"></i> Ask a Question</label>
+            </div>
+            <div class="reply-type-option">
+              <input type="radio" name="replyType" id="replyTypeOffer" value="offer">
+              <label for="replyTypeOffer"><i class="fas fa-tag"></i> Make an Offer</label>
+            </div>
+            <div class="reply-type-option">
+              <input type="radio" name="replyType" id="replyTypeContact" value="contact">
+              <label for="replyTypeContact"><i class="fas fa-phone"></i> Share Contact</label>
+            </div>
+          </div>
+        </div>
+        
+        <div id="replyOfferGroup" class="reply-offer-group">
+          <label for="offerAmount">Your Offer Amount (₹)</label>
+          <input type="number" id="offerAmount" name="offerAmount" placeholder="Enter amount" min="1">
+        </div>
+        
+        <div class="reply-contact-group">
+          <label for="replyContact">Your Contact (Optional)</label>
+          <input type="text" id="replyContact" name="contact" placeholder="Phone number, room no., etc.">
+          <small>If not provided, the buyer won't be able to contact you</small>
+        </div>
+        
+        <div class="reply-message-group">
+          <label for="replyMessage">Your Message <span class="required">*</span></label>
+          <textarea id="replyMessage" name="message" placeholder="Write your message here..." required></textarea>
+        </div>
+        
+        <button type="submit" class="reply-submit-btn" id="replySubmitBtn">
+          <i class="fas fa-paper-plane"></i> Send Reply
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Replies List Modal (For Request Owners) -->
+  <div id="repliesListModal" class="replies-list-modal">
+    <div class="replies-list-content">
+      <div class="replies-list-header">
+        <h3>Replies to Your Request</h3>
+        <button class="replies-list-close" onclick="closeRepliesListModal()"><i class="fas fa-times"></i></button>
+      </div>
+      
+      <div id="repliesListContainer">
+        <!-- Replies will be loaded here -->
+      </div>
+    </div>
+  </div>
+
   <!-- NAVBAR -->
   <nav class="navbar">
     <div class="nav-left">
@@ -96,6 +1000,12 @@
     </div>
   </nav>
 
+  <!-- Notification Bell (for replies) -->
+  <div id="notificationBell" class="notification-bell" onclick="openRepliesList()" style="display: none;">
+    <i class="fas fa-bell"></i>
+    <span id="notificationBadge" class="notification-badge">0</span>
+  </div>
+
   <div class="container">
     <h2><i class="fas fa-shopping-cart"></i> Post a Buy Request</h2>
 
@@ -126,7 +1036,10 @@
       </div>
       
       <div class="form-group">
-        <input name="contact" placeholder="Contact (Room no./Phone)" required />
+        <input name="contact" placeholder="Your contact" required />
+        <small class="contact-note">
+          <i class="fas fa-shield-alt"></i> Your contact info is only shared with people who reply to your request
+        </small>
       </div>
 
       <button type="submit">
@@ -140,97 +1053,597 @@
 
   <!-- FOOTER -->
   <footer class="footer">
-  <div class="container">
-    <div class="footer-content">
-      <!-- Brand Section -->
-      <div class="footer-section">
-        <h3>NERIST Campus Hub</h3>
-        <div class="developer-credit">
-          <p>Unofficial student platform for NERIST campus services and resources.</p>
-          <div class="developer-name">
-            <i class="fas fa-code"></i>
-            Developed by Abhinav Kumar
-            <span style="font-size: 12px; color: var(--text-secondary);">(BTech 1st Year CSE)</span>
+    <div class="container">
+      <div class="footer-content">
+        <!-- Brand Section -->
+        <div class="footer-section">
+          <h3>NERIST Campus Hub</h3>
+          <div class="developer-credit">
+            <p>Unofficial student platform for NERIST campus services and resources.</p>
+            <div class="developer-name">
+              <i class="fas fa-code"></i>
+              Developed by Abhinav Kumar
+              <span style="font-size: 12px; color: var(--text-secondary);">(BTech 1st Year CSE)</span>
+            </div>
           </div>
-        </div>
-        <!-- Social Links -->
-<div class="social-links">
-  <a href="javascript:void(0);" class="social-link" onclick="showComingSoon('GitHub')"><i class="fab fa-github"></i></a>
-  <a href="javascript:void(0);" class="social-link" onclick="showComingSoon('LinkedIn')"><i class="fab fa-linkedin-in"></i></a>
-  <a href="javascript:void(0);" class="social-link" onclick="showComingSoon('Twitter')"><i class="fab fa-twitter"></i></a>
-  <a href="javascript:void(0);" class="social-link" onclick="showComingSoon('Instagram')"><i class="fab fa-instagram"></i></a>
-</div>
+          <!-- Social Links -->
+          <div class="social-links">
+            <a href="javascript:void(0);" class="social-link" onclick="showComingSoon('GitHub')"><i class="fab fa-github"></i></a>
+            <a href="javascript:void(0);" class="social-link" onclick="showComingSoon('LinkedIn')"><i class="fab fa-linkedin-in"></i></a>
+            <a href="javascript:void(0);" class="social-link" onclick="showComingSoon('Twitter')"><i class="fab fa-twitter"></i></a>
+            <a href="javascript:void(0);" class="social-link" onclick="showComingSoon('Instagram')"><i class="fab fa-instagram"></i></a>
+          </div>
 
-<!-- Coming Soon Popup -->
-<div id="comingSoonPopup" class="coming-soon-popup">
-  <div class="popup-content">
-    <i class="fas fa-rocket"></i>
-    <h3 id="popupPlatform"></h3>
-    <p>is coming soon! 🚀</p>
-    <p style="font-size: 14px; margin-top: 10px;">We're working on it.</p>
-    <button class="popup-close" onclick="closePopup()">Close</button>
-  </div>
-</div>
-      </div>
-      
-      <!-- Quick Links Section -->
-      <div class="footer-section">
-        <h3>Quick Links</h3>
-        <ul class="footer-links">
-          <li><a href="/lost.html"><i class="fas fa-arrow-right"></i> Lost & Found</a></li>
-          <li><a href="/marketplace.html"><i class="fas fa-arrow-right"></i> Marketplace</a></li>
-          <li><a href="/questionpaper.html"><i class="fas fa-arrow-right"></i> Question Papers</a></li>
-          <li><a href="/rentals.html"><i class="fas fa-arrow-right"></i> Services</a></li>
-          <li><a href="/map.html"><i class="fas fa-arrow-right"></i> Campus Map</a></li>
-          <li><a href="/timetable.html"><i class="fas fa-arrow-right"></i> Timetable</a></li>
-        </ul>
-      </div>
-      
-      <!-- Contact & Feedback Section -->
-      <div class="footer-section">
-        <h3>Get in Touch</h3>
-        <div class="contact-info">
-          <div class="contact-item">
-            <i class="fas fa-envelope"></i>
-            <span>abhinavkumar53210@gmail.com</span>
-          </div>
-          <div class="contact-item">
-            <i class="fas fa-phone-alt"></i>
-            <span>Campus Help Desk</span>
-          </div>
-          <div class="contact-item">
-            <i class="fas fa-map-marker-alt"></i>
-            <span>NERIST, Nirjuli - 791109</span>
+          <!-- Coming Soon Popup -->
+          <div id="comingSoonPopup" class="coming-soon-popup">
+            <div class="popup-content">
+              <i class="fas fa-rocket"></i>
+              <h3 id="popupPlatform"></h3>
+              <p>is coming soon! 🚀</p>
+              <p style="font-size: 14px; margin-top: 10px;">We're working on it.</p>
+              <button class="popup-close" onclick="closePopup()">Close</button>
+            </div>
           </div>
         </div>
         
-        <!-- Feedback Form Link - Styled as Button -->
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSe1XYRtRNLUKZoS1a44XJWvRnq5Amk0UD036FmEJMXb974_VA/viewform?usp=header" class="feedback-link">
-          <i class="fas fa-comment-dots"></i>
-          Give Feedback
-        </a>
+        <!-- Quick Links Section -->
+        <div class="footer-section">
+          <h3>Quick Links</h3>
+          <ul class="footer-links">
+            <li><a href="/lost.html"><i class="fas fa-arrow-right"></i> Lost & Found</a></li>
+            <li><a href="/marketplace.html"><i class="fas fa-arrow-right"></i> Marketplace</a></li>
+            <li><a href="/questionpaper.html"><i class="fas fa-arrow-right"></i> Question Papers</a></li>
+            <li><a href="/rentals.html"><i class="fas fa-arrow-right"></i> Services</a></li>
+            <li><a href="/map.html"><i class="fas fa-arrow-right"></i> Campus Map</a></li>
+            <li><a href="/timetable.html"><i class="fas fa-arrow-right"></i> Timetable</a></li>
+          </ul>
+        </div>
+        
+        <!-- Contact & Feedback Section -->
+        <div class="footer-section">
+          <h3>Get in Touch</h3>
+          <div class="contact-info">
+            <div class="contact-item">
+              <i class="fas fa-envelope"></i>
+              <span>abhinavkumar53210@gmail.com</span>
+            </div>
+            <div class="contact-item">
+              <i class="fas fa-phone-alt"></i>
+              <span>Campus Help Desk</span>
+            </div>
+            <div class="contact-item">
+              <i class="fas fa-map-marker-alt"></i>
+              <span>NERIST, Nirjuli - 791109</span>
+            </div>
+          </div>
+          
+          <!-- Feedback Form Link - Styled as Button -->
+          <a href="https://docs.google.com/forms/d/e/1FAIpQLSe1XYRtRNLUKZoS1a44XJWvRnq5Amk0UD036FmEJMXb974_VA/viewform?usp=header" class="feedback-link">
+            <i class="fas fa-comment-dots"></i>
+            Give Feedback
+          </a>
+        </div>
+      </div>
+      
+      <!-- Footer Bottom -->
+      <div class="footer-bottom">
+        <p>
+          © 2026 NERIST Campus Hub. 
+          Made with <span class="heart"><i class="fas fa-heart"></i></span> 
+          for students.
+        </p>
+        <div class="footer-bottom-links">
+          <a href="/privacy.html"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+          <a href="/terms.html"><i class="fas fa-file-alt"></i> Terms of Use</a>
+          <a href="/contact.html"><i class="fas fa-headset"></i> Contact Us</a>
+        </div>
       </div>
     </div>
-    
-    <!-- Footer Bottom -->
-    <div class="footer-bottom">
-      <p>
-        © 2026 NERIST Campus Hub. 
-        Made with <span class="heart"><i class="fas fa-heart"></i></span> 
-        for students.
-      </p>
-      <div class="footer-bottom-links">
-        <a href="/privacy.html"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
-        <a href="/terms.html"><i class="fas fa-file-alt"></i> Terms of Use</a>
-        <a href="/contact.html"><i class="fas fa-headset"></i> Contact Us</a>
-      </div>
-    </div>
-  </div>
-</footer>
+  </footer>
 
   <script src="auth.js"></script>
   <script src="app.js"></script>
-  <script src="buy-requests.js"></script>
+  
+  <!-- Image Preview Script -->
+  <script>
+    // Image Preview Functions
+    function openImagePreview(imageSrc, caption = '') {
+      const modal = document.getElementById('imagePreviewModal');
+      const previewImage = document.getElementById('previewImage');
+      const previewCaption = document.getElementById('previewCaption');
+      
+      previewImage.src = imageSrc;
+      previewCaption.textContent = caption;
+      modal.classList.add('active');
+      
+      // Prevent body scrolling
+      document.body.style.overflow = 'hidden';
+    }
+    
+    function closeImagePreview(event) {
+      // Don't close if clicking on the image or download button
+      if (event && (event.target.closest('.preview-image') || event.target.closest('.download-preview'))) {
+        return;
+      }
+      
+      const modal = document.getElementById('imagePreviewModal');
+      modal.classList.remove('active');
+      
+      // Restore body scrolling
+      document.body.style.overflow = '';
+    }
+    
+    function downloadPreviewImage() {
+      const previewImage = document.getElementById('previewImage');
+      const link = document.createElement('a');
+      link.href = previewImage.src;
+      link.download = 'image.jpg';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+    
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('imagePreviewModal');
+        if (modal && modal.classList.contains('active')) {
+          modal.classList.remove('active');
+          document.body.style.overflow = '';
+        }
+        
+        const replyModal = document.getElementById('replyModal');
+        if (replyModal && replyModal.classList.contains('active')) {
+          closeReplyModal();
+        }
+        
+        const repliesModal = document.getElementById('repliesListModal');
+        if (repliesModal && repliesModal.classList.contains('active')) {
+          closeRepliesListModal();
+        }
+      }
+    });
+  </script>
+  
+  <!-- Reply System Script -->
+  <script>
+    // Reply Modal Functions
+    let currentRequestId = null;
+    let replyCheckInterval = null;
+    
+    // Check if user has already replied to a request
+    async function checkReplyStatus(requestId, button) {
+      if (!window.checkAuth()) return;
+      
+      try {
+        const response = await fetch(`/api/buy-requests/${requestId}/reply-status`, {
+          headers: window.Auth.getAuthHeaders()
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.hasReplied && button) {
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-check"></i> Already Replied';
+          }
+        }
+      } catch (error) {
+        console.error('Error checking reply status:', error);
+      }
+    }
+    
+    function openReplyModal(requestId, itemName, posterName, priceRange) {
+      if (!window.checkAuth()) {
+        window.showAlert('Please login to reply to requests', 'error');
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 1500);
+        return;
+      }
+      
+      currentRequestId = requestId;
+      
+      // Fill item summary
+      const summary = document.getElementById('replyItemSummary');
+      summary.innerHTML = `
+        <h4>${itemName}</h4>
+        <p><i class="fas fa-tag"></i> Price Range: ${priceRange}</p>
+        <p><i class="fas fa-user"></i> Buyer: ${posterName}</p>
+      `;
+      
+      document.getElementById('replyRequestId').value = requestId;
+      
+      // Reset form
+      document.getElementById('replyForm').reset();
+      document.getElementById('replyOfferGroup').classList.remove('active');
+      
+      // Show modal
+      document.getElementById('replyModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    
+    function closeReplyModal() {
+      document.getElementById('replyModal').classList.remove('active');
+      document.body.style.overflow = '';
+      currentRequestId = null;
+    }
+    
+    // Show/hide offer field based on reply type
+    document.querySelectorAll('input[name="replyType"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        const offerGroup = document.getElementById('replyOfferGroup');
+        if (this.value === 'offer') {
+          offerGroup.classList.add('active');
+          document.getElementById('offerAmount').required = true;
+        } else {
+          offerGroup.classList.remove('active');
+          document.getElementById('offerAmount').required = false;
+        }
+      });
+    });
+    
+    // Handle reply form submission
+    document.getElementById('replyForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('replySubmitBtn');
+      const originalText = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+      
+      const requestId = document.getElementById('replyRequestId').value;
+      const message = document.getElementById('replyMessage').value;
+      const replyType = document.querySelector('input[name="replyType"]:checked').value;
+      const offerAmount = document.getElementById('offerAmount').value;
+      const contact = document.getElementById('replyContact').value;
+      
+      try {
+        const response = await fetch(`/api/buy-requests/${requestId}/reply`, {
+          method: 'POST',
+          headers: window.Auth.getAuthHeaders(),
+          body: JSON.stringify({
+            message,
+            replyType,
+            offerAmount: offerAmount || null,
+            contact
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          window.showAlert('Reply sent successfully! The buyer will be notified.', 'success');
+          closeReplyModal();
+          
+          // Disable the reply button on the card
+          const card = document.querySelector(`[data-request-id="${requestId}"]`);
+          const replyBtn = card?.querySelector('.reply-btn');
+          if (replyBtn) {
+            replyBtn.disabled = true;
+            replyBtn.innerHTML = '<i class="fas fa-check"></i> Already Replied';
+          }
+        } else {
+          window.showAlert(data.error || 'Failed to send reply', 'error');
+        }
+      } catch (error) {
+        console.error('Error sending reply:', error);
+        window.showAlert('Network error. Please try again.', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+      }
+    });
+    
+    // Replies List Functions
+    async function viewReplies(requestId) {
+      if (!window.checkAuth()) {
+        window.showAlert('Please login to view replies', 'error');
+        return;
+      }
+      
+      try {
+        console.log('Fetching replies for request:', requestId);
+        
+        const response = await fetch(`/api/buy-requests/${requestId}/replies`, {
+          method: 'GET',
+          headers: window.Auth.getAuthHeaders()
+        });
+        
+        console.log('Response status:', response.status);
+        
+        if (response.status === 403) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('403 error details:', errorData);
+          window.showAlert('You can only view replies for your own requests', 'error');
+          return;
+        }
+        
+        if (response.status === 401) {
+          window.showAlert('Your session has expired. Please login again.', 'error');
+          setTimeout(() => {
+            window.location.href = 'login.html';
+          }, 1500);
+          return;
+        }
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch replies: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Replies data:', data);
+        
+        // Get request info from the card
+        const card = document.querySelector(`[data-request-id="${requestId}"]`);
+        const requestTitle = card?.querySelector('h3')?.textContent || 'Request';
+        
+        displayReplies(data.replies, requestId, requestTitle);
+      } catch (error) {
+        console.error('Error fetching replies:', error);
+        window.showAlert('Failed to load replies: ' + error.message, 'error');
+      }
+    }
+    
+    function displayReplies(replies, requestId, requestTitle) {
+      const container = document.getElementById('repliesListContainer');
+      
+      // Add request title to header
+      const modalHeader = document.querySelector('#repliesListModal h3');
+      if (modalHeader) {
+        modalHeader.textContent = `Replies: ${requestTitle}`;
+      }
+      
+      if (!replies || replies.length === 0) {
+        container.innerHTML = `
+          <div class="no-replies">
+            <i class="fas fa-inbox"></i>
+            <h4>No Replies Yet</h4>
+            <p>When someone replies to your request, they'll appear here.</p>
+          </div>
+        `;
+      } else {
+        let html = '';
+        replies.forEach(reply => {
+          const date = new Date(reply.createdAt).toLocaleString();
+          const replyTypeBadge = reply.replyType;
+          
+          html += `
+            <div class="reply-item ${reply.read ? '' : 'unread'}" id="reply-${reply._id}">
+              <div class="reply-header">
+                <div class="reply-sender">
+                  <i class="fas fa-user-circle"></i>
+                  ${reply.senderName} (${reply.senderRegistration})
+                </div>
+                <span class="reply-badge ${replyTypeBadge}">
+                  ${reply.replyType === 'question' ? 'Question' : 
+                    reply.replyType === 'offer' ? 'Offer' : 
+                    reply.replyType === 'contact' ? 'Contact' : 'Other'}
+                </span>
+              </div>
+              
+              ${reply.offerAmount ? `
+                <div class="reply-offer-amount">
+                  <i class="fas fa-tag"></i> Offer: ₹${reply.offerAmount}
+                </div>
+              ` : ''}
+              
+              <div class="reply-message-text">
+                ${reply.message.replace(/\n/g, '<br>')}
+              </div>
+              
+              <div class="reply-contact">
+                <span><i class="fas fa-phone"></i> Contact: ${reply.senderContact || 'Not provided'}</span>
+              </div>
+              
+              <div class="reply-footer">
+                <span class="reply-date">
+                  <i class="far fa-clock"></i> ${date}
+                </span>
+                <div class="reply-actions">
+                  ${!reply.read ? `
+                    <button class="reply-action-btn mark-read" onclick="markReplyAsRead('${reply._id}')">
+                      <i class="fas fa-check-circle"></i> Mark Read
+                    </button>
+                  ` : `
+                    <span class="read-status read"><i class="fas fa-check"></i> Read</span>
+                  `}
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      }
+      
+      document.getElementById('repliesListModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    
+    async function markReplyAsRead(replyId) {
+      try {
+        const response = await fetch(`/api/buy-request-replies/${replyId}/read`, {
+          method: 'PUT',
+          headers: window.Auth.getAuthHeaders()
+        });
+        
+        if (response.ok) {
+          const replyElement = document.getElementById(`reply-${replyId}`);
+          if (replyElement) {
+            replyElement.classList.remove('unread');
+            const actionsDiv = replyElement.querySelector('.reply-actions');
+            if (actionsDiv) {
+              actionsDiv.innerHTML = '<span class="read-status read"><i class="fas fa-check"></i> Read</span>';
+            }
+          }
+          await checkUnreadReplies();
+        }
+      } catch (error) {
+        console.error('Error marking reply as read:', error);
+      }
+    }
+    
+    function closeRepliesListModal() {
+      document.getElementById('repliesListModal').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    
+    // Check for unread replies
+    async function checkUnreadReplies() {
+      if (!window.Auth || !window.Auth.isLoggedIn()) {
+        document.getElementById('notificationBell').style.display = 'none';
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/users/buy-request-replies/unread-count', {
+          headers: window.Auth.getAuthHeaders()
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const unreadCount = data.count || 0;
+          
+          const bell = document.getElementById('notificationBell');
+          const badge = document.getElementById('notificationBadge');
+          
+          if (unreadCount > 0) {
+            bell.style.display = 'flex';
+            badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+          } else {
+            bell.style.display = 'none';
+          }
+        }
+      } catch (error) {
+        console.error('Error checking unread replies:', error);
+      }
+    }
+    
+    // Open replies list for all user's requests
+    async function openRepliesList() {
+      if (!window.checkAuth()) return;
+      
+      try {
+        const response = await fetch('/api/users/buy-request-replies', {
+          headers: window.Auth.getAuthHeaders()
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Group replies by request
+          const requestsMap = new Map();
+          data.replies.forEach(reply => {
+            if (!requestsMap.has(reply.requestId._id)) {
+              requestsMap.set(reply.requestId._id, {
+                request: reply.requestId,
+                replies: []
+              });
+            }
+            requestsMap.get(reply.requestId._id).replies.push(reply);
+          });
+          
+          let html = '';
+          for (let [requestId, group] of requestsMap) {
+            html += `
+              <div style="margin-bottom: 30px;">
+                <div style="background: var(--bg-card); padding: 15px; border-radius: var(--radius-md); margin-bottom: 15px;">
+                  <h4 style="margin: 0 0 5px 0;">${group.request.itemName}</h4>
+                  <p style="margin: 0; color: var(--text-secondary); font-size: 13px;">
+                    <i class="fas fa-tag"></i> Status: ${group.request.status}
+                  </p>
+                </div>
+            `;
+            
+            group.replies.forEach(reply => {
+              const date = new Date(reply.createdAt).toLocaleString();
+              html += `
+                <div class="reply-item ${reply.read ? '' : 'unread'}" id="reply-${reply._id}">
+                  <div class="reply-header">
+                    <div class="reply-sender">
+                      <i class="fas fa-user-circle"></i>
+                      ${reply.senderName} (${reply.senderRegistration})
+                    </div>
+                    <span class="reply-badge ${reply.replyType}">
+                      ${reply.replyType === 'question' ? 'Question' : 
+                        reply.replyType === 'offer' ? 'Offer' : 
+                        reply.replyType === 'contact' ? 'Contact' : 'Other'}
+                    </span>
+                  </div>
+                  
+                  ${reply.offerAmount ? `
+                    <div class="reply-offer-amount">
+                      <i class="fas fa-tag"></i> Offer: ₹${reply.offerAmount}
+                    </div>
+                  ` : ''}
+                  
+                  <div class="reply-message-text">
+                    ${reply.message.replace(/\n/g, '<br>')}
+                  </div>
+                  
+                  <div class="reply-contact">
+                    <span><i class="fas fa-phone"></i> Contact: ${reply.senderContact || 'Not provided'}</span>
+                  </div>
+                  
+                  <div class="reply-footer">
+                    <span class="reply-date">
+                      <i class="far fa-clock"></i> ${date}
+                    </span>
+                    <div class="reply-actions">
+                      ${!reply.read ? `
+                        <button class="reply-action-btn mark-read" onclick="markReplyAsRead('${reply._id}')">
+                          <i class="fas fa-check-circle"></i> Mark Read
+                        </button>
+                      ` : `
+                        <span class="read-status read"><i class="fas fa-check"></i> Read</span>
+                      `}
+                    </div>
+                  </div>
+                </div>
+              `;
+            });
+            
+            html += '</div>';
+          }
+          
+          document.getElementById('repliesListContainer').innerHTML = html;
+          document.getElementById('repliesListModal').classList.add('active');
+          document.body.style.overflow = 'hidden';
+        }
+      } catch (error) {
+        console.error('Error fetching replies:', error);
+        window.showAlert('Failed to load replies', 'error');
+      }
+    }
+    
+    // Check for unread replies every 30 seconds
+    function startReplyCheckInterval() {
+      if (replyCheckInterval) {
+        clearInterval(replyCheckInterval);
+      }
+      checkUnreadReplies();
+      replyCheckInterval = setInterval(checkUnreadReplies, 30000);
+    }
+    
+    // Stop interval on logout
+    window.addEventListener('authStateChanged', function() {
+      if (window.Auth && window.Auth.isLoggedIn()) {
+        startReplyCheckInterval();
+      } else {
+        if (replyCheckInterval) {
+          clearInterval(replyCheckInterval);
+          replyCheckInterval = null;
+        }
+        document.getElementById('notificationBell').style.display = 'none';
+      }
+    });
+    
+    // Check auth on load and start interval if logged in
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.Auth && window.Auth.isLoggedIn()) {
+        startReplyCheckInterval();
+      }
+    });
+  </script>
   
   <!-- AUTH UI FIX FOR BUY REQUESTS PAGE -->
   <script>
@@ -344,6 +1757,1016 @@
         if (text) text.textContent = 'Light';
       }
     }
+  </script>
+  <script src="pwa.js"></script>
+  
+  <!-- Main Buy Requests Script -->
+  <script>
+    // Make checkAuth and getCurrentUser global functions
+    window.checkAuth = function() {
+      return window.Auth && window.Auth.isLoggedIn();
+    };
+
+    window.getCurrentUser = function() {
+      return window.Auth ? window.Auth.getCurrentUser() : null;
+    };
+
+    window.showAlert = function(message, type = 'success') {
+      const alert = document.createElement('div');
+      alert.className = `alert alert-${type}`;
+      alert.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+        ${message}
+      `;
+      
+      document.body.insertBefore(alert, document.body.firstChild);
+      
+      setTimeout(() => {
+        alert.remove();
+      }, 3000);
+    };
+
+    // Debug auth on page load
+    console.log('=== AUTH DEBUG ===');
+    console.log('Auth object:', window.Auth);
+    console.log('checkAuth():', window.checkAuth());
+    console.log('getCurrentUser():', window.getCurrentUser());
+    console.log('=================');
+
+    // Wrap everything in an IIFE
+    (function() {
+      // Theme Persistence
+      function initTheme() {
+        const savedTheme = localStorage.getItem('nerist-theme');
+        if (savedTheme === 'light') {
+          document.body.classList.add('light-theme');
+          updateThemeToggle();
+        }
+      }
+
+      function toggleTheme() {
+        document.body.classList.toggle('light-theme');
+        
+        const isLight = document.body.classList.contains('light-theme');
+        localStorage.setItem('nerist-theme', isLight ? 'light' : 'dark');
+        
+        updateThemeToggle();
+      }
+
+      function updateThemeToggle() {
+        const toggleBtn = document.querySelector('.theme-toggle');
+        if (!toggleBtn) return;
+        
+        const icon = toggleBtn.querySelector('i');
+        const text = toggleBtn.querySelector('span');
+        
+        if (document.body.classList.contains('light-theme')) {
+          icon.className = 'fas fa-sun';
+          text.textContent = 'Light';
+        } else {
+          icon.className = 'fas fa-moon';
+          text.textContent = 'Dark';
+        }
+      }
+
+      // Initialize theme on page load
+      initTheme();
+
+      // ============ FIXED MOBILE NAVIGATION SYSTEM ============
+      function initMobileNavigation() {
+        // Always check if we're on mobile
+        if (window.innerWidth > 768) {
+          // Remove mobile elements if they exist
+          const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+          const mobileOverlay = document.querySelector('.mobile-menu-overlay');
+          const mobileMenu = document.querySelector('.mobile-menu');
+          
+          if (mobileMenuBtn) mobileMenuBtn.remove();
+          if (mobileOverlay) mobileOverlay.remove();
+          if (mobileMenu) mobileMenu.remove();
+          return;
+        }
+        
+        console.log('Initializing mobile navigation...');
+        
+        // Add hamburger button if not exists
+        if (!document.querySelector('.mobile-menu-btn')) {
+          const navLeft = document.querySelector('.nav-left');
+          if (navLeft) {
+            const hamburger = document.createElement('button');
+            hamburger.className = 'mobile-menu-btn';
+            hamburger.id = 'mobile-menu-btn';
+            hamburger.setAttribute('aria-label', 'Menu');
+            hamburger.innerHTML = '<i class="fas fa-bars"></i>';
+            navLeft.insertBefore(hamburger, navLeft.firstChild);
+            console.log('Hamburger button added');
+          }
+        }
+        
+        // Create overlay if not exists
+        if (!document.querySelector('.mobile-menu-overlay')) {
+          const overlay = document.createElement('div');
+          overlay.className = 'mobile-menu-overlay';
+          overlay.id = 'mobile-menu-overlay';
+          document.body.appendChild(overlay);
+          console.log('Overlay added');
+        }
+        
+        // Create mobile menu if not exists
+        if (!document.querySelector('.mobile-menu')) {
+          const mobileMenu = document.createElement('div');
+          mobileMenu.className = 'mobile-menu';
+          mobileMenu.id = 'mobile-menu';
+          document.body.appendChild(mobileMenu);
+          buildMobileMenuContent(mobileMenu);
+          console.log('Mobile menu added');
+        }
+        
+        setupMobileMenuEvents();
+      }
+
+      function buildMobileMenuContent(menuElement) {
+        const user = window.Auth?.getCurrentUser();
+        const currentPath = window.location.pathname;
+        
+        let menuHTML = `
+          <div class="mobile-menu-header">
+            <a href="/index.html" class="logo">
+              <span class="logo-icon">🧑‍🎓</span>
+              <span>NERIST Hub</span>
+            </a>
+          </div>
+        `;
+        
+        // User info section
+        if (user) {
+          menuHTML += `
+            <div class="mobile-user-info">
+              <div class="mobile-user-avatar">
+                ${user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+              </div>
+              <div class="mobile-user-details">
+                <div class="mobile-user-name">${user.name || 'Student'}</div>
+                <div class="mobile-user-regno">${user.registrationNumber || ''}</div>
+              </div>
+            </div>
+          `;
+        }
+        
+        // Navigation sections
+        menuHTML += `
+          <div class="mobile-menu-section">
+            <div class="mobile-menu-section-title">Campus Services</div>
+            
+            <div class="mobile-menu-item has-submenu" data-target="lost-found">
+              <i class="fas fa-search"></i>
+              <span>Lost & Found</span>
+              <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="mobile-submenu" id="lost-found-submenu">
+              <a href="/lost.html" class="mobile-submenu-item ${currentPath.includes('lost.html') ? 'active' : ''}">
+                <i class="fas fa-question-circle"></i>
+                <span>Lost Items</span>
+              </a>
+              <a href="/found.html" class="mobile-submenu-item ${currentPath.includes('found.html') ? 'active' : ''}">
+                <i class="fas fa-check-circle"></i>
+                <span>Found Items</span>
+              </a>
+            </div>
+            
+            <div class="mobile-menu-item has-submenu" data-target="marketplace">
+              <i class="fas fa-store"></i>
+              <span>Marketplace</span>
+              <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="mobile-submenu" id="marketplace-submenu">
+              <a href="/marketplace.html" class="mobile-submenu-item ${currentPath.includes('marketplace.html') ? 'active' : ''}">
+                <i class="fas fa-tag"></i>
+                <span>Sell Items</span>
+              </a>
+              <a href="/buy-requests.html" class="mobile-submenu-item ${currentPath.includes('buy-requests.html') ? 'active' : ''}">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Buy Requests</span>
+              </a>
+            </div>
+            
+            <div class="mobile-menu-item has-submenu" data-target="study">
+              <i class="fas fa-file-alt"></i>
+              <span>Study</span>
+              <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="mobile-submenu" id="study-submenu">
+              <a href="/questionpaper.html" class="mobile-submenu-item ${currentPath.includes('questionpaper.html') ? 'active' : ''}">
+                <i class="fas fa-book"></i>
+                <span>Question Papers</span>
+              </a>
+              <a href="/upload-paper.html" class="mobile-submenu-item ${currentPath.includes('upload-paper.html') ? 'active' : ''}">
+                <i class="fas fa-upload"></i>
+                <span>Upload Papers</span>
+              </a>
+              <a href="/timetable.html" class="mobile-submenu-item ${currentPath.includes('timetable.html') ? 'active' : ''}">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Timetable</span>
+              </a>
+            </div>
+            
+            <div class="mobile-menu-item has-submenu" data-target="faculty">
+              <i class="fas fa-chalkboard-teacher"></i>
+              <span>Faculty</span>
+              <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="mobile-submenu" id="faculty-submenu">
+              <a href="/teachers.html" class="mobile-submenu-item ${currentPath.includes('teachers.html') ? 'active' : ''}">
+                <i class="fas fa-users"></i>
+                <span>Teacher Directory</span>
+              </a>
+            </div>
+            
+            <div class="mobile-menu-item has-submenu" data-target="services">
+              <i class="fa-solid fa-briefcase"></i>
+              <span>Services</span>
+              <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="mobile-submenu" id="services-submenu">
+              <a href="/rentals.html" class="mobile-submenu-item ${currentPath.includes('rentals.html') ? 'active' : ''}">
+                <i class="fa-solid fa-briefcase"></i>
+                <span>Services</span>
+              </a>
+            </div>
+            
+            <div class="mobile-menu-item has-submenu" data-target="navigation">
+              <i class="fas fa-map"></i>
+              <span>Navigation</span>
+              <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="mobile-submenu" id="navigation-submenu">
+              <a href="/map.html" class="mobile-submenu-item ${currentPath.includes('map.html') ? 'active' : ''}">
+                <i class="fas fa-location-dot"></i>
+                <span>Campus Map</span>
+              </a>
+            </div>
+          </div>
+        `;
+        
+        // Auth buttons
+        if (user) {
+          menuHTML += `
+            <div class="mobile-auth-buttons">
+              <button class="mobile-auth-btn mobile-logout-btn" onclick="handleMobileLogout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+              </button>
+            </div>
+          `;
+        } else {
+          menuHTML += `
+            <div class="mobile-auth-buttons">
+              <button class="mobile-auth-btn mobile-login-btn" onclick="window.location.href='login.html'">
+                <i class="fas fa-sign-in-alt"></i>
+                <span>Login / Register</span>
+              </button>
+            </div>
+          `;
+        }
+        
+        menuElement.innerHTML = menuHTML;
+      }
+
+      function setupMobileMenuEvents() {
+        const hamburger = document.getElementById('mobile-menu-btn') || document.querySelector('.mobile-menu-btn');
+        const overlay = document.getElementById('mobile-menu-overlay') || document.querySelector('.mobile-menu-overlay');
+        const mobileMenu = document.getElementById('mobile-menu') || document.querySelector('.mobile-menu');
+        
+        if (!hamburger || !overlay || !mobileMenu) {
+          console.log('Mobile elements not found, retrying...');
+          setTimeout(setupMobileMenuEvents, 100);
+          return;
+        }
+        
+        console.log('Setting up mobile menu events');
+        
+        // Remove any existing listeners by creating fresh elements
+        const newHamburger = hamburger.cloneNode(true);
+        hamburger.parentNode.replaceChild(newHamburger, hamburger);
+        
+        const newOverlay = overlay.cloneNode(true);
+        overlay.parentNode.replaceChild(newOverlay, overlay);
+        
+        const newMobileMenu = mobileMenu.cloneNode(true);
+        mobileMenu.parentNode.replaceChild(newMobileMenu, mobileMenu);
+        
+        // Get fresh references
+        const freshHamburger = document.getElementById('mobile-menu-btn') || document.querySelector('.mobile-menu-btn');
+        const freshOverlay = document.getElementById('mobile-menu-overlay') || document.querySelector('.mobile-menu-overlay');
+        const freshMobileMenu = document.getElementById('mobile-menu') || document.querySelector('.mobile-menu');
+        
+        // Toggle menu function
+        function toggleMobileMenu(open) {
+          if (open === undefined) {
+            // Toggle
+            const isOpen = freshMobileMenu.classList.contains('active');
+            if (isOpen) {
+              closeMobileMenu();
+            } else {
+              openMobileMenu();
+            }
+          } else if (open) {
+            openMobileMenu();
+          } else {
+            closeMobileMenu();
+          }
+        }
+        
+        function openMobileMenu() {
+          freshMobileMenu.classList.add('active');
+          freshOverlay.classList.add('active');
+          document.body.style.overflow = 'hidden';
+          
+          const icon = freshHamburger.querySelector('i');
+          if (icon) icon.className = 'fas fa-times';
+        }
+        
+        function closeMobileMenu() {
+          freshMobileMenu.classList.remove('active');
+          freshOverlay.classList.remove('active');
+          document.body.style.overflow = '';
+          
+          const icon = freshHamburger.querySelector('i');
+          if (icon) icon.className = 'fas fa-bars';
+          
+          // Close all submenus
+          document.querySelectorAll('.mobile-submenu.active').forEach(sub => {
+            sub.classList.remove('active');
+          });
+          
+          // Reset all chevrons
+          document.querySelectorAll('.fa-chevron-right').forEach(chevron => {
+            chevron.style.transform = '';
+          });
+        }
+        
+        // Hamburger click
+        freshHamburger.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('Hamburger clicked');
+          toggleMobileMenu();
+        });
+        
+        // Overlay click
+        freshOverlay.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          closeMobileMenu();
+        });
+        
+        // Menu item clicks - FIXED
+        freshMobileMenu.addEventListener('click', function(e) {
+          // Don't close menu when clicking inside it (handled by specific cases)
+          e.stopPropagation();
+        });
+        
+        // Handle submenu toggles
+        freshMobileMenu.querySelectorAll('.mobile-menu-item.has-submenu').forEach(item => {
+          item.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const targetId = this.dataset.target;
+            const submenu = document.getElementById(`${targetId}-submenu`);
+            const chevron = this.querySelector('.fa-chevron-right');
+            
+            if (submenu) {
+              // Close other open submenus
+              freshMobileMenu.querySelectorAll('.mobile-submenu.active').forEach(menu => {
+                if (menu.id !== `${targetId}-submenu`) {
+                  menu.classList.remove('active');
+                  const parentChevron = freshMobileMenu.querySelector(`[data-target="${menu.id.replace('-submenu', '')}"] .fa-chevron-right`);
+                  if (parentChevron) parentChevron.style.transform = '';
+                }
+              });
+              
+              submenu.classList.toggle('active');
+              if (chevron) {
+                chevron.style.transform = submenu.classList.contains('active') ? 'rotate(90deg)' : '';
+              }
+            }
+          });
+        });
+        
+        // Handle submenu item clicks (links) - FIXED
+        freshMobileMenu.querySelectorAll('.mobile-submenu-item').forEach(link => {
+          link.addEventListener('click', function(e) {
+            // Let the link work normally
+            // Don't close immediately to allow navigation
+            setTimeout(() => {
+              closeMobileMenu();
+            }, 100);
+          });
+        });
+        
+        // Handle auth buttons
+        freshMobileMenu.querySelectorAll('.mobile-auth-btn').forEach(btn => {
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            // Don't close immediately - let the onclick handler work
+          });
+        });
+        
+        // Close on escape key
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape') {
+            closeMobileMenu();
+          }
+        });
+        
+        // Make close function globally available
+        window.closeMobileMenu = closeMobileMenu;
+      }
+
+      function handleMobileLogout() {
+        if (window.Auth) {
+          window.Auth.logout();
+          // Rebuild menu without user info
+          const mobileMenu = document.querySelector('.mobile-menu');
+          if (mobileMenu) {
+            buildMobileMenuContent(mobileMenu);
+            // Re-setup events after content change
+            setupMobileMenuEvents();
+          }
+          updateAuthUI();
+          window.location.reload();
+        }
+      }
+
+      // Make mobile functions global
+      window.handleMobileLogout = handleMobileLogout;
+      window.toggleTheme = toggleTheme;
+
+      // ============ END MOBILE NAVIGATION ============
+
+      // ============ AUTH UI UPDATE FUNCTION ============
+      function updateAuthUI() {
+        const user = window.Auth?.getCurrentUser();
+        const welcomeMessage = document.getElementById('welcome-message');
+        const userName = document.getElementById('user-name');
+        const userRegno = document.getElementById('user-regno');
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        
+        if (user) {
+          // User is logged in
+          if (welcomeMessage) {
+            welcomeMessage.style.display = 'flex';
+            if (userName) userName.textContent = user.name || 'User';
+            if (userRegno) userRegno.textContent = user.registrationNumber || '';
+          }
+          if (loginBtn) loginBtn.style.display = 'none';
+          if (logoutBtn) logoutBtn.style.display = 'flex';
+        } else {
+          // User is not logged in
+          if (welcomeMessage) welcomeMessage.style.display = 'none';
+          if (loginBtn) loginBtn.style.display = 'flex';
+          if (logoutBtn) logoutBtn.style.display = 'none';
+        }
+      }
+
+      // Make updateAuthUI globally available
+      window.updateAuthUI = updateAuthUI;
+      // ============ END AUTH UI UPDATE ============
+
+      // Use the global functions
+      const checkAuth = window.checkAuth;
+      const getCurrentUser = window.getCurrentUser;
+      const showAlert = window.showAlert;
+
+      // Buy Requests functionality
+      const buyForm = document.getElementById("buyForm");
+      const listDiv = document.getElementById("list");
+
+      // Show loading state for requests
+      function showRequestsLoading(show = true) {
+        if (!listDiv) return;
+        if (show) {
+          listDiv.innerHTML = `
+            <div class="loading-state">
+              <i class="fas fa-spinner fa-spin"></i>
+              <p>Loading requests...</p>
+            </div>
+          `;
+        }
+      }
+
+      async function loadRequests() {
+        showRequestsLoading(true);
+        
+        try {
+          const res = await fetch('/api/buy-requests?status=open');
+          
+          if (!res.ok) {
+            throw new Error(`HTTP error ${res.status}`);
+          }
+          
+          const requests = await res.json();
+
+          if (!listDiv) return;
+
+          listDiv.innerHTML = "";
+
+          if (!requests.length) {
+            listDiv.innerHTML = `
+              <div class="empty-state">
+                <i class="fas fa-shopping-cart"></i>
+                <h3>No buy requests</h3>
+                <p>Be the first to post a request!</p>
+              </div>
+            `;
+            return;
+          }
+
+          // Define isLoggedIn and currentUser HERE - outside the loop
+          const isLoggedIn = checkAuth();
+          const currentUser = getCurrentUser();
+
+          console.log('Loading requests - logged in:', isLoggedIn);
+          console.log('Current user:', currentUser);
+
+          requests.forEach(request => {
+            // Check if user is the request owner
+            const isOwner = isLoggedIn && currentUser && 
+                           currentUser.registrationNumber && 
+                           request.postedByRegistration && 
+                           currentUser.registrationNumber.toString().trim() === request.postedByRegistration.toString().trim();
+            
+            console.log(`Request ${request._id} - Owner: ${request.postedByRegistration}, Current: ${currentUser?.registrationNumber}, isOwner: ${isOwner}`);
+            
+            // Format price range
+            const priceRange = request.minPrice && request.maxPrice 
+              ? `₹${request.minPrice} - ₹${request.maxPrice}`
+              : request.minPrice ? `Min ₹${request.minPrice}` 
+              : request.maxPrice ? `Max ₹${request.maxPrice}`
+              : 'Negotiable';
+            
+            listDiv.innerHTML += `
+              <div class="card" data-request-id="${request._id}">
+                <span class="card-badge available">${request.status}</span>
+                
+                <h3>${request.itemName}</h3>
+                ${request.model ? `<p><i class="fas fa-tag"></i> Model: ${request.model}</p>` : ''}
+                ${request.category ? `<p><i class="fas fa-folder"></i> Category: ${request.category}</p>` : ''}
+                ${request.description ? `<p><i class="fas fa-align-left"></i> ${request.description}</p>` : ''}
+                <p><i class="fas fa-money-bill"></i> Price: ${priceRange}</p>
+                <p><i class="fas fa-user"></i> Posted by: ${request.postedBy} (${request.postedByRegistration})</p>
+                
+                <!-- Contact info is hidden - only shown via replies -->
+                <div class="contact-note">
+                  <i class="fas fa-shield-alt"></i> Contact info available via reply
+                </div>
+
+                <div class="card-actions">
+                  ${
+                    isOwner
+                      ? `<button class="view-replies-btn" onclick="viewReplies('${request._id}')">
+                           <i class="fas fa-comments"></i> View Replies
+                         </button>`
+                      : isLoggedIn && !isOwner
+                      ? `<button class="reply-btn" onclick="openReplyModal('${request._id}', '${request.itemName.replace(/'/g, "\\'")}', '${request.postedBy.replace(/'/g, "\\'")}', '${priceRange.replace(/'/g, "\\'")}')">
+                           <i class="fas fa-reply"></i> I Can Sell
+                         </button>`
+                      : !isLoggedIn
+                      ? `<button class="reply-btn" onclick="showAlert('Please login to reply', 'error'); setTimeout(() => window.location.href='login.html', 1500);">
+                           <i class="fas fa-reply"></i> Login to Reply
+                         </button>`
+                      : ''
+                  }
+                  
+                  ${
+                    request.status === "open" && isOwner
+                      ? `<button class="success" onclick="markFulfilled('${request._id}', this)">
+                           <i class="fas fa-check"></i> Mark as Fulfilled
+                         </button>`
+                      : ""
+                  }
+                  ${
+                    isOwner
+                      ? `<button class="danger" onclick="deleteRequest('${request._id}', this)">
+                           <i class="fas fa-trash"></i> Delete
+                         </button>`
+                      : ""
+                  }
+                </div>
+              </div>
+            `;
+          });
+          
+          // After loading requests, check reply status for each request if logged in
+          if (isLoggedIn) {
+            document.querySelectorAll('.reply-btn').forEach((btn) => {
+              const card = btn.closest('.card');
+              const requestId = card?.dataset.requestId;
+              if (requestId && !btn.disabled) {
+                window.checkReplyStatus(requestId, btn);
+              }
+            });
+          }
+        } catch (error) {
+          console.error('Error loading requests:', error);
+          if (listDiv) {
+            listDiv.innerHTML = `
+              <div class="error-state">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error loading requests</h3>
+                <p>${error.message}</p>
+                <button onclick="loadRequests()" class="retry-btn">
+                  <i class="fas fa-redo"></i> Try Again
+                </button>
+              </div>
+            `;
+          }
+        }
+      }
+
+      async function markFulfilled(id, button) {
+        if (!checkAuth()) {
+          showAlert('Please login to mark requests as fulfilled', 'error');
+          return;
+        }
+        
+        // Disable button and show loading state
+        const originalText = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+        
+        try {
+          const response = await fetch(`/api/buy-requests/${id}/fulfilled`, { 
+            method: "PUT",
+            headers: window.Auth.getAuthHeaders()
+          });
+          
+          if (response.ok) {
+            showAlert('Request marked as fulfilled!', 'success');
+            loadRequests();
+          } else {
+            const error = await response.json();
+            showAlert(error.error || 'Failed to mark as fulfilled', 'error');
+            button.disabled = false;
+            button.innerHTML = originalText;
+          }
+        } catch (error) {
+          console.error('Error marking fulfilled:', error);
+          showAlert('Failed to mark as fulfilled', 'error');
+          button.disabled = false;
+          button.innerHTML = originalText;
+        }
+      }
+
+      async function deleteRequest(id, button) {
+        if (!checkAuth()) {
+          showAlert('Please login to delete requests', 'error');
+          return;
+        }
+        
+        if (!confirm('Are you sure you want to delete this request?')) return;
+        
+        // Disable button and show loading state
+        const originalText = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+        
+        try {
+          const response = await fetch(`/api/buy-requests/${id}`, { 
+            method: "DELETE",
+            headers: window.Auth.getAuthHeaders()
+          });
+          
+          if (response.ok) {
+            showAlert('Request deleted successfully!', 'success');
+            loadRequests();
+          } else {
+            const error = await response.json();
+            showAlert(error.error || 'Failed to delete request', 'error');
+            button.disabled = false;
+            button.innerHTML = originalText;
+          }
+        } catch (error) {
+          console.error('Error deleting request:', error);
+          showAlert('Failed to delete request', 'error');
+          button.disabled = false;
+          button.innerHTML = originalText;
+        }
+      }
+
+      // Make these functions available globally for onclick attributes
+      window.markFulfilled = markFulfilled;
+      window.deleteRequest = deleteRequest;
+
+      // FIXED: Buy Form Submission - Prevent double posting
+      if (buyForm) {
+        // Remove any existing event listeners by cloning and replacing
+        const newBuyForm = buyForm.cloneNode(true);
+        buyForm.parentNode.replaceChild(newBuyForm, buyForm);
+        
+        newBuyForm.addEventListener("submit", async e => {
+          e.preventDefault();
+          e.stopPropagation(); // Prevent event bubbling
+          
+          if (!checkAuth()) {
+            showAlert('Please login to post a buy request', 'error');
+            setTimeout(() => {
+              window.location.href = 'login.html';
+            }, 1500);
+            return;
+          }
+          
+          // Check if already submitting
+          if (newBuyForm.classList.contains('submitting')) {
+            console.log('Already submitting, please wait...');
+            return;
+          }
+          
+          // Disable submit button and show loading state
+          const submitBtn = newBuyForm.querySelector('button[type="submit"]');
+          const originalText = submitBtn.innerHTML;
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+          newBuyForm.classList.add('submitting');
+          
+          const formData = {
+            itemName: newBuyForm.itemName.value,
+            model: newBuyForm.model.value,
+            category: newBuyForm.category.value,
+            description: newBuyForm.description.value,
+            minPrice: newBuyForm.minPrice.value,
+            maxPrice: newBuyForm.maxPrice.value,
+            contact: newBuyForm.contact.value
+          };
+          
+          try {
+            const response = await fetch("/api/buy-requests", {
+              method: "POST",
+              headers: window.Auth.getAuthHeaders(),
+              body: JSON.stringify(formData)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+              showAlert('Buy request posted successfully!', 'success');
+              newBuyForm.reset();
+              // Reload requests after successful post
+              await loadRequests();
+            } else {
+              showAlert(result.error || 'Failed to post request. Please try again.', 'error');
+            }
+          } catch (error) {
+            console.error('Error posting request:', error);
+            showAlert('Network error: ' + error.message, 'error');
+          } finally {
+            // Always re-enable the button and remove submitting class
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            newBuyForm.classList.remove('submitting');
+          }
+        });
+      }
+      
+      // Load requests on page load
+      loadRequests();
+
+      // Chatbot functionality - ONLY ON PAGES WITH CHATBOT
+      function toggleChat() {
+        const box = document.getElementById("chatbot-box");
+        if (box) {
+          box.style.display = box.style.display === "flex" ? "none" : "flex";
+          
+          if (box.style.display === "flex") {
+            document.getElementById("chat-input").focus();
+          }
+        }
+      }
+
+      async function sendMessage() {
+        const input = document.getElementById("chat-input");
+        if (!input) return;
+        
+        const msg = input.value.trim();
+        if (!msg) return;
+
+        const messages = document.getElementById("chatbot-messages");
+        if (!messages) return;
+
+        // User message
+        const userDiv = document.createElement("div");
+        userDiv.className = "user-msg";
+        userDiv.innerHTML = `<i class="fas fa-user"></i> ${msg}`;
+        messages.appendChild(userDiv);
+
+        input.value = "";
+
+        // Loader
+        const loader = document.createElement("div");
+        loader.className = "loading";
+        messages.appendChild(loader);
+
+        messages.scrollTop = messages.scrollHeight;
+
+        try {
+          const res = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: msg })
+          });
+
+          const data = await res.json();
+          loader.remove();
+
+          const botDiv = document.createElement("div");
+          botDiv.className = "bot-msg";
+          botDiv.innerHTML = `<i class="fas fa-robot"></i> ${data.reply || "I couldn't find that information. Try asking about NERIST facilities, departments, or campus events."}`;
+          messages.appendChild(botDiv);
+        } catch (error) {
+          loader.remove();
+          const botDiv = document.createElement("div");
+          botDiv.className = "bot-msg";
+          botDiv.innerHTML = `<i class="fas fa-robot"></i> Sorry, I'm having trouble connecting. Please try again later.`;
+          messages.appendChild(botDiv);
+        }
+
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      // Allow Enter key to send message
+      const chatInput = document.getElementById("chat-input");
+      if (chatInput) {
+        chatInput.addEventListener("keypress", function(e) {
+          if (e.key === "Enter") {
+            sendMessage();
+          }
+        });
+      }
+
+      // Make chatbot functions global
+      window.toggleChat = toggleChat;
+      window.sendMessage = sendMessage;
+
+      // Auto-hide chatbox when clicking outside
+      document.addEventListener('click', function(event) {
+        const chatbox = document.getElementById('chatbot-box');
+        const chatBtn = document.getElementById('chatbot-btn');
+        
+        if (chatbox && chatbox.style.display === 'flex' &&
+            !chatbox.contains(event.target) && 
+            !chatBtn.contains(event.target)) {
+          toggleChat();
+        }
+      });
+
+      // Function to set active menu based on current page
+      function setActiveMenu() {
+        const currentPath = window.location.pathname;
+        
+        // Desktop active menu
+        document.querySelectorAll('.menu > span').forEach(menu => {
+          menu.classList.remove('active');
+        });
+        
+        if (currentPath.includes('/lost.html')) {
+          const lostMenu = document.querySelector('.menu:has(a[href*="lost.html"]) > span');
+          if (lostMenu) lostMenu.classList.add('active');
+        } else if (currentPath.includes('/found.html')) {
+          const foundMenu = document.querySelector('.menu:has(a[href*="found.html"]) > span');
+          if (foundMenu) foundMenu.classList.add('active');
+        } else if (currentPath.includes('/marketplace.html')) {
+          const marketplaceMenu = document.querySelector('.menu:has(a[href*="marketplace.html"]) > span');
+          if (marketplaceMenu) marketplaceMenu.classList.add('active');
+        } else if (currentPath.includes('/buy-requests.html')) {
+          const buyMenu = document.querySelector('.menu:has(a[href*="buy-requests.html"]) > span');
+          if (buyMenu) buyMenu.classList.add('active');
+        } else if (currentPath.includes('/questionpaper.html')) {
+          const questionMenu = document.querySelector('.menu:has(a[href*="questionpaper.html"]) > span');
+          if (questionMenu) questionMenu.classList.add('active');
+        } else if (currentPath.includes('/rentals.html')) {
+          const rentalMenu = document.querySelector('.menu:has(a[href*="rentals.html"]) > span');
+          if (rentalMenu) rentalMenu.classList.add('active');
+        } else if (currentPath.includes('/map.html')) {
+          const mapMenu = document.querySelector('.menu:has(a[href*="map.html"]) > span');
+          if (mapMenu) mapMenu.classList.add('active');
+        } else if (currentPath.includes('/teachers.html')) {
+          const teachersMenu = document.querySelector('.menu:has(a[href*="teachers.html"]) > span');
+          if (teachersMenu) teachersMenu.classList.add('active');
+        } else if (currentPath.includes('/timetable.html')) {
+          const timetableMenu = document.querySelector('.menu:has(a[href*="timetable.html"]) > span');
+          if (timetableMenu) timetableMenu.classList.add('active');
+        }
+      }
+
+      // Initialize authentication
+      function initAuth() {
+        if (!window.Auth) {
+          console.error('Auth module not loaded');
+          return;
+        }
+        
+        // Check auth status on page load
+        if (window.Auth.checkAuthStatus) {
+          window.Auth.checkAuthStatus().then(isAuthenticated => {
+            console.log('User authenticated:', isAuthenticated);
+            updateAuthUI(); // Update UI after auth check
+            
+            const user = window.Auth.getCurrentUser();
+            if (user) {
+              console.log('Current user:', user);
+              // Update mobile menu if it exists
+              const mobileMenu = document.querySelector('.mobile-menu');
+              if (mobileMenu && window.innerWidth <= 768) {
+                buildMobileMenuContent(mobileMenu);
+                // Re-setup events after content change
+                setupMobileMenuEvents();
+              }
+            }
+          }).catch(err => {
+            console.error('Auth check failed:', err);
+            updateAuthUI(); // Update UI even if check fails
+          });
+        } else {
+          // Fallback: just check localStorage
+          updateAuthUI();
+        }
+      }
+
+      // Listen for auth state changes
+      window.addEventListener('authStateChanged', function() {
+        console.log('Auth state changed event received');
+        updateAuthUI();
+        
+        const mobileMenu = document.querySelector('.mobile-menu');
+        if (mobileMenu && window.innerWidth <= 768) {
+          buildMobileMenuContent(mobileMenu);
+          // Re-setup events after content change
+          setupMobileMenuEvents();
+        }
+      });
+
+      // Initialize everything when DOM is ready
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM Content Loaded');
+        setActiveMenu();
+        initAuth();
+        updateAuthUI();
+        
+        // Initialize mobile navigation immediately
+        initMobileNavigation();
+        
+        // Also initialize after a short delay to ensure DOM is fully ready
+        setTimeout(() => {
+          initMobileNavigation();
+          updateAuthUI();
+        }, 100);
+        
+        // Initialize on window load as well
+        window.addEventListener('load', function() {
+          initMobileNavigation();
+          updateAuthUI();
+        });
+        
+        console.log('Page loaded - Auth status:', window.Auth ? window.Auth.isLoggedIn() : 'Auth not loaded');
+      });
+
+      // Re-initialize on resize
+      let resizeTimer;
+      window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+          initMobileNavigation();
+        }, 250);
+      });
+    })();
+
+    function showComingSoon(platform) {
+      const popup = document.getElementById('comingSoonPopup');
+      const platformElement = document.getElementById('popupPlatform');
+      platformElement.textContent = platform;
+      popup.classList.add('show');
+      
+      // Close when clicking outside
+      popup.onclick = function(e) {
+        if (e.target === popup) {
+          closePopup();
+        }
+      };
+    }
+
+    function closePopup() {
+      const popup = document.getElementById('comingSoonPopup');
+      popup.classList.remove('show');
+    }
+
+    // Close with Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closePopup();
+      }
+    });
   </script>
   <script src="pwa.js"></script>
 </body>
