@@ -16,7 +16,7 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 // Models
 const User = require("./server/User");
-const LostItem = require("./server/LostItem");
+const { LostItem, Reply } = require("./server/LostItem");
 const MarketplaceItem = require("./server/MarketplaceItem");
 const BuyRequest = require("./server/BuyRequest");
 const QuestionPaper = require("./server/QuestionPaper");
@@ -24,6 +24,10 @@ const BikeRental = require("./server/BikeRental");
 const Building = require("./server/Building");
 const Notification = require("./server/Notification");
 const PushSubscription = require("./server/PushSubscription");
+const MarketplaceReply = require("./server/MarketplaceReply");
+const BuyRequestReply = require("./server/BuyRequestReply");
+const RentalReply = require("./server/RentalReply");
+// const Teacher = require("./Teacher"); // Add this if you have a Teacher model
 
 // Utilities
 const getLocalAnswer = require("./server/chatbot");
@@ -348,7 +352,7 @@ async function deleteFromCloudinary(publicId, resourceType = 'image') {
 
 /* ============ PUSH NOTIFICATION FUNCTIONS ============ */
 
-// Helper to get URL for notification type
+// Helper to get URL for notification type - SINGLE DEFINITION with all types
 function getUrlForType(type, itemId) {
   const urls = {
     'lost': `/lost.html?id=${itemId}`,
@@ -356,221 +360,11 @@ function getUrlForType(type, itemId) {
     'buy': `/buy-requests.html?id=${itemId}`,
     'sell': `/marketplace.html?id=${itemId}`,
     'rental': `/rentals.html?id=${itemId}`,
-    'service': `/rentals.html?id=${itemId}`
-  };
-  return urls[type] || '/';
-}
-
-// Send push notification to a specific user
-async function sendPushNotification(userId, type, title, body, itemId = null) {
-  try {
-    // Check if web-push is configured
-    if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
-      console.log("⚠️ Push notifications not configured - skipping");
-      return false;
-    }
-    
-    // Get all subscriptions for this user
-    const subscriptions = await PushSubscription.find({ userId });
-    
-    if (subscriptions.length === 0) {
-      console.log(`No push subscriptions found for user ${userId}`);
-      return false;
-    }
-    
-    const payload = JSON.stringify({
-      title: title,
-      body: body,
-      icon: "/feviconicon.png",
-      badge: "/images/icon-72x72.png",
-      vibrate: [200, 100, 200],
-      data: {
-        url: getUrlForType(type, itemId),
-        timestamp: Date.now(),
-        type: type,
-        itemId: itemId
-      },
-      actions: [
-        { action: "open", title: "Open App" },
-        { action: "close", title: "Close" }
-      ]
-    });
-    
-    let sentCount = 0;
-    
-    for (const sub of subscriptions) {
-      try {
-        await webPush.sendNotification(sub.subscription, payload);
-        sub.lastUsed = new Date();
-        await sub.save();
-        sentCount++;
-      } catch (error) {
-        console.error(`Error sending to subscription ${sub._id}:`, error);
-        
-        // If subscription is expired or invalid, remove it
-        if (error.statusCode === 410 || error.statusCode === 404) {
-          console.log(`Removing expired subscription ${sub._id}`);
-          await PushSubscription.findByIdAndDelete(sub._id);
-        }
-      }
-    }
-    
-    console.log(`📨 Push notification sent to ${sentCount}/${subscriptions.length} devices for user ${userId}`);
-    return sentCount > 0;
-  } catch (error) {
-    console.error("Error sending push notification:", error);
-    return false;
-  }
-}
-
-// Send push notification to all users
-async function sendPushToAllUsers(type, title, body, itemId = null) {
-  try {
-    // Check if web-push is configured
-    if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
-      console.log("⚠️ Push notifications not configured - skipping");
-      return false;
-    }
-    
-    const subscriptions = await PushSubscription.find({});
-    
-    if (subscriptions.length === 0) {
-      console.log("No push subscriptions found");
-      return false;
-    }
-    
-    const payload = JSON.stringify({
-      title: title,
-      body: body,
-      icon: "/feviconicon.png",
-      badge: "/images/icon-72x72.png",
-      vibrate: [200, 100, 200],
-      data: {
-        url: getUrlForType(type, itemId),
-        timestamp: Date.now(),
-        type: type,
-        itemId: itemId
-      },
-      actions: [
-        { action: "open", title: "Open App" },
-        { action: "close", title: "Close" }
-      ]
-    });
-    
-    let sentCount = 0;
-    const sendPromises = subscriptions.map(async (sub) => {
-      try {
-        await webPush.sendNotification(sub.subscription, payload);
-        sub.lastUsed = new Date();
-        await sub.save();
-        sentCount++;
-      } catch (error) {
-        console.error(`Error sending to subscription ${sub._id}:`, error);
-        if (error.statusCode === 410 || error.statusCode === 404) {
-          await PushSubscription.findByIdAndDelete(sub._id);
-        }
-      }
-    });
-    
-    await Promise.allSettled(sendPromises);
-    
-    console.log(`📨 Push notification sent to ${sentCount}/${subscriptions.length} devices`);
-    return sentCount > 0;
-  } catch (error) {
-    console.error("Error sending push to all users:", error);
-    return false;
-  }
-}
-
-/* ============ NOTIFICATION HELPER (UPDATED) ============ */
-async function createNotification(userId, type, title, message, itemId = null, itemModel = null) {
-  try {
-    const notification = await Notification.create({
-      userId,
-      type,
-      title,
-      message,
-      itemId,
-      itemModel
-    });
-
-    // Send real-time notification via Socket.IO
-    const socketId = onlineUsers.get(userId.toString());
-    if (socketId) {
-      io.to(socketId).emit('notification', {
-        _id: notification._id,
-        type,
-        title,
-        message,
-        itemId,
-        createdAt: notification.createdAt,
-        read: false
-      });
-    }
-    
-    // Send push notification
-    await sendPushNotification(userId, type, title, message, itemId);
-
-    return notification;
-  } catch (error) {
-    console.error('Error creating notification:', error);
-    return null;
-  }
-}
-
-async function notifyAllUsers(type, title, message, itemId = null, itemModel = null) {
-  try {
-    const users = await User.find({}, '_id');
-    
-    const notifications = users.map(user => ({
-      userId: user._id,
-      type,
-      title,
-      message,
-      itemId,
-      itemModel,
-      read: false
-    }));
-    
-    await Notification.insertMany(notifications);
-    
-    // Send to online users via Socket.IO
-    users.forEach(user => {
-      const socketId = onlineUsers.get(user._id.toString());
-      if (socketId) {
-        io.to(socketId).emit('notification', {
-          type,
-          title,
-          message,
-          itemId,
-          createdAt: new Date(),
-          read: false
-        });
-      }
-    });
-    
-    // Send push notifications to all users
-    await sendPushToAllUsers(type, title, message, itemId);
-    
-    console.log(`📢 Notification sent to ${users.length} users: ${title}`);
-  } catch (error) {
-    console.error('Error sending notifications to all users:', error);
-  }
-}
-
-/* ============ PUSH NOTIFICATION ROUTES ============ */
-
-/* ============ PUSH NOTIFICATION FUNCTIONS ============ */
-
-// Helper to get URL for notification type
-function getUrlForType(type, itemId) {
-  const urls = {
-    'lost': `/lost.html?id=${itemId}`,
-    'found': `/found.html?id=${itemId}`,
-    'buy': `/buy-requests.html?id=${itemId}`,
-    'sell': `/marketplace.html?id=${itemId}`,
-    'rental': `/rentals.html?id=${itemId}`,
-    'service': `/rentals.html?id=${itemId}`
+    'service': `/rentals.html?id=${itemId}`,
+    'reply': `/lost.html#replies-${itemId}`,
+    'marketplace_reply': `/marketplace.html#replies-${itemId}`,
+    'buy_request_reply': `/buy-requests.html#replies-${itemId}`,
+    'rental_reply': `/rentals.html#replies-${itemId}`
   };
   return urls[type] || '/';
 }
@@ -636,7 +430,104 @@ async function sendPushToAllUsers(type, title, body, itemId = null) {
   }
 }
 
-/* ============ UPDATED NOTIFICATION HELPER ============ */
+// Send push notification to a specific user
+async function sendPushNotification(userId, type, title, body, itemId = null) {
+  try {
+    // Check if web-push is configured
+    if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+      console.log("⚠️ Push notifications not configured - skipping");
+      return false;
+    }
+    
+    // Get all subscriptions for this user
+    const subscriptions = await PushSubscription.find({ userId });
+    
+    if (subscriptions.length === 0) {
+      console.log(`No push subscriptions found for user ${userId}`);
+      return false;
+    }
+    
+    const payload = JSON.stringify({
+      title: title,
+      body: body,
+      icon: "/feviconicon.png",
+      badge: "/images/icon-72x72.png",
+      vibrate: [200, 100, 200],
+      data: {
+        url: getUrlForType(type, itemId),
+        timestamp: Date.now(),
+        type: type,
+        itemId: itemId
+      },
+      actions: [
+        { action: "open", title: "Open App" },
+        { action: "close", title: "Close" }
+      ]
+    });
+    
+    let sentCount = 0;
+    
+    for (const sub of subscriptions) {
+      try {
+        await webPush.sendNotification(sub.subscription, payload);
+        sub.lastUsed = new Date();
+        await sub.save();
+        sentCount++;
+      } catch (error) {
+        console.error(`Error sending to subscription ${sub._id}:`, error);
+        
+        // If subscription is expired or invalid, remove it
+        if (error.statusCode === 410 || error.statusCode === 404) {
+          console.log(`Removing expired subscription ${sub._id}`);
+          await PushSubscription.findByIdAndDelete(sub._id);
+        }
+      }
+    }
+    
+    console.log(`📨 Push notification sent to ${sentCount}/${subscriptions.length} devices for user ${userId}`);
+    return sentCount > 0;
+  } catch (error) {
+    console.error("Error sending push notification:", error);
+    return false;
+  }
+}
+
+/* ============ NOTIFICATION HELPER (UPDATED) ============ */
+async function createNotification(userId, type, title, message, itemId = null, itemModel = null) {
+  try {
+    const notification = await Notification.create({
+      userId,
+      type,
+      title,
+      message,
+      itemId,
+      itemModel
+    });
+
+    // Send real-time notification via Socket.IO
+    const socketId = onlineUsers.get(userId.toString());
+    if (socketId) {
+      io.to(socketId).emit('notification', {
+        _id: notification._id,
+        type,
+        title,
+        message,
+        itemId,
+        createdAt: notification.createdAt,
+        read: false
+      });
+    }
+    
+    // Send push notification
+    await sendPushNotification(userId, type, title, message, itemId);
+
+    return notification;
+  } catch (error) {
+    console.error('Error creating notification:', error);
+    return null;
+  }
+}
+
 async function notifyAllUsers(type, title, message, itemId = null, itemModel = null) {
   try {
     // Save to database for logged-in users' in-app notifications
@@ -1386,7 +1277,16 @@ app.get("/api/items", optionalAuth, async (req, res) => {
   const filter = {};
   if (req.query.status) filter.status = req.query.status;
   const items = await LostItem.find(filter).sort({ createdAt: -1 });
-  res.json(items);
+  
+  // Don't send contact info in public response
+  const sanitizedItems = items.map(item => {
+    const itemObj = item.toObject();
+    // Remove contact info from public view
+    delete itemObj.contact;
+    return itemObj;
+  });
+  
+  res.json(sanitizedItems);
 });
 
 // MARK FOUND - PROTECTED
@@ -1431,6 +1331,9 @@ app.delete("/api/items/:id", authenticateToken, async (req, res) => {
       return res.status(403).json({ error: "You can only delete your own items" });
     }
     
+    // Delete all replies for this item
+    await Reply.deleteMany({ itemId: req.params.id });
+    
     // Delete image from Cloudinary if it exists
     if (item.imagePublicId) {
       await deleteFromCloudinary(item.imagePublicId);
@@ -1441,6 +1344,243 @@ app.delete("/api/items/:id", authenticateToken, async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to delete item" });
+  }
+});
+
+/* ============ REPLIES ROUTES FOR LOST & FOUND ============ */
+
+// POST /api/items/:id/reply - Send a reply about an item (PROTECTED)
+app.post("/api/items/:id/reply", authenticateToken, async (req, res) => {
+  try {
+    const itemId = req.params.id;
+    const { message, replyType, offerAmount, contact } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ error: "Message is required" });
+    }
+    
+    // Find the original item
+    const item = await LostItem.findById(itemId);
+    if (!item) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+    
+    // Don't allow replying to your own item
+    if (item.userId.toString() === req.user.id.toString()) {
+      return res.status(400).json({ error: "You cannot reply to your own item" });
+    }
+    
+    // Check if user already replied (optional - prevent spam)
+    const existingReply = await Reply.findOne({
+      itemId: itemId,
+      senderId: req.user.id
+    });
+    
+    if (existingReply) {
+      return res.status(400).json({ error: "You have already replied to this item" });
+    }
+    
+    // Create reply
+    const reply = await Reply.create({
+      itemId: itemId,
+      senderId: req.user.id,
+      senderName: req.user.name,
+      senderRegistration: req.user.registrationNumber,
+      senderContact: contact || req.user.phone || "",
+      message: message,
+      replyType: replyType || "question",
+      offerAmount: offerAmount || null,
+      read: false
+    });
+    
+    // Create notification for item owner
+    const replyTypeText = {
+      'question': 'asked a question about',
+      'interest': 'is interested in',
+      'offer': 'made an offer for',
+      'contact': 'wants to contact you about',
+      'other': 'replied to'
+    }[replyType] || 'replied to';
+    
+    await createNotification(
+      item.userId,
+      'reply',
+      `📬 New Reply: ${item.title}`,
+      `${req.user.name} ${replyTypeText} your ${item.status} item`,
+      item._id,
+      'LostItem'
+    );
+    
+    res.status(201).json({ 
+      success: true, 
+      message: "Reply sent successfully",
+      reply 
+    });
+    
+  } catch (error) {
+    console.error("Error creating reply:", error);
+    res.status(500).json({ error: "Failed to send reply" });
+  }
+});
+
+// GET /api/items/:id/replies - Get replies for an item (PROTECTED - only owner)
+app.get("/api/items/:id/replies", authenticateToken, async (req, res) => {
+  try {
+    const itemId = req.params.id;
+    
+    // Find the item
+    const item = await LostItem.findById(itemId);
+    if (!item) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+    
+    // Check if user is the item owner
+    if (item.userId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ error: "You can only view replies for your own items" });
+    }
+    
+    // Get replies
+    const replies = await Reply.find({ itemId })
+      .sort({ createdAt: -1 });
+    
+    res.json({ replies });
+    
+  } catch (error) {
+    console.error("Error fetching replies:", error);
+    res.status(500).json({ error: "Failed to fetch replies" });
+  }
+});
+
+// GET /api/users/replies - Get all replies received by current user (PROTECTED)
+app.get("/api/users/replies", authenticateToken, async (req, res) => {
+  try {
+    const { page = 1, limit = 50, unreadOnly } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Find all items posted by this user
+    const userItems = await LostItem.find({ userId: req.user.id }).select('_id');
+    const itemIds = userItems.map(item => item._id);
+    
+    // Build filter
+    const filter = { itemId: { $in: itemIds } };
+    if (unreadOnly === 'true') {
+      filter.read = false;
+    }
+    
+    // Get replies
+    const [replies, total] = await Promise.all([
+      Reply.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .populate('itemId', 'title status location'),
+      Reply.countDocuments(filter)
+    ]);
+    
+    res.json({
+      replies,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / parseInt(limit))
+    });
+    
+  } catch (error) {
+    console.error("Error fetching user replies:", error);
+    res.status(500).json({ error: "Failed to fetch replies" });
+  }
+});
+
+// GET /api/users/replies/unread-count - Get unread replies count
+app.get("/api/users/replies/unread-count", authenticateToken, async (req, res) => {
+  try {
+    // Find all items posted by this user
+    const userItems = await LostItem.find({ userId: req.user.id }).select('_id');
+    const itemIds = userItems.map(item => item._id);
+    
+    const count = await Reply.countDocuments({
+      itemId: { $in: itemIds },
+      read: false
+    });
+    
+    res.json({ count });
+    
+  } catch (error) {
+    console.error("Error counting unread replies:", error);
+    res.status(500).json({ error: "Failed to count unread replies" });
+  }
+});
+
+// PUT /api/replies/:id/read - Mark reply as read (PROTECTED)
+app.put("/api/replies/:id/read", authenticateToken, async (req, res) => {
+  try {
+    const reply = await Reply.findById(req.params.id);
+    if (!reply) {
+      return res.status(404).json({ error: "Reply not found" });
+    }
+    
+    // Find the item to check ownership
+    const item = await LostItem.findById(reply.itemId);
+    if (!item) {
+      return res.status(404).json({ error: "Associated item not found" });
+    }
+    
+    // Check if user owns the item
+    if (item.userId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ error: "You can only mark replies on your own items" });
+    }
+    
+    reply.read = true;
+    await reply.save();
+    
+    res.json({ success: true, reply });
+    
+  } catch (error) {
+    console.error("Error marking reply as read:", error);
+    res.status(500).json({ error: "Failed to mark reply as read" });
+  }
+});
+
+// DELETE /api/replies/:id - Delete a reply (PROTECTED - only reply sender)
+app.delete("/api/replies/:id", authenticateToken, async (req, res) => {
+  try {
+    const reply = await Reply.findById(req.params.id);
+    if (!reply) {
+      return res.status(404).json({ error: "Reply not found" });
+    }
+    
+    // Check if user is the reply sender
+    if (reply.senderId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ error: "You can only delete your own replies" });
+    }
+    
+    await Reply.findByIdAndDelete(req.params.id);
+    
+    res.json({ success: true, message: "Reply deleted" });
+    
+  } catch (error) {
+    console.error("Error deleting reply:", error);
+    res.status(500).json({ error: "Failed to delete reply" });
+  }
+});
+
+// GET /api/items/:id/reply-status - Check if current user has replied to this item (PROTECTED)
+app.get("/api/items/:id/reply-status", authenticateToken, async (req, res) => {
+  try {
+    const itemId = req.params.id;
+    
+    const existingReply = await Reply.findOne({
+      itemId: itemId,
+      senderId: req.user.id
+    });
+    
+    res.json({ 
+      hasReplied: !!existingReply,
+      reply: existingReply 
+    });
+    
+  } catch (error) {
+    console.error("Error checking reply status:", error);
+    res.status(500).json({ error: "Failed to check reply status" });
   }
 });
 
@@ -1638,7 +1778,266 @@ app.put("/api/marketplace/:id/sold", authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE SELL ITEM - PROTECTED (with Cloudinary cleanup)
+/* ============ MARKETPLACE REPLIES ROUTES ============ */
+
+// POST /api/marketplace/:id/reply - Send a reply about a marketplace item (PROTECTED)
+app.post("/api/marketplace/:id/reply", authenticateToken, async (req, res) => {
+  try {
+    const itemId = req.params.id;
+    const { message, replyType, offerAmount, contact } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ error: "Message is required" });
+    }
+    
+    // Find the original item
+    const item = await MarketplaceItem.findById(itemId);
+    if (!item) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+    
+    // Don't allow replying to your own item
+    if (item.userId.toString() === req.user.id.toString()) {
+      return res.status(400).json({ error: "You cannot reply to your own item" });
+    }
+    
+    // Check if user already replied (optional - prevent spam)
+    const existingReply = await MarketplaceReply.findOne({
+      itemId: itemId,
+      senderId: req.user.id
+    });
+    
+    if (existingReply) {
+      return res.status(400).json({ error: "You have already replied to this item" });
+    }
+    
+    // Create reply
+    const reply = await MarketplaceReply.create({
+      itemId: itemId,
+      senderId: req.user.id,
+      senderName: req.user.name,
+      senderRegistration: req.user.registrationNumber,
+      senderContact: contact || req.user.phone || "",
+      message: message,
+      replyType: replyType || "question",
+      offerAmount: offerAmount || null,
+      read: false
+    });
+    
+    // Create notification for item owner
+    const replyTypeText = {
+      'question': 'asked a question about',
+      'interest': 'is interested in',
+      'offer': 'made an offer for',
+      'contact': 'wants to contact you about',
+      'other': 'replied to'
+    }[replyType] || 'replied to';
+    
+    await createNotification(
+      item.userId,
+      'marketplace_reply',
+      `📬 New Reply: ${item.title}`,
+      `${req.user.name} ${replyTypeText} your item`,
+      item._id,
+      'MarketplaceItem'
+    );
+    
+    res.status(201).json({ 
+      success: true, 
+      message: "Reply sent successfully",
+      reply 
+    });
+    
+  } catch (error) {
+    console.error("Error creating marketplace reply:", error);
+    res.status(500).json({ error: "Failed to send reply" });
+  }
+});
+
+// GET /api/marketplace/:id/replies - Get replies for a marketplace item (PROTECTED - only owner)
+app.get("/api/marketplace/:id/replies", authenticateToken, async (req, res) => {
+  try {
+    const itemId = req.params.id;
+    
+    console.log("=== VIEW MARKETPLACE REPLIES DEBUG ===");
+    console.log("Item ID:", itemId);
+    console.log("User ID from token:", req.user.id);
+    console.log("User registration:", req.user.registrationNumber);
+    
+    // Find the item
+    const item = await MarketplaceItem.findById(itemId);
+    if (!item) {
+      console.log("Item not found");
+      return res.status(404).json({ error: "Item not found" });
+    }
+    
+    console.log("Item owner ID:", item.userId ? item.userId.toString() : "null");
+    console.log("Item owner registration:", item.postedByRegistration);
+    console.log("Item owner name:", item.postedBy);
+    
+    // Check if user is the item owner - check BOTH userId and registration number
+    const isOwnerById = item.userId && item.userId.toString() === req.user.id.toString();
+    const isOwnerByReg = item.postedByRegistration && 
+                        item.postedByRegistration.toString().trim() === req.user.registrationNumber.toString().trim();
+    
+    console.log("Is owner by ID:", isOwnerById);
+    console.log("Is owner by registration:", isOwnerByReg);
+    
+    // Allow if either matches
+    if (!isOwnerById && !isOwnerByReg) {
+      console.log("Access denied - user is not the owner");
+      return res.status(403).json({ error: "You can only view replies for your own items" });
+    }
+    
+    console.log("Access granted - fetching replies");
+    
+    // Get replies
+    const replies = await MarketplaceReply.find({ itemId })
+      .sort({ createdAt: -1 });
+    
+    console.log(`Found ${replies.length} replies`);
+    res.json({ replies });
+    
+  } catch (error) {
+    console.error("Error fetching marketplace replies:", error);
+    res.status(500).json({ error: "Failed to fetch replies" });
+  }
+});
+
+// GET /api/users/marketplace-replies - Get all marketplace replies received by current user (PROTECTED)
+app.get("/api/users/marketplace-replies", authenticateToken, async (req, res) => {
+  try {
+    const { page = 1, limit = 50, unreadOnly } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Find all items posted by this user
+    const userItems = await MarketplaceItem.find({ userId: req.user.id }).select('_id');
+    const itemIds = userItems.map(item => item._id);
+    
+    // Build filter
+    const filter = { itemId: { $in: itemIds } };
+    if (unreadOnly === 'true') {
+      filter.read = false;
+    }
+    
+    // Get replies
+    const [replies, total] = await Promise.all([
+      MarketplaceReply.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .populate('itemId', 'title price status'),
+      MarketplaceReply.countDocuments(filter)
+    ]);
+    
+    res.json({
+      replies,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / parseInt(limit))
+    });
+    
+  } catch (error) {
+    console.error("Error fetching user marketplace replies:", error);
+    res.status(500).json({ error: "Failed to fetch replies" });
+  }
+});
+
+// GET /api/users/marketplace-replies/unread-count - Get unread marketplace replies count
+app.get("/api/users/marketplace-replies/unread-count", authenticateToken, async (req, res) => {
+  try {
+    // Find all items posted by this user
+    const userItems = await MarketplaceItem.find({ userId: req.user.id }).select('_id');
+    const itemIds = userItems.map(item => item._id);
+    
+    const count = await MarketplaceReply.countDocuments({
+      itemId: { $in: itemIds },
+      read: false
+    });
+    
+    res.json({ count });
+    
+  } catch (error) {
+    console.error("Error counting unread marketplace replies:", error);
+    res.status(500).json({ error: "Failed to count unread replies" });
+  }
+});
+
+// PUT /api/marketplace-replies/:id/read - Mark marketplace reply as read (PROTECTED)
+app.put("/api/marketplace-replies/:id/read", authenticateToken, async (req, res) => {
+  try {
+    const reply = await MarketplaceReply.findById(req.params.id);
+    if (!reply) {
+      return res.status(404).json({ error: "Reply not found" });
+    }
+    
+    // Find the item to check ownership
+    const item = await MarketplaceItem.findById(reply.itemId);
+    if (!item) {
+      return res.status(404).json({ error: "Associated item not found" });
+    }
+    
+    // Check if user owns the item
+    if (item.userId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ error: "You can only mark replies on your own items" });
+    }
+    
+    reply.read = true;
+    await reply.save();
+    
+    res.json({ success: true, reply });
+    
+  } catch (error) {
+    console.error("Error marking marketplace reply as read:", error);
+    res.status(500).json({ error: "Failed to mark reply as read" });
+  }
+});
+
+// DELETE /api/marketplace-replies/:id - Delete a marketplace reply (PROTECTED - only reply sender)
+app.delete("/api/marketplace-replies/:id", authenticateToken, async (req, res) => {
+  try {
+    const reply = await MarketplaceReply.findById(req.params.id);
+    if (!reply) {
+      return res.status(404).json({ error: "Reply not found" });
+    }
+    
+    // Check if user is the reply sender
+    if (reply.senderId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ error: "You can only delete your own replies" });
+    }
+    
+    await MarketplaceReply.findByIdAndDelete(req.params.id);
+    
+    res.json({ success: true, message: "Reply deleted" });
+    
+  } catch (error) {
+    console.error("Error deleting marketplace reply:", error);
+    res.status(500).json({ error: "Failed to delete reply" });
+  }
+});
+
+// GET /api/marketplace/:id/reply-status - Check if current user has replied to this marketplace item (PROTECTED)
+app.get("/api/marketplace/:id/reply-status", authenticateToken, async (req, res) => {
+  try {
+    const itemId = req.params.id;
+    
+    const existingReply = await MarketplaceReply.findOne({
+      itemId: itemId,
+      senderId: req.user.id
+    });
+    
+    res.json({ 
+      hasReplied: !!existingReply,
+      reply: existingReply 
+    });
+    
+  } catch (error) {
+    console.error("Error checking marketplace reply status:", error);
+    res.status(500).json({ error: "Failed to check reply status" });
+  }
+});
+
+// Update the delete marketplace item route to also delete replies
 app.delete("/api/marketplace/:id", authenticateToken, async (req, res) => {
   try {
     const item = await MarketplaceItem.findById(req.params.id);
@@ -1649,6 +2048,9 @@ app.delete("/api/marketplace/:id", authenticateToken, async (req, res) => {
     if (item.userId && item.userId.toString() !== req.user.id.toString()) {
       return res.status(403).json({ error: "You can only delete your own items" });
     }
+    
+    // Delete all replies for this item
+    await MarketplaceReply.deleteMany({ itemId: req.params.id });
     
     // Delete image from Cloudinary if it exists
     if (item.imagePublicId) {
@@ -1751,11 +2153,254 @@ app.delete("/api/buy-requests/:id", authenticateToken, async (req, res) => {
       return res.status(403).json({ error: "You can only delete your own requests" });
     }
     
+    // Delete all replies for this request
+    await BuyRequestReply.deleteMany({ requestId: req.params.id });
+    
     await BuyRequest.findByIdAndDelete(req.params.id);
     res.json({ success: true });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to delete request" });
+  }
+});
+
+/* ============ BUY REQUESTS REPLIES ROUTES ============ */
+
+// POST /api/buy-requests/:id/reply - Send a reply about a buy request (PROTECTED)
+app.post("/api/buy-requests/:id/reply", authenticateToken, async (req, res) => {
+  try {
+    const requestId = req.params.id;
+    const { message, replyType, offerAmount, contact } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ error: "Message is required" });
+    }
+    
+    // Find the original request
+    const request = await BuyRequest.findById(requestId);
+    if (!request) {
+      return res.status(404).json({ error: "Buy request not found" });
+    }
+    
+    // Don't allow replying to your own request
+    if (request.userId && request.userId.toString() === req.user.id.toString()) {
+      return res.status(400).json({ error: "You cannot reply to your own request" });
+    }
+    
+    // Check if user already replied (optional - prevent spam)
+    const existingReply = await BuyRequestReply.findOne({
+      requestId: requestId,
+      senderId: req.user.id
+    });
+    
+    if (existingReply) {
+      return res.status(400).json({ error: "You have already replied to this request" });
+    }
+    
+    // Create reply
+    const reply = await BuyRequestReply.create({
+      requestId: requestId,
+      senderId: req.user.id,
+      senderName: req.user.name,
+      senderRegistration: req.user.registrationNumber,
+      senderContact: contact || req.user.phone || "",
+      message: message,
+      replyType: replyType || "question",
+      offerAmount: offerAmount || null,
+      read: false
+    });
+    
+    // Create notification for request owner
+    const replyTypeText = {
+      'question': 'asked a question about',
+      'offer': 'made an offer for',
+      'contact': 'wants to contact you about',
+      'other': 'replied to'
+    }[replyType] || 'replied to';
+    
+    await createNotification(
+      request.userId,
+      'buy_request_reply',
+      `📬 New Reply: ${request.itemName}`,
+      `${req.user.name} ${replyTypeText} your buy request`,
+      request._id,
+      'BuyRequest'
+    );
+    
+    res.status(201).json({ 
+      success: true, 
+      message: "Reply sent successfully",
+      reply 
+    });
+    
+  } catch (error) {
+    console.error("Error creating buy request reply:", error);
+    res.status(500).json({ error: "Failed to send reply" });
+  }
+});
+
+// GET /api/buy-requests/:id/replies - Get replies for a buy request (PROTECTED - only owner)
+app.get("/api/buy-requests/:id/replies", authenticateToken, async (req, res) => {
+  try {
+    const requestId = req.params.id;
+    
+    // Find the request
+    const request = await BuyRequest.findById(requestId);
+    if (!request) {
+      return res.status(404).json({ error: "Buy request not found" });
+    }
+    
+    // Check if user is the request owner - check both userId and registration number
+    const isOwnerById = request.userId && request.userId.toString() === req.user.id.toString();
+    const isOwnerByReg = request.postedByRegistration && 
+                        request.postedByRegistration.toString().trim() === req.user.registrationNumber.toString().trim();
+    
+    if (!isOwnerById && !isOwnerByReg) {
+      return res.status(403).json({ error: "You can only view replies for your own requests" });
+    }
+    
+    // Get replies
+    const replies = await BuyRequestReply.find({ requestId })
+      .sort({ createdAt: -1 });
+    
+    res.json({ replies });
+    
+  } catch (error) {
+    console.error("Error fetching buy request replies:", error);
+    res.status(500).json({ error: "Failed to fetch replies" });
+  }
+});
+
+// GET /api/users/buy-request-replies - Get all buy request replies received by current user (PROTECTED)
+app.get("/api/users/buy-request-replies", authenticateToken, async (req, res) => {
+  try {
+    const { page = 1, limit = 50, unreadOnly } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Find all requests posted by this user
+    const userRequests = await BuyRequest.find({ userId: req.user.id }).select('_id');
+    const requestIds = userRequests.map(request => request._id);
+    
+    // Build filter
+    const filter = { requestId: { $in: requestIds } };
+    if (unreadOnly === 'true') {
+      filter.read = false;
+    }
+    
+    // Get replies
+    const [replies, total] = await Promise.all([
+      BuyRequestReply.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .populate('requestId', 'itemName status'),
+      BuyRequestReply.countDocuments(filter)
+    ]);
+    
+    res.json({
+      replies,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / parseInt(limit))
+    });
+    
+  } catch (error) {
+    console.error("Error fetching user buy request replies:", error);
+    res.status(500).json({ error: "Failed to fetch replies" });
+  }
+});
+
+// GET /api/users/buy-request-replies/unread-count - Get unread buy request replies count
+app.get("/api/users/buy-request-replies/unread-count", authenticateToken, async (req, res) => {
+  try {
+    // Find all requests posted by this user
+    const userRequests = await BuyRequest.find({ userId: req.user.id }).select('_id');
+    const requestIds = userRequests.map(request => request._id);
+    
+    const count = await BuyRequestReply.countDocuments({
+      requestId: { $in: requestIds },
+      read: false
+    });
+    
+    res.json({ count });
+    
+  } catch (error) {
+    console.error("Error counting unread buy request replies:", error);
+    res.status(500).json({ error: "Failed to count unread replies" });
+  }
+});
+
+// PUT /api/buy-request-replies/:id/read - Mark buy request reply as read (PROTECTED)
+app.put("/api/buy-request-replies/:id/read", authenticateToken, async (req, res) => {
+  try {
+    const reply = await BuyRequestReply.findById(req.params.id);
+    if (!reply) {
+      return res.status(404).json({ error: "Reply not found" });
+    }
+    
+    // Find the request to check ownership
+    const request = await BuyRequest.findById(reply.requestId);
+    if (!request) {
+      return res.status(404).json({ error: "Associated request not found" });
+    }
+    
+    // Check if user owns the request
+    if (request.userId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ error: "You can only mark replies on your own requests" });
+    }
+    
+    reply.read = true;
+    await reply.save();
+    
+    res.json({ success: true, reply });
+    
+  } catch (error) {
+    console.error("Error marking buy request reply as read:", error);
+    res.status(500).json({ error: "Failed to mark reply as read" });
+  }
+});
+
+// DELETE /api/buy-request-replies/:id - Delete a buy request reply (PROTECTED - only reply sender)
+app.delete("/api/buy-request-replies/:id", authenticateToken, async (req, res) => {
+  try {
+    const reply = await BuyRequestReply.findById(req.params.id);
+    if (!reply) {
+      return res.status(404).json({ error: "Reply not found" });
+    }
+    
+    // Check if user is the reply sender
+    if (reply.senderId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ error: "You can only delete your own replies" });
+    }
+    
+    await BuyRequestReply.findByIdAndDelete(req.params.id);
+    
+    res.json({ success: true, message: "Reply deleted" });
+    
+  } catch (error) {
+    console.error("Error deleting buy request reply:", error);
+    res.status(500).json({ error: "Failed to delete reply" });
+  }
+});
+
+// GET /api/buy-requests/:id/reply-status - Check if current user has replied to this buy request (PROTECTED)
+app.get("/api/buy-requests/:id/reply-status", authenticateToken, async (req, res) => {
+  try {
+    const requestId = req.params.id;
+    
+    const existingReply = await BuyRequestReply.findOne({
+      requestId: requestId,
+      senderId: req.user.id
+    });
+    
+    res.json({ 
+      hasReplied: !!existingReply,
+      reply: existingReply 
+    });
+    
+  } catch (error) {
+    console.error("Error checking buy request reply status:", error);
+    res.status(500).json({ error: "Failed to check reply status" });
   }
 });
 
@@ -1891,7 +2536,249 @@ app.put("/api/rentals/:id/rented", authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE - PROTECTED (with Cloudinary cleanup)
+/* ============ RENTAL REPLIES ROUTES ============ */
+
+// POST /api/rentals/:id/reply - Send a reply about a rental service (PROTECTED)
+app.post("/api/rentals/:id/reply", authenticateToken, async (req, res) => {
+  try {
+    const rentalId = req.params.id;
+    const { message, replyType, bookingDate, bookingDuration, contact } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ error: "Message is required" });
+    }
+    
+    // Find the original rental
+    const rental = await BikeRental.findById(rentalId);
+    if (!rental) {
+      return res.status(404).json({ error: "Rental service not found" });
+    }
+    
+    // Don't allow replying to your own rental
+    if (rental.userId && rental.userId.toString() === req.user.id.toString()) {
+      return res.status(400).json({ error: "You cannot reply to your own service" });
+    }
+    
+    // Check if user already replied (optional - prevent spam)
+    const existingReply = await RentalReply.findOne({
+      rentalId: rentalId,
+      senderId: req.user.id
+    });
+    
+    if (existingReply) {
+      return res.status(400).json({ error: "You have already replied to this service" });
+    }
+    
+    // Create reply
+    const reply = await RentalReply.create({
+      rentalId: rentalId,
+      senderId: req.user.id,
+      senderName: req.user.name,
+      senderRegistration: req.user.registrationNumber,
+      senderContact: contact || req.user.phone || "",
+      message: message,
+      replyType: replyType || "question",
+      bookingDate: bookingDate || null,
+      bookingDuration: bookingDuration || null,
+      read: false
+    });
+    
+    // Create notification for rental owner
+    const replyTypeText = {
+      'question': 'asked a question about',
+      'interest': 'is interested in',
+      'booking': 'wants to book',
+      'contact': 'wants to contact you about',
+      'other': 'replied to'
+    }[replyType] || 'replied to';
+    
+    await createNotification(
+      rental.userId,
+      'rental_reply',
+      `📬 New Reply: ${rental.title || rental.serviceType}`,
+      `${req.user.name} ${replyTypeText} your service`,
+      rental._id,
+      'BikeRental'
+    );
+    
+    res.status(201).json({ 
+      success: true, 
+      message: "Reply sent successfully",
+      reply 
+    });
+    
+  } catch (error) {
+    console.error("Error creating rental reply:", error);
+    res.status(500).json({ error: "Failed to send reply" });
+  }
+});
+
+// GET /api/rentals/:id/replies - Get replies for a rental service (PROTECTED - only owner)
+app.get("/api/rentals/:id/replies", authenticateToken, async (req, res) => {
+  try {
+    const rentalId = req.params.id;
+    
+    // Find the rental
+    const rental = await BikeRental.findById(rentalId);
+    if (!rental) {
+      return res.status(404).json({ error: "Rental service not found" });
+    }
+    
+    // Check if user is the rental owner - check both userId and registration number
+    const isOwnerById = rental.userId && rental.userId.toString() === req.user.id.toString();
+    const isOwnerByReg = rental.postedByRegistration && 
+                        rental.postedByRegistration.toString().trim() === req.user.registrationNumber.toString().trim();
+    
+    if (!isOwnerById && !isOwnerByReg) {
+      return res.status(403).json({ error: "You can only view replies for your own services" });
+    }
+    
+    // Get replies
+    const replies = await RentalReply.find({ rentalId })
+      .sort({ createdAt: -1 });
+    
+    res.json({ replies });
+    
+  } catch (error) {
+    console.error("Error fetching rental replies:", error);
+    res.status(500).json({ error: "Failed to fetch replies" });
+  }
+});
+
+// GET /api/users/rental-replies - Get all rental replies received by current user (PROTECTED)
+app.get("/api/users/rental-replies", authenticateToken, async (req, res) => {
+  try {
+    const { page = 1, limit = 50, unreadOnly } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Find all rentals posted by this user
+    const userRentals = await BikeRental.find({ userId: req.user.id }).select('_id');
+    const rentalIds = userRentals.map(rental => rental._id);
+    
+    // Build filter
+    const filter = { rentalId: { $in: rentalIds } };
+    if (unreadOnly === 'true') {
+      filter.read = false;
+    }
+    
+    // Get replies
+    const [replies, total] = await Promise.all([
+      RentalReply.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .populate('rentalId', 'title serviceType rentPerDay availability'),
+      RentalReply.countDocuments(filter)
+    ]);
+    
+    res.json({
+      replies,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / parseInt(limit))
+    });
+    
+  } catch (error) {
+    console.error("Error fetching user rental replies:", error);
+    res.status(500).json({ error: "Failed to fetch replies" });
+  }
+});
+
+// GET /api/users/rental-replies/unread-count - Get unread rental replies count
+app.get("/api/users/rental-replies/unread-count", authenticateToken, async (req, res) => {
+  try {
+    // Find all rentals posted by this user
+    const userRentals = await BikeRental.find({ userId: req.user.id }).select('_id');
+    const rentalIds = userRentals.map(rental => rental._id);
+    
+    const count = await RentalReply.countDocuments({
+      rentalId: { $in: rentalIds },
+      read: false
+    });
+    
+    res.json({ count });
+    
+  } catch (error) {
+    console.error("Error counting unread rental replies:", error);
+    res.status(500).json({ error: "Failed to count unread replies" });
+  }
+});
+
+// PUT /api/rental-replies/:id/read - Mark rental reply as read (PROTECTED)
+app.put("/api/rental-replies/:id/read", authenticateToken, async (req, res) => {
+  try {
+    const reply = await RentalReply.findById(req.params.id);
+    if (!reply) {
+      return res.status(404).json({ error: "Reply not found" });
+    }
+    
+    // Find the rental to check ownership
+    const rental = await BikeRental.findById(reply.rentalId);
+    if (!rental) {
+      return res.status(404).json({ error: "Associated rental not found" });
+    }
+    
+    // Check if user owns the rental
+    if (rental.userId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ error: "You can only mark replies on your own services" });
+    }
+    
+    reply.read = true;
+    await reply.save();
+    
+    res.json({ success: true, reply });
+    
+  } catch (error) {
+    console.error("Error marking rental reply as read:", error);
+    res.status(500).json({ error: "Failed to mark reply as read" });
+  }
+});
+
+// DELETE /api/rental-replies/:id - Delete a rental reply (PROTECTED - only reply sender)
+app.delete("/api/rental-replies/:id", authenticateToken, async (req, res) => {
+  try {
+    const reply = await RentalReply.findById(req.params.id);
+    if (!reply) {
+      return res.status(404).json({ error: "Reply not found" });
+    }
+    
+    // Check if user is the reply sender
+    if (reply.senderId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ error: "You can only delete your own replies" });
+    }
+    
+    await RentalReply.findByIdAndDelete(req.params.id);
+    
+    res.json({ success: true, message: "Reply deleted" });
+    
+  } catch (error) {
+    console.error("Error deleting rental reply:", error);
+    res.status(500).json({ error: "Failed to delete reply" });
+  }
+});
+
+// GET /api/rentals/:id/reply-status - Check if current user has replied to this rental service (PROTECTED)
+app.get("/api/rentals/:id/reply-status", authenticateToken, async (req, res) => {
+  try {
+    const rentalId = req.params.id;
+    
+    const existingReply = await RentalReply.findOne({
+      rentalId: rentalId,
+      senderId: req.user.id
+    });
+    
+    res.json({ 
+      hasReplied: !!existingReply,
+      reply: existingReply 
+    });
+    
+  } catch (error) {
+    console.error("Error checking rental reply status:", error);
+    res.status(500).json({ error: "Failed to check reply status" });
+  }
+});
+
+// Update the delete rental route to also delete replies
 app.delete("/api/rentals/:id", authenticateToken, async (req, res) => {
   try {
     const rental = await BikeRental.findById(req.params.id);
@@ -1902,6 +2789,9 @@ app.delete("/api/rentals/:id", authenticateToken, async (req, res) => {
     if (rental.userId && rental.userId.toString() !== req.user.id.toString()) {
       return res.status(403).json({ error: "You can only delete your own rentals" });
     }
+    
+    // Delete all replies for this rental
+    await RentalReply.deleteMany({ rentalId: req.params.id });
     
     // Delete image from Cloudinary if it exists
     if (rental.imagePublicId) {
