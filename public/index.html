@@ -377,6 +377,12 @@
         <span>Theme</span>
       </button>
 
+      <!-- Message Icon with Badge -->
+<!-- <div class="message-icon" onclick="ChatSystem.openChatList()" style="position: relative; margin-right: 10px;">
+  <i class="fas fa-comment-dots"></i>
+  <span id="message-badge" class="message-badge" style="display: none;">0</span>
+</div> -->
+
       <!-- Install PWA Button -->
       <button id="installPWA" class="install-pwa-btn" style="display: none;" title="Install App">
         <i class="fas fa-download"></i>
@@ -409,7 +415,7 @@
           <p>Interactive map to find labs, classrooms, and other facilities easily</p>
       </a>
       
-      <a href="/upload-paper.html" class="quick-action">
+      <a href="/upload.html" class="quick-action">
         <i class="fas fa-upload"></i>
         <h3>Upload-Question-Papers</h3>
         <p>Upload previous year question papers</p>
@@ -485,7 +491,7 @@
           </span>
         </div>
 
-        <div class="feature-card" onclick="window.location.href='/teachers.html'">
+        <div class="feature-card" onclick="window.location.href='/timetable.html'">
           <div class="feature-icon">
             <i class="fas fa-users"></i>
           </div>
@@ -632,7 +638,7 @@
   </button>
 
   <!-- Welcome Popup for New Users -->
-   <div id="welcomePopup" class="welcome-popup-overlay" style="display: none;">
+  <div id="welcomePopup" class="welcome-popup-overlay" style="display: none;">
     <div class="welcome-popup">
       <div class="popup-header">
         <h2>🎓 Welcome to NERIST Hub!</h2>
@@ -689,7 +695,7 @@
           <h4>Feedback</h4>
           <p>Help us improve & suggest features</p>
         </div>
-      </div> 
+      </div>
       
       <!-- <div class="popup-highlight">
         <i class="fas fa-map"></i>
@@ -699,7 +705,7 @@
         </div>
       </div> -->
       
-      <!-- <div class="dont-show-container">
+      <div class="dont-show-container">
         <input type="checkbox" id="dontShowAgain">
         <label for="dontShowAgain">Don't show this again</label>
       </div>
@@ -713,7 +719,7 @@
         </button>
       </div>
     </div>
-  </div> -->
+  </div>
 
   <script src="app.js"></script>
   <script>
